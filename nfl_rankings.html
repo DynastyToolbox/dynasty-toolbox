@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFL Player Rankings</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <h1>NFL Player Rankings</h1>
+    </header>
+    <nav>
+        <div class="dropdown">
+          <a href="#" class="dropbtn">Rankings</a>
+          <div class="dropdown-content">
+            <a href="college_rankings.html">Devy Rankings</a>
+            <a href="nfl_rankings.html">NFL Player Rankings</a>
+          </div>
+        </div>
+        <div class="dropdown">
+          <a href="#" class="dropbtn">Draft</a>
+          <div class="dropdown-content">
+            <a href="dynasty_mock_drafts.html">Dynasty</a>
+            <a href="nfl_mock_drafts.html">NFL</a>
+          </div>
+        </div>
+        <div class="dropdown">
+          <a href="#" class="dropbtn">Tools</a>
+          <div class="dropdown-content">
+            <a href="trade_calculator.html">Trade Calculator</a>
+        <a href="devy_mock_simulator.html">Devy Mock Simulator</a>
+        <a href="league_rankings.html">League Rankings</a>
+          </div>
+        </div>
+      </nav>
+    
+    <main>
+        <section>
+            <h2>NFL Player Rankings</h2>
+            <div class="dropdown">
+                <label for="teamType">Select Team Type: </label>
+                <select id="teamType">
+                    <option value="competing">Competing</option>
+                    <option value="overall">Overall</option>
+                    <option value="tanking">Tanking</option>
+                </select>
+            </div>
+            <table id="nflRankingsTable">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Player</th>
+                        <th>Position</th>
+                        <th>Age</th>
+                        <th>Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Table rows will be dynamically populated -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2024 Dynasty Fantasy Football</p>
+    </footer>
+
+    <!-- JavaScript to fetch and populate data -->
+    <script>
+        const teamTypeDropdown = document.getElementById("teamType");
+        const nflRankingsTableBody = document.querySelector("#nflRankingsTable tbody");
+
+        // URLs for competing and tanking CSV data
+        const csvUrls = {
+            competing: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=0&single=true&output=csv",
+            overall: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=116299513&single=true&output=csv",
+            tanking: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=1543093851&single=true&output=csv"
+        };
+
+        // Function to fetch CSV data and convert it to an array of objects
+        async function fetchCsvData(url) {
+            const response = await fetch(url);
+            const text = await response.text();
+            const rows = text.split("\n").map(row => row.split(","));
+            const headers = rows.shift(); // First row contains headers
+            return rows.map(row => {
+                const obj = {};
+                row.forEach((value, index) => {
+                    obj[headers[index].trim()] = value.trim();
+                });
+                return obj;
+            });
+        }
+
+        // Function to populate the table
+        async function populateTable(teamType) {
+            const data = await fetchCsvData(csvUrls[teamType]);
+            nflRankingsTableBody.innerHTML = ""; // Clear existing rows
+
+            data.forEach((row) => {
+                const tableRow = document.createElement("tr");
+                Object.values(row).forEach((value) => {
+                    const cell = document.createElement("td");
+                    cell.textContent = value;
+                    tableRow.appendChild(cell);
+                });
+                nflRankingsTableBody.appendChild(tableRow);
+            });
+        }
+
+        // Event listener for dropdown
+        teamTypeDropdown.addEventListener("change", (event) => {
+            populateTable(event.target.value);
+        });
+
+        // Populate table with default selection
+        populateTable("competing");
+    </script>
+</body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devy Rankings</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    <style>
+        th {
+            cursor: pointer;
+        }
+        th:hover {
+            text-decoration: underline;
+        }
+        #searchBar {
+            margin-left: 15px;
+            padding: 5px;
+            font-size: 1em;
+        }
+        .notes-tab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #f1f1f1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .notes-content {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 20px;
+            width: 80%;
+            max-height: 80%;
+            overflow-y: auto;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            font-size: 0.8em;
+        }
+        .notes-tab:hover .notes-content {
+            display: block;
+        }
+    </style>
+
+</head>
+<body>
+    <header>
+        <h1>Devy Rankings</h1>
+    </header>
+    <nav>
+        <div class="dropdown">
+          <a href="#" class="dropbtn">Rankings</a>
+          <div class="dropdown-content">
+            <a href="college_rankings.html">Devy Rankings</a>
+            <a href="nfl_rankings.html">NFL Player Rankings</a>
+          </div>
+        </div>
+        <div class="dropdown">
+          <a href="#" class="dropbtn">Draft</a>
+          <div class="dropdown-content">
+            <a href="dynasty_mock_drafts.html">Dynasty</a>
+            <a href="nfl_mock_drafts.html">NFL</a>
+          </div>
+        </div>
+        <div class="dropdown">
+          <a href="#" class="dropbtn">Tools</a>
+          <div class="dropdown-content">
+            <a href="trade_calculator.html">Trade Calculator</a>
+        <a href="devy_mock_simulator.html">Devy Mock Simulator</a>
+        <a href="league_rankings.html">League Rankings</a>
+          </div>
+        </div>
+      </nav>
+
+    <main>
+        <section>
+            <h2>College Player Rankings</h2>
+            <div id="filters">
+                <label><input type="checkbox" value="QB" checked> QB</label>
+                <label><input type="checkbox" value="RB" checked> RB</label>
+                <label><input type="checkbox" value="WR" checked> WR</label>
+                <label><input type="checkbox" value="TE" checked> TE</label>
+                <input type="text" id="searchBar" placeholder="Search players or teams">
+            </div>
+            <table id="rankingsTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0, true)">Beau's Ranks</th>
+                        <th onclick="sortTable(1, true)">Overall Rank</th>
+                        <th onclick="sortTable(2, true)">Position Rank</th>
+                        <th onclick="sortTable(3, false)">Position</th>
+                        <th onclick="sortTable(4, false)">Player</th>
+                        <th onclick="sortTable(5, false)">School</th>
+                        <th onclick="sortTable(6, false)">Build</th>
+                        <th onclick="sortTable(7, false)">Height</th>
+                        <th onclick="sortTable(8, true)">Weight</th>
+                        <th onclick="sortTable(9, true)">Age</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Table rows will be dynamically populated -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2024 Dynasty Fantasy Football</p>
+    </footer>
+
+    <div class="notes-tab">
+        Notes
+        <div class="notes-content">
+            <p><strong>Build Types:</strong></p>
+            <ul>
+                <li><strong>Quarterbacks:</strong></li>
+                <ul>
+                    <li>Game Manager: Focuses on efficiency and avoiding turnovers.</li>
+                    <li>Gunslinger: Aggressive passer with high-risk, high-reward style.</li>
+                    <li>Pocket Passer: Operates effectively within the pocket.</li>
+                    <li>Dual Threat: Excels at both passing and running.</li>
+                    <li>All Rounder: Well-rounded in all aspects of quarterbacking.</li>
+                </ul>
+                <li><strong>Runningbacks:</strong></li>
+                <ul>
+                    <li>Feature Back (All/Power/Speed): Can handle all responsibilities with a specific focus.</li>
+                    <li>Speed Back: Relies on agility and quickness.</li>
+                    <li>Power Back: Focuses on strength and short-yardage situations.</li>
+                    <li>Third Down Back: Specialized for passing situations.</li>
+                    <li>Change of Pace Back: Provides a contrasting style to the primary back.</li>
+                </ul>
+                <li><strong>Wide Receivers:</strong></li>
+                <ul>
+                    <li>Feature Receiver (Route Running/Jump Ball): Dominates as a primary target.</li>
+                    <li>Yards After Catch: Excels at gaining extra yards post-reception.</li>
+                    <li>Slot: Specializes in short, quick routes from the slot position.</li>
+                    <li>Jump Ball: Thrives in contested catch situations.</li>
+                    <li>Speed: Stretches the field with deep-threat ability.</li>
+                    <li>Possession: Reliable for moving the chains on critical downs.</li>
+                </ul>
+                <li><strong>Tight Ends:</strong></li>
+                <ul>
+                    <li>Feature: Capable of being the focal point in the passing game.</li>
+                    <li>Possession: Reliable for short-to-medium yardage gains.</li>
+                    <li>Route: Effective in advanced route-running techniques.</li>
+                    <li>Blocking: Specializes in aiding the running game.</li>
+                </ul>
+                <li><strong>Athlete:</strong> Versatile Player with exceptional attributes, high potential. </li>
+            </ul>
+        </div>
+    </div>    
+
+    <script>
+        const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQIB7_gxUbTXeSXvPdQ_pozQdvF28oYKmQWLuinKqxJ3WF2upn5gHixZTyKC3chz9dA2gqLEE6VWshE/pub?gid=335460763&single=true&output=csv';
+        const positionFilters = document.querySelectorAll('#filters input[type="checkbox"]');
+        const searchBar = document.querySelector('#searchBar');
+        const rankingsTableBody = document.querySelector('#rankingsTable tbody');
+
+        // Fetch and populate rankings
+        async function fetchRankings() {
+            try {
+                const response = await fetch(csvUrl);
+                if (!response.ok) throw new Error('HTTP Error ' + response.status);
+                const data = await response.text();
+                populateTable(data);
+            } catch (error) {
+                console.error('Error fetching rankings:', error);
+            }
+        }
+
+        // Populate table with filtered data
+        function populateTable(csvData) {
+            const rows = csvData.split('\n').slice(1); // Skip header row
+            const filters = Array.from(positionFilters).filter(cb => cb.checked).map(cb => cb.value);
+            const searchQuery = searchBar.value.toLowerCase();
+
+            rankingsTableBody.innerHTML = "";
+            rows.forEach(row => {
+                const cols = row.split(',');
+                const position = cols[3]?.trim();
+                const player = cols[4]?.trim().toLowerCase();
+                const school = cols[5]?.trim().toLowerCase();
+
+                if (!filters.includes(position)) return; // Skip rows not matching filter
+                if (searchQuery && !player.includes(searchQuery) && !school.includes(searchQuery)) return; // Skip rows not matching search
+
+                const tr = document.createElement('tr');
+                cols.forEach(col => {
+                    const td = document.createElement('td');
+                    td.textContent = col.trim();
+                    tr.appendChild(td);
+                });
+                rankingsTableBody.appendChild(tr);
+            });
+        }
+
+        // Sorting functionality
+        function sortTable(columnIndex, isNumeric) {
+            const rows = Array.from(rankingsTableBody.rows);
+            const ascending = rankingsTableBody.getAttribute('data-sort-order') !== 'asc';
+
+            rows.sort((a, b) => {
+                const aText = a.cells[columnIndex]?.textContent.trim();
+                const bText = b.cells[columnIndex]?.textContent.trim();
+
+                if (isNumeric) {
+                    return ascending ? aText - bText : bText - aText;
+                } else {
+                    return ascending ? aText.localeCompare(bText) : bText.localeCompare(aText);
+                }
+            });
+
+            rankingsTableBody.setAttribute('data-sort-order', ascending ? 'asc' : 'desc');
+            rankingsTableBody.innerHTML = "";
+            rows.forEach(row => rankingsTableBody.appendChild(row));
+        }
+
+        // Update table on filter or search change
+        positionFilters.forEach(checkbox => {
+            checkbox.addEventListener('change', () => fetchRankings());
+        });
+
+        searchBar.addEventListener('input', () => fetchRankings());
+
+        // Initial table population
+        fetchRankings();
+    </script>
+</body>
+</html>
+
+
+

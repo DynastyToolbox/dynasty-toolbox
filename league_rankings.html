@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>League Rankings</title>
+  <!-- External stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet" />
+  <!-- Chart.js for the projection graph -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Basic styling similar to your other pages */
+    body {
+      font-family: 'Bree Serif', serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+    header, h1, h2 {
+      text-align: center;
+    }
+    nav {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    nav .dropdown {
+      display: inline-block;
+      position: relative;
+      margin: 0 10px;
+    }
+    nav .dropbtn {
+      text-decoration: none;
+      color: #fff;
+      background: #004d40;
+      padding: 10px 15px;
+      border-radius: 4px;
+    }
+    nav .dropdown-content {
+      display: none;
+      position: absolute;
+      background: #004d40;
+      min-width: 160px;
+      z-index: 1;
+    }
+    nav .dropdown:hover .dropdown-content {
+      display: block;
+    }
+    nav .dropdown-content a {
+      color: #fff;
+      text-decoration: none;
+      display: block;
+      padding: 8px 10px;
+    }
+    /* Controls at the top */
+    #leagueInputContainer {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    #leagueId {
+      padding: 5px;
+      font-size: 1em;
+      width: 250px;
+    }
+    #rankingSelect, #loadLeagueBtn {
+      padding: 6px 12px;
+      font-size: 1em;
+      margin-left: 10px;
+      background: #004d40;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    /* Results area */
+    #rankings {
+      max-width: 1200px;
+      margin: 20px auto 20px;
+      background: #fff;
+      border: 2px solid #004d40;
+      border-radius: 8px;
+      padding: 10px;
+      box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
+    }
+    /* Summary table above team cards */
+    #summaryRankings {
+      margin-bottom: 20px;
+    }
+    #summaryRankings table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    #summaryRankings th, #summaryRankings td {
+      border: 2px solid #004d40;
+      padding: 8px;
+      text-align: center;
+      font-size: 1em;
+    }
+    /* Projection chart container */
+    #projectionContainer {
+      max-width: 1200px;
+      margin: 20px auto;
+    }
+    #projectionChart {
+      width: 100% !important;
+      height: 600px;
+    }
+    /* Team cards grid */
+    #teamCards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+    }
+    .team-card {
+      background: #fafafa;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      width: 280px;
+      box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
+    }
+    .team-card h3 {
+      margin: 0 0 10px;
+      font-size: 1.2em;
+    }
+    .overall-score {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .position-group {
+      margin-top: 5px;
+    }
+    .position-group h4 {
+      margin: 5px 0;
+      font-size: 1em;
+      background: #ddd;
+      padding: 3px;
+      border-radius: 4px;
+    }
+    .position-group ul {
+      list-style: none;
+      padding-left: 10px;
+      margin: 0;
+    }
+    .position-group li {
+      margin-bottom: 2px;
+      font-size: 0.9em;
+    }
+    /* Unique colors for positions */
+    .position-QB { background-color: #e0f7fa; }
+    .position-RB { background-color: #fff9c4; }
+    .position-WR { background-color: #fce4ec; }
+    .position-TE { background-color: #e8f5e9; }
+    /* Draft picks styling */
+    .draft-picks h4 {
+      margin: 5px 0;
+      font-size: 1em;
+      background: #ddd;
+      padding: 3px;
+      border-radius: 4px;
+    }
+    .draft-picks ul {
+      list-style: none;
+      padding-left: 10px;
+      margin: 0;
+    }
+    .draft-picks li {
+      margin-bottom: 2px;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>League Roster Rankings</h1>
+    <p>Enter your Sleeper League ID and select the NFL rankings type to generate team rankings.</p>
+  </header>
+  
+  <!-- Navigation: Tools dropdown -->
+  <nav>
+    <div class="dropdown">
+      <a href="#" class="dropbtn">Rankings</a>
+      <div class="dropdown-content">
+        <a href="college_rankings.html">Devy Rankings</a>
+        <a href="nfl_rankings.html">NFL Player Rankings</a>
+      </div>
+    </div>
+    <div class="dropdown">
+      <a href="#" class="dropbtn">Draft</a>
+      <div class="dropdown-content">
+        <a href="dynasty_mock_drafts.html">Dynasty</a>
+        <a href="nfl_mock_drafts.html">NFL</a>
+      </div>
+    </div>
+    <div class="dropdown">
+      <a href="#" class="dropbtn">Tools</a>
+      <div class="dropdown-content">
+        <a href="trade_calculator.html">Trade Calculator</a>
+        <a href="devy_mock_simulator.html">Devy Mock Simulator</a>
+        <a href="league_rankings.html">League Rankings</a>
+      </div>
+    </div>
+  </nav>
+  
+  <!-- League ID input and ranking selection -->
+  <div id="leagueInputContainer">
+    <input type="text" id="leagueId" placeholder="Enter Sleeper League ID" />
+    <select id="rankingSelect">
+      <option value="competing">Competing</option>
+      <option value="overall">Overall</option>
+      <option value="tanking">Tanking</option>
+    </select>
+    <button id="loadLeagueBtn">Load League</button>
+  </div>
+  
+  <!-- Summary Rankings -->
+  <div id="summaryRankings">
+    <!-- Summary table will be inserted here -->
+  </div>
+  
+  <!-- Projection Chart -->
+  <div id="projectionContainer">
+    <canvas id="projectionChart"></canvas>
+  </div>
+  
+  <!-- Team Cards -->
+  <div id="rankings">
+    <div id="teamCards">
+      <!-- Team cards will be inserted here -->
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      // Global variable for the projection chart instance.
+      let projectionChartInstance = null;
+  
+      // Helper function to normalize names.
+      function normalizeName(name) {
+        return name.toLowerCase().replace(/[^a-z0-9]/g, "");
+      }
+  
+      // Helper function to convert a number to its ordinal string.
+      function ordinalSuffix(i) {
+        let j = i % 10, k = i % 100;
+        if (j === 1 && k !== 11) return i + "st";
+        if (j === 2 && k !== 12) return i + "nd";
+        if (j === 3 && k !== 13) return i + "rd";
+        return i + "th";
+      }
+  
+      /********** Projection URLs (declared only once) **********/
+      const projectionUrls = {
+        proj1: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=936576734&single=true&output=csv",
+        proj2: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=2003106464&single=true&output=csv",
+        proj3: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=991171708&single=true&output=csv"
+      };
+  
+      /********** NFL Rankings CSV URLs **********/
+      const nflRankingsUrls = {
+        competing: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=0&single=true&output=csv",
+        overall: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=116299513&single=true&output=csv",
+        tanking: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=1543093851&single=true&output=csv"
+      };
+  
+      let nflRankings = {}; // Lookup: normalized player name -> score
+  
+      async function loadNFLRankings(rankingType) {
+        try {
+          const url = nflRankingsUrls[rankingType];
+          const res = await fetch(url);
+          const text = await res.text();
+          const data = parseCSV(text);
+          data.forEach(row => {
+            const name = row["Player"] ? normalizeName(row["Player"]) : "";
+            const score = parseFloat(row["Score"]) || 0;
+            nflRankings[name] = score;
+          });
+          console.log("Loaded NFL Rankings:", nflRankings);
+        } catch (error) {
+          console.error("Error loading NFL rankings:", error);
+        }
+      }
+  
+      /********** Sleeper API & NFL Players **********/
+      let sleeperPlayers = {};
+      async function fetchSleeperPlayers() {
+        try {
+          const res = await fetch("https://api.sleeper.app/v1/players/nfl");
+          const data = await res.json();
+          sleeperPlayers = data;
+          console.log("Loaded sleeperPlayers:", sleeperPlayers);
+        } catch (error) {
+          console.error("Error fetching sleeper players:", error);
+        }
+      }
+  
+      async function fetchLeagueRosters(leagueId) {
+        const url = `https://api.sleeper.app/v1/league/${leagueId}/rosters`;
+        const res = await fetch(url);
+        return res.json();
+      }
+  
+      async function fetchLeagueUsers(leagueId) {
+        const url = `https://api.sleeper.app/v1/league/${leagueId}/users`;
+        const res = await fetch(url);
+        return res.json();
+      }
+  
+      // Optional: Fetch draft picks (if available)
+      async function fetchDraftPicks(leagueId) {
+        const url = `https://api.sleeper.app/v1/league/${leagueId}/draft_picks`;
+        try {
+          const res = await fetch(url);
+          if (!res.ok) {
+            console.warn("Draft picks endpoint returned", res.status);
+            return [];
+          }
+          return await res.json();
+        } catch (error) {
+          console.error("Error fetching draft picks:", error);
+          return [];
+        }
+      }
+  
+      function getPlayerScore(playerId) {
+        if (sleeperPlayers[playerId]) {
+          const rawName = sleeperPlayers[playerId].full_name;
+          const normalized = normalizeName(rawName);
+          const score = nflRankings[normalized];
+          if (score === undefined) {
+            console.log(`No ranking found for "${rawName}" normalized as "${normalized}"`);
+          } else {
+            console.log(`Found ranking for "${rawName}" normalized as "${normalized}": ${score}`);
+          }
+          return score !== undefined ? score : 0;
+        }
+        return 0;
+      }
+  
+      /********** CSV Parsing Utility **********/
+      function parseCSV(text) {
+        const lines = text.trim().split("\n").filter(line => line.trim().length > 0);
+        if (lines.length === 0) return [];
+        const headers = lines[0].split(",").map(h => h.trim().replace(/"/g, ""));
+        const data = lines.slice(1).map(line => {
+          const values = line.split(",").map(v => v.trim().replace(/"/g, ""));
+          let obj = {};
+          headers.forEach((header, i) => {
+            obj[header] = values[i] || "";
+          });
+          return obj;
+        });
+        return data;
+      }
+  
+      /********** Compute Team Scores & Position Averages **********/
+      async function computeTeamScores(leagueId) {
+        await fetchSleeperPlayers();
+        const rankingType = document.getElementById("rankingSelect").value;
+        await loadNFLRankings(rankingType);
+  
+        // Fetch rosters, users, and draft picks concurrently.
+        const [rosters, users, draftPicksData] = await Promise.all([
+          fetchLeagueRosters(leagueId),
+          fetchLeagueUsers(leagueId),
+          fetchDraftPicks(leagueId)
+        ]);
+  
+        // Group draft picks by owner id.
+        const picksByOwner = {};
+        draftPicksData.forEach(pick => {
+          if (!picksByOwner[pick.owner_id]) {
+            picksByOwner[pick.owner_id] = [];
+          }
+          picksByOwner[pick.owner_id].push(pick);
+        });
+  
+        const userMap = {};
+        users.forEach(user => {
+          userMap[user.user_id] = user.display_name;
+        });
+  
+        // Define limits for computing position averages.
+        const posLimits = { QB: 3, RB: 5, WR: 5, TE: 2 };
+  
+        const teamScores = rosters.map(roster => {
+          let allScores = [];
+          const breakdown = { QB: [], RB: [], WR: [], TE: [] };
+          roster.players.forEach(playerId => {
+            const playerData = sleeperPlayers[playerId];
+            if (playerData) {
+              const fullName = playerData.full_name;
+              const pos = (playerData.position || "").toUpperCase();
+              const score = getPlayerScore(playerId);
+              allScores.push(score);
+              if (breakdown[pos]) {
+                breakdown[pos].push({ name: fullName, score: score });
+              }
+            }
+          });
+  
+          // Compute overall average from top 15 scores.
+          allScores.sort((a, b) => b - a);
+          const top15 = allScores.slice(0, 15);
+          const overallAvg = top15.length > 0 ? (top15.reduce((sum, s) => sum + s, 0) / top15.length) : 0;
+  
+          // Compute position averages.
+          const positionAverages = {};
+          for (const pos in breakdown) {
+            let scores = breakdown[pos].map(p => p.score);
+            scores.sort((a, b) => b - a);
+            const limit = posLimits[pos] || scores.length;
+            const topScores = scores.slice(0, limit);
+            const avg = topScores.length > 0 ? (topScores.reduce((sum, s) => sum + s, 0) / topScores.length) : 0;
+            positionAverages[pos] = avg;
+          }
+  
+          return {
+            team: userMap[roster.owner_id] || "Unknown",
+            overallScore: overallAvg,
+            breakdown: breakdown,
+            positionAverages: positionAverages,
+            draftPicks: picksByOwner[roster.owner_id] || []
+          };
+        });
+  
+        return teamScores;
+      }
+  
+      /********** Compute Rankings (Overall & Positional) **********/
+      function computeRankings(teamScores) {
+        let sortedOverall = [...teamScores].sort((a, b) => b.overallScore - a.overallScore);
+        sortedOverall.forEach((team, index) => {
+          team.overallRank = index + 1;
+        });
+        const posList = ["QB", "RB", "WR", "TE"];
+        let posRankings = {};
+        posList.forEach(pos => {
+          let arr = teamScores.map(team => {
+            return { team: team.team, avg: team.positionAverages[pos] };
+          }).filter(item => item.avg > 0);
+          arr.sort((a, b) => b.avg - a.avg);
+          arr.forEach((item, index) => {
+            posRankings[item.team + "_" + pos] = index + 1;
+          });
+        });
+        teamScores.forEach(team => {
+          team.positionRanks = {};
+          posList.forEach(pos => {
+            team.positionRanks[pos] = posRankings[team.team + "_" + pos] || "N/A";
+          });
+        });
+      }
+  
+      /********** Compute Future Projections **********/
+      async function computeFutureProjections(leagueId, currentTeamScores) {
+        const proj1Lookup = await loadProjectionRankings(projectionUrls.proj1);
+        const proj2Lookup = await loadProjectionRankings(projectionUrls.proj2);
+        const proj3Lookup = await loadProjectionRankings(projectionUrls.proj3);
+  
+        const [rosters, users] = await Promise.all([
+          fetchLeagueRosters(leagueId),
+          fetchLeagueUsers(leagueId)
+        ]);
+  
+        const userMap = {};
+        users.forEach(user => {
+          userMap[user.user_id] = user.display_name;
+        });
+  
+        // Map current overall scores by team name.
+        const currentMap = {};
+        currentTeamScores.forEach(team => {
+          currentMap[team.team] = team.overallScore;
+        });
+  
+        let projections = [];
+        rosters.forEach(roster => {
+          let scoresProj1 = [];
+          let scoresProj2 = [];
+          let scoresProj3 = [];
+          roster.players.forEach(playerId => {
+            const playerData = sleeperPlayers[playerId];
+            if (playerData) {
+              const normalized = normalizeName(playerData.full_name);
+              scoresProj1.push(proj1Lookup[normalized] || 0);
+              scoresProj2.push(proj2Lookup[normalized] || 0);
+              scoresProj3.push(proj3Lookup[normalized] || 0);
+            }
+          });
+          scoresProj1.sort((a, b) => b - a);
+          scoresProj2.sort((a, b) => b - a);
+          scoresProj3.sort((a, b) => b - a);
+          const top15Proj1 = scoresProj1.slice(0, 15);
+          const top15Proj2 = scoresProj2.slice(0, 15);
+          const top15Proj3 = scoresProj3.slice(0, 15);
+          const proj1Avg = top15Proj1.length > 0 ? (top15Proj1.reduce((sum, s) => sum + s, 0) / top15Proj1.length) : 0;
+          const proj2Avg = top15Proj2.length > 0 ? (top15Proj2.reduce((sum, s) => sum + s, 0) / top15Proj2.length) : 0;
+          const proj3Avg = top15Proj3.length > 0 ? (top15Proj3.reduce((sum, s) => sum + s, 0) / top15Proj3.length) : 0;
+          const teamName = userMap[roster.owner_id] || "Unknown";
+          projections.push({
+            team: teamName,
+            current: currentMap[teamName] || 0,
+            proj1: proj1Avg,
+            proj2: proj2Avg,
+            proj3: proj3Avg
+          });
+        });
+        return computeAdjustedProjections(projections, currentTeamScores);
+      }
+  
+      /********** Compute Adjusted Projections with Bonus Adjustments **********/
+      function computeAdjustedProjections(projectionsData, teamScores) {
+        // Map current overall ranks.
+        const currentRankMap = {};
+        teamScores.forEach(team => {
+          currentRankMap[team.team] = team.overallRank;
+        });
+        // For each team, compute adjusted projections.
+        projectionsData.forEach(team => {
+          team.r0 = currentRankMap[team.team] || 0;
+          team.proj1_adjusted = team.proj1 + (150 * team.r0);
+        });
+        let sortedProj1 = [...projectionsData].sort((a, b) => b.proj1_adjusted - a.proj1_adjusted);
+        sortedProj1.forEach((team, index) => {
+          team.r1 = index + 1;
+        });
+  
+        projectionsData.forEach(team => {
+          team.proj2_adjusted = team.proj2 + (150 * team.r0 * 0.9) + (150 * team.r1);
+        });
+        let sortedProj2 = [...projectionsData].sort((a, b) => b.proj2_adjusted - a.proj2_adjusted);
+        sortedProj2.forEach((team, index) => {
+          team.r2 = index + 1;
+        });
+  
+        projectionsData.forEach(team => {
+          team.proj3_adjusted = team.proj3 + (150 * team.r0 * 0.8) + (150 * team.r1 * 0.9) + (150 * team.r2);
+        });
+        let sortedProj3 = [...projectionsData].sort((a, b) => b.proj3_adjusted - a.proj3_adjusted);
+        sortedProj3.forEach((team, index) => {
+          team.r3 = index + 1;
+        });
+  
+        return projectionsData;
+      }
+  
+      /********** Render Projection Chart using Chart.js **********/
+      function renderProjectionChart(projectionsData) {
+        const ctx = document.getElementById("projectionChart").getContext("2d");
+        const labels = ["Current", "+1 Year", "+2 Years", "+3 Years"];
+        const datasets = projectionsData.map(team => {
+          const r = Math.floor(Math.random() * 200);
+          const g = Math.floor(Math.random() * 200);
+          const b = Math.floor(Math.random() * 200);
+          const color = `rgb(${r}, ${g}, ${b})`;
+          return {
+            label: team.team,
+            data: [team.current, team.proj1_adjusted, team.proj2_adjusted, team.proj3_adjusted].map(s => parseFloat(s.toFixed(2))),
+            borderColor: color,
+            backgroundColor: color,
+            fill: false,
+            tension: 0.1,
+            borderWidth: 3
+          };
+        });
+  
+        // Compute global min and max.
+        let allData = [];
+        datasets.forEach(ds => {
+          allData = allData.concat(ds.data);
+        });
+        const minValue = Math.min(...allData);
+        const maxValue = Math.max(...allData);
+  
+        if (window.projectionChartInstance) {
+          window.projectionChartInstance.destroy();
+        }
+        window.projectionChartInstance = new Chart(ctx, {
+          type: 'line',
+          data: { labels: labels, datasets: datasets },
+          options: {
+            responsive: true,
+            plugins: { title: { display: true, text: 'Future Projection Scores' } },
+            scales: {
+              y: {
+                beginAtZero: false,
+                min: minValue - 500,
+                max: maxValue + 500,
+                title: { display: true, text: 'Score' }
+              }
+            }
+          }
+        });
+      }
+  
+      /********** Display Team Rankings **********/
+      async function displayTeamRankings(teamScores) {
+        computeRankings(teamScores);
+        teamScores.sort((a, b) => a.overallRank - b.overallRank);
+  
+        // Build summary table (without overall score column)
+        let summaryHtml = `<h3>Summary Rankings</h3>`;
+        summaryHtml += `<table><thead><tr><th>Rank</th><th>Team</th><th>QB</th><th>RB</th><th>WR</th><th>TE</th></tr></thead><tbody>`;
+        const posList = ["QB", "RB", "WR", "TE"];
+        let posRankings = {};
+        posList.forEach(pos => {
+          let arr = teamScores.map(team => { return { team: team.team, avg: team.positionAverages[pos] }; }).filter(item => item.avg > 0);
+          arr.sort((a, b) => b.avg - a.avg);
+          arr.forEach((item, index) => {
+            posRankings[item.team + "_" + pos] = index + 1;
+          });
+        });
+        teamScores.forEach((team, index) => {
+          summaryHtml += `<tr>`;
+          summaryHtml += `<td>${ordinalSuffix(index + 1)}</td>`;
+          summaryHtml += `<td>${team.team}</td>`;
+          posList.forEach(pos => {
+            const rank = posRankings[team.team + "_" + pos] ? ordinalSuffix(posRankings[team.team + "_" + pos]) : "N/A";
+            summaryHtml += `<td>${rank}</td>`;
+          });
+          summaryHtml += `</tr>`;
+        });
+        summaryHtml += `</tbody></table>`;
+        document.getElementById("summaryRankings").innerHTML = summaryHtml;
+  
+        // Build team cards.
+        const teamCardsDiv = document.getElementById("teamCards");
+        teamCardsDiv.innerHTML = "";
+        teamScores.forEach(team => {
+          const card = document.createElement("div");
+          card.classList.add("team-card");
+  
+          let html = `<h3>${team.team}</h3>`;
+          html += `<p class="overall-score">Overall: ${ordinalSuffix(team.overallRank)}</p>`;
+          html += `<div class="position-breakdown">`;
+          for (const pos of ["QB", "RB", "WR", "TE"]) {
+            html += `<div class="position-group position-${pos}">`;
+            html += `<h4>${pos} (Rank: ${team.positionRanks[pos] !== "N/A" ? ordinalSuffix(team.positionRanks[pos]) : "N/A"})</h4>`;
+            if (team.breakdown[pos] && team.breakdown[pos].length > 0) {
+              let sortedPlayers = team.breakdown[pos].sort((a, b) => b.score - a.score);
+              html += `<ul>`;
+              sortedPlayers.forEach(player => {
+                html += `<li>${player.name} (${parseFloat(player.score).toFixed(2)})</li>`;
+              });
+              html += `</ul>`;
+            }
+            html += `</div>`;
+          }
+          html += `</div>`;
+          if (team.draftPicks && team.draftPicks.length > 0) {
+            html += `<div class="draft-picks"><h4>Draft Picks:</h4><ul>`;
+            team.draftPicks.forEach(pick => {
+              html += `<li>Round ${pick.round || pick.round_number || "?"} - Pick ${pick.pick_no || pick.pick || "?"}</li>`;
+            });
+            html += `</ul></div>`;
+          }
+          card.innerHTML = html;
+          teamCardsDiv.appendChild(card);
+        });
+      }
+  
+      /********** Render Projection Chart using Chart.js **********/
+      function renderProjectionChart(projectionsData) {
+        const ctx = document.getElementById("projectionChart").getContext("2d");
+        const labels = ["Current", "+1 Year", "+2 Years", "+3 Years"];
+        const datasets = projectionsData.map(team => {
+          const r = Math.floor(Math.random() * 200);
+          const g = Math.floor(Math.random() * 200);
+          const b = Math.floor(Math.random() * 200);
+          const color = `rgb(${r}, ${g}, ${b})`;
+          return {
+            label: team.team,
+            data: [team.current, team.proj1_adjusted, team.proj2_adjusted, team.proj3_adjusted].map(s => parseFloat(s.toFixed(2))),
+            borderColor: color,
+            backgroundColor: color,
+            fill: false,
+            tension: 0.1,
+            borderWidth: 3
+          };
+        });
+  
+        // Compute global min and max.
+        let allData = [];
+        datasets.forEach(ds => {
+          allData = allData.concat(ds.data);
+        });
+        const minValue = Math.min(...allData);
+        const maxValue = Math.max(...allData);
+  
+        if (window.projectionChartInstance) {
+          window.projectionChartInstance.destroy();
+        }
+        window.projectionChartInstance = new Chart(ctx, {
+          type: 'line',
+          data: { labels: labels, datasets: datasets },
+          options: {
+            responsive: true,
+            plugins: { title: { display: true, text: 'Future Projection Scores' } },
+            scales: {
+              y: {
+                beginAtZero: false,
+                min: minValue - 500,
+                max: maxValue + 500,
+                title: { display: true, text: 'Score' }
+              }
+            }
+          }
+        });
+      }
+  
+      /********** Render Everything **********/
+      async function renderAll(leagueId) {
+        const teamScores = await computeTeamScores(leagueId);
+        console.log("Computed team scores:", teamScores);
+        await displayTeamRankings(teamScores);
+        const projections = await computeFutureProjections(leagueId, teamScores);
+        console.log("Computed future projections:", projections);
+        renderProjectionChart(projections);
+      }
+  
+      /********** Event Handler for "Load League" **********/
+      document.getElementById("loadLeagueBtn").addEventListener("click", async function() {
+        const leagueId = document.getElementById("leagueId").value.trim();
+        console.log("League ID:", leagueId);
+        if (!leagueId) {
+          alert("Please enter a Sleeper League ID.");
+          return;
+        }
+        try {
+          await renderAll(leagueId);
+        } catch (error) {
+          console.error("Error computing team scores:", error);
+          alert("There was an error loading the league data. Please check the console for details.");
+        }
+      });
+  
+      async function loadProjectionRankings(projUrl) {
+        try {
+          const res = await fetch(projUrl);
+          const text = await res.text();
+          const data = parseCSV(text);
+          let lookup = {};
+          data.forEach(row => {
+            const name = row["Player"] ? normalizeName(row["Player"]) : "";
+            const score = parseFloat(row["Score"]) || 0;
+            lookup[name] = score;
+          });
+          return lookup;
+        } catch (error) {
+          console.error("Error loading projection rankings from", projUrl, error);
+          return {};
+        }
+      }
+    });
+  </script>
+  
+</body>
+</html>

@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mock Draft Simulator</title>
+  <!-- External stylesheet with team colors etc. -->
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+  <style>
+    /* Additional inline styles */
+    body {
+      font-family: 'Bree Serif', serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+    header { text-align: center; margin-top: 20px; }
+    nav { text-align: center; margin-bottom: 20px; }
+    nav .dropdown { display: inline-block; position: relative; margin: 0 10px; }
+    nav .dropbtn { text-decoration: none; color: #fff; background: #004d40; padding: 10px 15px; border-radius: 4px; }
+    nav .dropdown-content { display: none; position: absolute; background: #004d40; min-width: 160px; z-index: 1; }
+    nav .dropdown:hover .dropdown-content { display: block; }
+    nav .dropdown-content a { color: #fff; text-decoration: none; display: block; padding: 8px 10px; }
+    /* Finish Draft button and results at the top */
+    #finishDraftButton { display: block; margin: 10px auto 20px; }
+    #results {
+      margin-bottom: 20px;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+      background: #fff;
+      border: 2px solid #004d40;
+      border-radius: 8px;
+      padding: 10px;
+      box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
+    }
+    /* Main container: two columns side-by-side */
+    .main-container {
+      display: flex;
+      flex-direction: row;
+      gap: 20px;
+      align-items: flex-start;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .draft-board, .available-players {
+      background: #fff;
+      border: 2px solid #004d40;
+      border-radius: 8px;
+      padding: 10px;
+      flex: 1;
+      min-width: 400px;
+      box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
+    }
+    .draft-board h2,
+    .available-players h2,
+    #results h2 {
+      margin-top: 0;
+      text-align: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 5px;
+      text-align: center;
+      font-size: 0.9em;
+    }
+    /* Round header styling */
+    .round-header {
+      background-color: #ddd;
+      cursor: pointer;
+    }
+    .round-header td { font-weight: bold; }
+    .collapsed { display: none; }
+    /* Highlight selected available player */
+    .selected { background-color: #cfe8fc; }
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 1em;
+      cursor: pointer;
+      background: #004d40;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+    }
+    /* Plus button on available players */
+    .plus-btn {
+      margin-left: 5px;
+      padding: 2px 6px;
+      font-size: 0.8em;
+      cursor: pointer;
+      background: #00796b;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+    }
+    /* Remove assignment button */
+    .remove-assignment-btn {
+      margin-left: 5px;
+      padding: 2px 6px;
+      font-size: 0.8em;
+      cursor: pointer;
+      background: #d32f2f;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+    }
+    /* TEAM cell styling for team colors */
+    .team-cell { font-weight: bold; padding: 5px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Mock Draft Simulator</h1>
+  </header>
+  
+  <nav>
+    <div class="dropdown">
+      <a href="#" class="dropbtn">Rankings</a>
+      <div class="dropdown-content">
+        <a href="college_rankings.html">Devy Rankings</a>
+        <a href="nfl_rankings.html">NFL Player Rankings</a>
+      </div>
+    </div>
+    <div class="dropdown">
+      <a href="#" class="dropbtn">Draft</a>
+      <div class="dropdown-content">
+        <a href="dynasty_mock_drafts.html">Dynasty</a>
+        <a href="nfl_mock_drafts.html">NFL</a>
+      </div>
+    </div>
+    <div class="dropdown">
+      <a href="#" class="dropbtn">Tools</a>
+      <div class="dropdown-content">
+        <a href="trade_calculator.html">Trade Calculator</a>
+        <a href="devy_mock_simulator.html">Devy Mock Simulator</a>
+        <a href="league_rankings.html">League Rankings</a>
+      </div>
+    </div>
+  </nav>
+  
+  <!-- Finish Draft button -->
+  <div style="text-align:center;">
+    <button id="finishDraftButton">Finish Draft</button>
+  </div>
+  
+  <!-- Results area -->
+  <div id="results">
+    <h2>Dynasty Rookie Mock Draft Order</h2>
+    <!-- Results will be displayed here -->
+  </div>
+  
+  <!-- Main container: NFL Draft Board and Available Players -->
+  <div class="main-container">
+    <!-- NFL Draft Board (grouped by round, collapsible) -->
+    <div class="draft-board">
+      <h2>NFL Draft Board</h2>
+      <table id="draftTable">
+        <thead>
+          <tr>
+            <th>Round</th>
+            <th>Pick</th>
+            <th>Team</th>
+            <th>Need</th>
+            <th>Assigned</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Grouped rows will be inserted here -->
+        </tbody>
+      </table>
+      <p>(Click on a draft pick row to assign the selected available player.)</p>
+    </div>
+    <!-- Available Players -->
+    <div class="available-players">
+      <h2>Available Players</h2>
+      <table id="playersTable">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Name</th>
+            <th>Position</th>
+            <th>Select</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Available players rows will be inserted here -->
+        </tbody>
+      </table>
+      <p>(Click the plus button to select a player.)</p>
+    </div>
+  </div>
+  
+  <script>
+    /********** CSV URLs **********/
+    // Use your correct CSV URLs.
+    const draftPicksUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS0-gweBPf_H1hdmwWNUnFoVMhKyCaFw1HiflQmHmtiaOaLCGsywBNW0SFxVTD5WAPCzjWDUagpc_Qe/pub?gid=1913028468&single=true&output=csv";
+    const availablePlayersUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQIB7_gxUbTXeSXvPdQ_pozQdvF28oYKmQWLuinKqxJ3WF2upn5gHixZTyKC3chz9dA2gqLEE6VWshE/pub?gid=2100855095&single=true&output=csv";
+    const teamPosValuesUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRvCf4id2GhAIHZQxe_xy0MnIpbvfp1GJCjHnzt4590C5sXE5AucQlIp8w4ukTm6RSS58F1FzygPWBO/pub?gid=1972908686&single=true&output=csv";
+    
+    /********** Hit Chances by Position and Round **********/
+    const hitChances = {
+      "RB": { 1: 0.85, 2: 0.475, 3: 0.375, 4: 0.175, 5: 0.16, 6: 0.12, 7: 0.04 },
+      "WR": { 1: 0.575, 2: 0.40, 3: 0.24, 4: 0.09, 5: 0.075, 6: 0.05, 7: 0.04 },
+      "QB": { 1: 0.645, 2: 0.425, 3: 0.125, 4: 0.105, 5: 0.0, 6: 0.10, 7: 0.0 },
+      "TE": { 1: 0.80, 2: 0.375, 3: 0.27, 4: 0.26, 5: 0.04, 6: 0.075, 7: 0.0 }
+    };
+    
+    /********** Global Data Arrays **********/
+    let draftPicks = [];       // From NFL draft board CSV
+    let availablePlayers = []; // From available players CSV
+    let teamPositionValues = {}; // From team position values CSV
+    let selectedAvailablePlayer = null;
+    
+    /********** CSV Parsing Utility **********/
+    function parseCSV(text) {
+      const lines = text.trim().split("\n").filter(line => line.trim().length > 0);
+      if (lines.length === 0) return [];
+      const headers = lines[0].split(",").map(h => h.trim().replace(/"/g, ""));
+      const data = lines.slice(1).map(line => {
+        const values = line.split(",").map(v => v.trim().replace(/"/g, ""));
+        let obj = {};
+        headers.forEach((header, i) => {
+          obj[header] = values[i] || "";
+        });
+        return obj;
+      });
+      return data;
+    }
+    
+    /********** Load Team Position Values **********/
+    async function loadTeamPositionValues() {
+      try {
+        const res = await fetch(teamPosValuesUrl);
+        const text = await res.text();
+        const data = parseCSV(text);
+        // Expected headers: TEAM, QUARTERBACK, RUNNINGBACK, WIDE RECIEVER, TIGHT END.
+        data.forEach(row => {
+          const teamName = row["TEAM"] || row["Team"] || row[0];
+          if (!teamName) return;
+          const key = teamName.toLowerCase();
+          teamPositionValues[key] = {
+            "QB": parseFloat(row["QUARTERBACK"]) || 0,
+            "RB": parseFloat(row["RUNNINGBACK"]) || 0,
+            "WR": parseFloat(row["WIDE RECIEVER"]) || 0,
+            "TE": parseFloat(row["TIGHT END"]) || 0
+          };
+        });
+        console.log("Loaded teamPositionValues:", teamPositionValues);
+      } catch (error) {
+        console.error("Error loading team position values:", error);
+      }
+    }
+    
+    /********** Data Loading **********/
+    async function loadData() {
+      try {
+        // Load NFL draft picks CSV and filter out rows with an empty round.
+        const resDraft = await fetch(draftPicksUrl);
+        const draftText = await resDraft.text();
+        draftPicks = parseCSV(draftText);
+        draftPicks = draftPicks.filter(p => {
+          const r = p.ROUND || p.Round || "";
+          return r.trim() !== "" && !isNaN(parseInt(r));
+        });
+        console.log("Loaded draftPicks:", draftPicks);
+  
+        // Load available players CSV.
+        const resPlayers = await fetch(availablePlayersUrl);
+        const playersText = await resPlayers.text();
+        availablePlayers = parseCSV(playersText);
+        console.log("Loaded availablePlayers (raw):", availablePlayers);
+  
+        // Filter available players to only include QB, RB, WR, TE using Position.
+        availablePlayers = availablePlayers.filter(p => {
+          let pos = p.Position || p.Pos;
+          return pos && ["QB", "RB", "WR", "TE"].includes(pos.toUpperCase());
+        });
+        availablePlayers.sort((a, b) => parseInt(a.Rank) - parseInt(b.Rank));
+        console.log("Filtered & Sorted availablePlayers:", availablePlayers);
+  
+        // Load team position values.
+        await loadTeamPositionValues();
+  
+        displayDraftPicks();
+        displayAvailablePlayers();
+      } catch (error) {
+        console.error("Error loading data:", error);
+      }
+    }
+    
+    /********** UI Display Functions **********/
+    // Build the NFL Draft Board table grouped by round (collapsible).
+    function displayDraftPicks() {
+      const tbody = document.getElementById("draftTable").querySelector("tbody");
+      tbody.innerHTML = "";
+      
+      // Group picks by round.
+      let groups = {};
+      draftPicks.forEach((pick, index) => {
+        let roundStr = pick.ROUND || pick.Round || "";
+        let roundNum = parseInt(roundStr);
+        if (isNaN(roundNum)) return;
+        roundStr = roundNum.toString();
+        if (!groups[roundStr]) {
+          groups[roundStr] = [];
+        }
+        groups[roundStr].push({ pick: pick, index: index });
+      });
+      
+      // Get sorted rounds.
+      const rounds = Object.keys(groups).sort((a, b) => parseInt(a) - parseInt(b));
+      rounds.forEach(roundNum => {
+        // Create header row for the round.
+        const headerRow = document.createElement("tr");
+        headerRow.classList.add("round-header");
+        headerRow.setAttribute("data-round", roundNum);
+        headerRow.innerHTML = `<td colspan="5" style="text-align:left; cursor:pointer;">
+                                 Round ${roundNum} <button onclick="toggleRound(event, '${roundNum}')">–</button>
+                               </td>`;
+        tbody.appendChild(headerRow);
+        
+        groups[roundNum].forEach(obj => {
+          const pick = obj.pick;
+          const index = obj.index;
+          const tr = document.createElement("tr");
+          tr.classList.add("round-row", `round-${roundNum}`);
+          tr.setAttribute("data-index", index);
+          
+          // TEAM cell with team color.
+          const teamName = pick.TEAM || pick.Team || "";
+          const teamCell = `<td class="team-cell team-${teamName.toLowerCase()}">${teamName}</td>`;
+          let assignedHTML = "";
+          if (pick.assignedPlayer) {
+            assignedHTML = `${pick.assignedPlayer.Name} <button class="remove-assignment-btn" onclick="removeAssignment(event, ${index})">X</button>`;
+          }
+          tr.innerHTML = `<td>${pick.ROUND || pick.Round || ""}</td>
+                          <td>${pick.PICK || pick.Pick || ""}</td>
+                          ${teamCell}
+                          <td>${pick.NEED || pick.Need || ""}</td>
+                          <td class="assignedCell">${assignedHTML}</td>`;
+          tr.addEventListener("click", function() {
+            if (selectedAvailablePlayer && !pick.assignedPlayer) {
+              assignPlayerToPick(index, selectedAvailablePlayer);
+              selectedAvailablePlayer = null;
+              clearSelectedAvailable();
+            }
+          });
+          tbody.appendChild(tr);
+        });
+      });
+    }
+    
+    // Toggle collapse/expand for a given round.
+    function toggleRound(event, roundNum) {
+      event.stopPropagation();
+      const rows = document.querySelectorAll(`.round-${roundNum}`);
+      let isCollapsed = rows.length > 0 && rows[0].style.display === "none";
+      rows.forEach(row => { row.style.display = isCollapsed ? "" : "none"; });
+      const headerBtn = document.querySelector(`tr.round-header[data-round="${roundNum}"] button`);
+      if (headerBtn) { headerBtn.textContent = isCollapsed ? "–" : "+"; }
+    }
+    
+    // Build the Available Players table.
+    function displayAvailablePlayers() {
+      const tbody = document.getElementById("playersTable").querySelector("tbody");
+      tbody.innerHTML = "";
+      availablePlayers.forEach((player, index) => {
+        const tr = document.createElement("tr");
+        tr.setAttribute("data-index", index);
+        tr.innerHTML = `<td>${player.Rank}</td>
+                        <td>${player.Name}</td>
+                        <td>${player.Position || player.Pos}</td>
+                        <td><button class="plus-btn" onclick="selectPlayer(event, ${index})">+</button></td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    
+    // When a plus button is clicked, select an available player.
+    function selectPlayer(event, index) {
+      event.stopPropagation();
+      clearSelectedAvailable();
+      selectedAvailablePlayer = availablePlayers[index];
+      const row = event.target.closest("tr");
+      row.classList.add("selected");
+    }
+    
+    // Clear selection highlighting.
+    function clearSelectedAvailable() {
+      const rows = document.querySelectorAll("#playersTable tbody tr");
+      rows.forEach(row => row.classList.remove("selected"));
+    }
+    
+    // Assign the selected available player to a draft pick.
+    function assignPlayerToPick(pickIndex, player) {
+      const round = parseInt(draftPicks[pickIndex].ROUND || draftPicks[pickIndex].Round || "1");
+      const pos = (player.Position || player.Pos).toUpperCase();
+      const hitChance = (hitChances[pos] && hitChances[pos][round]) ? hitChances[pos][round] : 0;
+      const teamName = (draftPicks[pickIndex].TEAM || draftPicks[pickIndex].Team || "").toLowerCase();
+      let teamPosNum = 0;
+      if (teamName && teamPositionValues[teamName] && teamPositionValues[teamName][pos] !== undefined) {
+        teamPosNum = teamPositionValues[teamName][pos];
+      }
+      // Scoring formula:
+      // score = 5000 * (hit chance) + 500 * (team position number)
+      let score = 5000 * hitChance + 500 * teamPosNum;
+      // Additional multipliers: QB * 0.9, TE * 0.8.
+      let posMultiplier = 1.0;
+      if (pos === "QB") posMultiplier = 0.9;
+      else if (pos === "TE") posMultiplier = 0.8;
+      score = score * posMultiplier;
+  
+      draftPicks[pickIndex].assignedPlayer = player;
+      draftPicks[pickIndex].score = score;
+  
+      availablePlayers = availablePlayers.filter(p => p.Name !== player.Name);
+  
+      displayDraftPicks();
+      displayAvailablePlayers();
+    }
+    
+    // Remove an assignment from a draft pick.
+    function removeAssignment(event, pickIndex) {
+      event.stopPropagation();
+      const removedPlayer = draftPicks[pickIndex].assignedPlayer;
+      if (removedPlayer) {
+        delete draftPicks[pickIndex].assignedPlayer;
+        delete draftPicks[pickIndex].score;
+        availablePlayers.push(removedPlayer);
+        availablePlayers.sort((a, b) => parseInt(a.Rank) - parseInt(b.Rank));
+        displayDraftPicks();
+        displayAvailablePlayers();
+      }
+    }
+    
+    // When Finish Draft is clicked, display results using only assigned picks.
+    function finishDraft() {
+      const assignedPicks = draftPicks.filter(p => p.assignedPlayer);
+      assignedPicks.sort((a, b) => b.score - a.score);
+      displayResults(assignedPicks);
+    }
+    
+    function displayResults(picks) {
+      const resultsDiv = document.getElementById("results");
+      resultsDiv.innerHTML = "<h2>Dynasty Rookie Mock Draft Order</h2>";
+      if (picks.length === 0) {
+        resultsDiv.innerHTML += "<p>No picks were assigned.</p>";
+        return;
+      }
+      const ol = document.createElement("ol");
+      picks.forEach(pick => {
+        const li = document.createElement("li");
+        li.textContent = `${pick.assignedPlayer.Name} (${pick.assignedPlayer.Position || pick.assignedPlayer.Pos}) – Assigned to ${pick.TEAM || pick.Team} (Round ${pick.ROUND || pick.Round}, Pick ${pick.PICK || pick.Pick}) – Score: ${pick.score.toFixed(2)}`;
+        ol.appendChild(li);
+      });
+      resultsDiv.appendChild(ol);
+    }
+    
+    document.getElementById("finishDraftButton").addEventListener("click", finishDraft);
+    
+    loadData();
+  </script>
+</body>
+</html>

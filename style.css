@@ -1,0 +1,270 @@
+/* General styles */
+body {
+    font-family: 'Bree Serif', serif;
+    font-size: 1.1em;
+    background-color: #f2f4f3;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+/* Header */
+header {
+    background: linear-gradient(135deg, #000, #222);
+    padding: 20px 15px;
+    color: #ffffff;
+    text-align: center;
+    border-bottom: 5px solid #333;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 2.5em;
+    font-weight: 700;
+    color: #ffffff;
+    font-family: 'Montserrat', sans-serif;
+}
+
+/* Navigation */
+nav {
+    background-color: #004d40;
+    color: white;
+    padding: 10px 0;
+    text-align: center;
+    font-size: 1.2em;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+nav a {
+    color: #ffffff;
+    margin: 0 15px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+nav a:hover {
+    color: #80cbc4;
+}
+
+
+/* Table styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 1em;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+thead {
+    background: #00796b;
+    color: white;
+    text-align: left;
+}
+
+thead th {
+    padding: 12px 15px;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #e0f2f1;
+}
+
+td, th {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+/* Draft Row Bubble Style */
+/* Mock Draft Row Styles */
+.draft-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #ffffff; /* Default fallback color */
+    color: #000000; /* Default text color */
+    border-radius: 30px; /* Rounded bubble effect */
+    margin: 10px 20px; /* Spacing from edges and between rows */
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Team Logo Style */
+.draft-row img.team-logo {
+    width: 50px;
+    height: 50px;
+    border-radius: 25px; /* Circular logos */
+    margin-right: 15px;
+}
+
+/* Text in Draft Row */
+.draft-row div {
+    flex: 1;
+    text-align: center; /* Center-aligns each column of text */
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+/* Table container to center content */
+#mockDraftTable {
+    border-spacing: 0 15px; /* Adds vertical spacing between rows */
+    width: 100%;
+}
+
+
+/* Team-specific colors */
+.team-cardinals { background-color: #97233F; color: #FFFFFF; }
+.team-falcons { background-color: #A71930; color: #FFFFFF; }
+.team-ravens { background-color: #241773; color: #FFFFFF; }
+.team-bills { background-color: #00338D; color: #FFFFFF; }
+.team-panthers { background-color: #0085CA; color: #FFFFFF; }
+.team-bears { background-color: #0b1032; color: #8d481d; }
+.team-bengals { background-color: #FB4F14; color: #FFFFFF; }
+.team-browns { background-color: #311D00; color: #FFFFFF; }
+.team-cowboys { background-color: #041E42; color: #FFFFFF; }
+.team-broncos { background-color: #002244; color: #FB4F14; }
+.team-lions { background-color: #0076B6; color: #FFFFFF; }
+.team-packers { background-color: #203731; color: #FFB612; }
+.team-texans { background-color: #03202F; color: #A71930; }
+.team-colts { background-color: #002C5F; color: #A2AAAD; }
+.team-jaguars { background-color: #006778; color: #D7A22A; }
+.team-chiefs { background-color: #E31837; color: #FFB81C; }
+.team-raiders { background-color: #000000; color: #A5ACAF; }
+.team-chargers { background-color: #002A5E; color: #FFC20E; }
+.team-rams { background-color: #003594; color: #FFD100; }
+.team-dolphins { background-color: #008E97; color: #FFFFFF; }
+.team-vikings { background-color: #4F2683; color: #FFFFFF; }
+.team-patriots { background-color: #002244; color: #C60C30; }
+.team-saints { background-color: #D3BC8D; color: #101820; }
+.team-giants { background-color: #0B2265; color: #A71930; }
+.team-jets { background-color: #125740; color: #FFFFFF; }
+.team-eagles { background-color: #004C54; color: #FFFFFF; }
+.team-steelers { background-color: #FFB612; color: #101820; }
+.team-49ers { background-color: #AA0000; color: #B3995D; }
+.team-seahawks { background-color: #002244; color: #69BE28; }
+.team-buccaneers { background-color: #D50A0A; color: #d6d6d6; }
+.team-titans { background-color: #c1c1c1; color: #4B92DB;; }
+.team-commanders { background-color: #5A1414; color: #FFB612; }
+
+/* Remove table cell borders */
+#mockDraftTable td {
+    border: none;
+    padding: 10px;
+}
+
+.pick-number {
+    font-size: 1.2em;
+    font-weight: bold;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+}
+
+.team-logo {
+    width: 50px;
+    height: 50px;
+    vertical-align: middle;
+    margin-right: 10px;
+}
+
+.team-name {
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+
+/* Footer */
+footer {
+    background: #004d40;
+    color: white;
+    text-align: center;
+    padding: 15px 0;
+    font-size: 1em;
+    margin-top: 20px;
+}
+
+footer p {
+    margin: 0;
+    color: #a7d2c8;
+}
+
+/* Dropdown styles */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown .dropbtn {
+    background-color: #004d40;
+    color: white;
+    padding: 10px 15px;
+    font-size: 1.2em;
+    border: none;
+    cursor: pointer;
+}
+
+.dropdown .dropbtn:hover {
+    color: #80cbc4;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #004d40;
+    min-width: 160px;
+    z-index: 1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.dropdown-content a {
+    color: white;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.dropdown-content a:hover {
+    background-color: #80cbc4;
+    color: #004d40;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown:hover .dropbtn {
+    color: #80cbc4;
+}
+
+.dropdown {
+    margin: 20px 0;
+    font-size: 1em;
+}
+
+.dropdown label {
+    font-weight: bold;
+    margin-right: 10px;
+    color: #004d40;
+}
+
+.dropdown select {
+    padding: 5px 10px;
+    font-size: 1em;
+    border: 1px solid #004d40;
+    border-radius: 5px;
+    background-color: #e0f2f1;
+    color: #004d40;
+    cursor: pointer;
+}

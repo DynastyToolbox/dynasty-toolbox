@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynasty Mock Drafts</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    <style>
+       /* Dynasty Mock Draft Bubble Styles */
+       .dynasty-bubble {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f9f9f9;
+            border: 2px solid #ccc;
+            border-radius: 30px;
+            padding: 35px;
+            margin: 20px auto;
+            width: 85%;
+            max-width: 900px;
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .dynasty-bubble img {
+            width: 150px;
+            height: 120px;
+            border-radius: 20%;
+            margin-right: 20px;
+        }
+
+        .dynasty-bubble div {
+            font-size: 1.8em;
+            flex: 1;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Dynasty Mock Drafts</h1>
+    </header>
+    <nav>
+        <div class="dropdown">
+          <a href="#" class="dropbtn">Rankings</a>
+          <div class="dropdown-content">
+            <a href="college_rankings.html">Devy Rankings</a>
+            <a href="nfl_rankings.html">NFL Player Rankings</a>
+          </div>
+        </div>
+        <div class="dropdown">
+          <a href="#" class="dropbtn">Draft</a>
+          <div class="dropdown-content">
+            <a href="dynasty_mock_drafts.html">Dynasty</a>
+            <a href="nfl_mock_drafts.html">NFL</a>
+          </div>
+        </div>
+        <div class="dropdown">
+          <a href="#" class="dropbtn">Tools</a>
+          <div class="dropdown-content">
+            <a href="trade_calculator.html">Trade Calculator</a>
+            <a href="devy_mock_simulator.html">Devy Mock Simulator</a>
+            <a href="league_rankings.html">League Rankings</a>
+          </div>
+        </div>
+    </nav>
+
+    <main>
+        <section>
+            <h2>Select a Dynasty Mock Draft</h2>
+            <div id="mockDraftList">
+                <!-- Mock draft cards will be dynamically generated here -->
+            </div>
+        </section>
+
+        <section id="mockDraftDisplay" style="display: none;">
+            <button id="backToList" style="margin-bottom: 20px;">Back to List</button>
+            <h2 id="mockTitle">Mock Draft Title</h2>
+            <div id="mockDraftRows">
+                <!-- Draft rows will be dynamically populated here -->
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Dynasty Fantasy Football</p>
+    </footer>
+
+    <script>
+        const mockDraftList = document.getElementById("mockDraftList");
+        const mockDraftDisplay = document.getElementById("mockDraftDisplay");
+        const mockTitle = document.getElementById("mockTitle");
+        const mockDraftRows = document.getElementById("mockDraftRows");
+        const backToListButton = document.getElementById("backToList");
+
+        const csvUrls = {
+            "January 2025 10 TM SF Dynasty Mock Draft": "https://docs.google.com/spreadsheets/d/e/2PACX-1vTssZu5UAqIQso_f5KsmwOgk_N6lVc-Ws6Ok6mZCxALKEUxrXPcn2VB7UsdBQ2L3yVGacGiZJyD21-m/pub?gid=68953556&single=true&output=csv"
+        };
+
+        const photosPath = "./assets/Photos/"; // Directory for player photos
+
+        // Function to fetch and parse CSV
+        async function fetchMockDrafts() {
+            const drafts = {};
+            for (const [title, url] of Object.entries(csvUrls)) {
+                const response = await fetch(url);
+                const csvText = await response.text();
+                const rows = csvText.split("\n").slice(1);
+                drafts[title] = rows.map(row => {
+                    const [pick, player, position, team] = row.split(",");
+                    return { pick, player, position, team };
+                });
+            }
+            return drafts;
+        }
+
+        // Function to display the list of mock drafts
+        async function displayMockDraftList() {
+            const drafts = await fetchMockDrafts();
+            Object.keys(drafts).forEach((title) => {
+                const card = document.createElement("div");
+                card.className = "mock-card";
+                card.innerHTML = `<h3>${title}</h3><button onclick="viewMockDraft('${title}')">View Draft</button>`;
+                mockDraftList.appendChild(card);
+            });
+        }
+
+        // Function to display a specific mock draft
+        async function viewMockDraft(title) {
+            const drafts = await fetchMockDrafts();
+            const picks = drafts[title];
+            mockTitle.textContent = title;
+            mockDraftRows.innerHTML = ""; // Clear existing rows
+
+            picks.forEach(pick => {
+                const row = document.createElement("div");
+                row.className = "dynasty-bubble";
+
+                // Instead of using the player name, build the image filename using team and position.
+                const photoFileName = (pick.team + "-" + pick.position).toLowerCase().trim().replace(/\s+/g, "-") + ".png";
+                const photoPath = photosPath + photoFileName;
+
+                row.innerHTML = `
+                    <img src="${photoPath}" alt="${pick.team} ${pick.position} photo" onerror="this.style.display='none'">
+                    <div>
+                        <strong>Pick ${pick.pick}:</strong> ${pick.player}<br>
+                        ${pick.position} - ${pick.team || "N/A"}
+                    </div>
+                `;
+                mockDraftRows.appendChild(row);
+            });
+
+            mockDraftList.style.display = "none";
+            mockDraftDisplay.style.display = "block";
+        }
+
+        // Event listener for "Back to List" button
+        backToListButton.addEventListener("click", () => {
+            mockDraftDisplay.style.display = "none";
+            mockDraftList.style.display = "block";
+        });
+
+        // Initial load
+        displayMockDraftList();
+    </script>
+</body>
+</html>

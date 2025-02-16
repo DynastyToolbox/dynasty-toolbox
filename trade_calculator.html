@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trade Calculator</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet" />
+  <script defer src="script.js"></script>
+  <style>
+    /* ---------- Header & Nav Styles ---------- */
+    body {
+      font-family: 'Bree Serif', serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+    header {
+      margin-top: 20px;
+    }
+    nav a {
+      margin: 0 10px;
+      text-decoration: none;
+      color: #004d40;
+      font-weight: bold;
+    }
+    nav .dropdown {
+      display: inline-block;
+      position: relative;
+    }
+    nav .dropdown-content {
+      display: none;
+      position: absolute;
+      background: #004d40;
+      min-width: 160px;
+      z-index: 1;
+    }
+    nav .dropdown:hover .dropdown-content {
+      display: block;
+    }
+    /* ---------- Trade Calculator Styles ---------- */
+    .trade-container {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 20px;
+    }
+    .trade-box {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 20px;
+      width: 400px;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+      border: 2px solid #004d40;
+      text-align: left;
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .trade-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1.3em;
+      font-weight: bold;
+      color: #004d40;
+      margin-bottom: 10px;
+    }
+    .trade-header select {
+      font-size: 1em;
+      padding: 5px;
+      border-radius: 6px;
+      border: 1px solid #004d40;
+      background: #e0f2f1;
+      color: #004d40;
+    }
+    .player-search {
+      width: calc(100% - 10px);
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 1em;
+      margin-bottom: 10px;
+    }
+    /* Suggestions */
+    .trade-sends {
+      position: relative;
+    }
+    .suggestions-box {
+      position: absolute;
+      top: 45px;
+      left: 0;
+      width: calc(100% - 20px);
+      background: white;
+      border: 1px solid #004d40;
+      border-radius: 6px;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+      z-index: 10;
+      display: none;
+    }
+    .suggestion-item {
+      padding: 8px;
+      cursor: pointer;
+      color: #004d40;
+      font-weight: bold;
+    }
+    .suggestion-item:hover {
+      background: #80cbc4;
+      color: white;
+    }
+    .trade-list {
+      list-style-type: none;
+      padding: 0;
+      margin: 10px 0;
+    }
+    .trade-item {
+      background: #e0f2f1;
+      padding: 10px;
+      border-radius: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      font-size: 1em;
+    }
+    /* Styled destination dropdown */
+    .dest-select {
+      padding: 4px;
+      border-radius: 4px;
+      border: 1px solid #004d40;
+      background: #e0f2f1;
+      color: #004d40;
+      font-weight: bold;
+      margin-left: 8px;
+    }
+    .remove-btn {
+      background: #d32f2f;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 25px;
+      height: 25px;
+      font-size: 1em;
+      cursor: pointer;
+      margin-left: 8px;
+    }
+    .remove-btn:hover {
+      background: #ff5252;
+    }
+    /* Remove team button styling */
+    .remove-team-btn {
+      background: #d32f2f;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 0.8em;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+    .remove-team-btn:hover {
+      background: #ff5252;
+    }
+    /* Totals styling */
+    .trade-totals p {
+      margin: 5px 0;
+      font-weight: bold;
+    }
+    .trade-total.positive {
+      color: green;
+    }
+    .trade-total.negative {
+      color: red;
+    }
+    /* Add Team button styling */
+    #addTeamContainer {
+      margin-bottom: 20px;
+    }
+    #addTeamButton {
+      padding: 10px 20px;
+      font-size: 1em;
+      background: #004d40;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #addTeamButton:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <!-- ---------- Header & Nav ---------- -->
+  <header>
+    <h1>Trade Calculator</h1>
+  </header>
+  <nav>
+    <div class="dropdown">
+      <a href="#" class="dropbtn">Rankings</a>
+      <div class="dropdown-content">
+        <a href="college_rankings.html">Devy Rankings</a>
+        <a href="nfl_rankings.html">NFL Player Rankings</a>
+      </div>
+    </div>
+    <div class="dropdown">
+      <a href="#" class="dropbtn">Draft</a>
+      <div class="dropdown-content">
+        <a href="dynasty_mock_drafts.html">Dynasty</a>
+        <a href="nfl_mock_drafts.html">NFL</a>
+      </div>
+    </div>
+    <div class="dropdown">
+      <a href="#" class="dropbtn">Tools</a>
+      <div class="dropdown-content">
+        <a href="trade_calculator.html">Trade Calculator</a>
+        <a href="devy_mock_simulator.html">Devy Mock Simulator</a>
+        <a href="league_rankings.html">League Rankings</a>
+      </div>
+    </div>
+  </nav>
+  
+  <!-- ---------- Main Trade Calculator ---------- -->
+  <main>
+    <div class="trade-container" id="tradeContainer">
+      <!-- Initial 2 teams are defined here -->
+      <div class="trade-box" id="team1Box">
+        <div class="trade-header">
+          <span>Team 1</span>
+          <select id="team1Status">
+            <option value="competing">Competing</option>
+            <option value="overall">Overall</option>
+            <option value="tanking">Tanking</option>
+          </select>
+          <!-- Remove button will be hidden when only 2 teams remain -->
+          <button class="remove-team-btn" onclick="removeTeam(1)">Remove Team</button>
+        </div>
+        <div class="trade-sends">
+          <h3>Sends:</h3>
+          <input type="text" id="team1PlayerInput" class="player-search" placeholder="Search for a player" />
+          <div id="team1Suggestions" class="suggestions-box"></div>
+          <ul id="team1Sends" class="trade-list"></ul>
+        </div>
+        <div class="trade-receives">
+          <h3>Receives:</h3>
+          <ul id="team1Receives" class="trade-list"></ul>
+        </div>
+        <div class="trade-totals">
+          <p>Sends Total: <span id="team1SendsTotal">0</span></p>
+          <p>Receives Total: <span id="team1ReceivesTotal">0</span></p>
+          <p>Trade Total: <span id="team1TradeTotal" class="trade-total">0</span></p>
+        </div>
+      </div>
+      <div class="trade-box" id="team2Box">
+        <div class="trade-header">
+          <span>Team 2</span>
+          <select id="team2Status">
+            <option value="competing">Competing</option>
+            <option value="overall">Overall</option>
+            <option value="tanking">Tanking</option>
+          </select>
+          <button class="remove-team-btn" onclick="removeTeam(2)">Remove Team</button>
+        </div>
+        <div class="trade-sends">
+          <h3>Sends:</h3>
+          <input type="text" id="team2PlayerInput" class="player-search" placeholder="Search for a player" />
+          <div id="team2Suggestions" class="suggestions-box"></div>
+          <ul id="team2Sends" class="trade-list"></ul>
+        </div>
+        <div class="trade-receives">
+          <h3>Receives:</h3>
+          <ul id="team2Receives" class="trade-list"></ul>
+        </div>
+        <div class="trade-totals">
+          <p>Sends Total: <span id="team2SendsTotal">0</span></p>
+          <p>Receives Total: <span id="team2ReceivesTotal">0</span></p>
+          <p>Trade Total: <span id="team2TradeTotal" class="trade-total">0</span></p>
+        </div>
+      </div>
+    </div>
+    <!-- Add Team Button -->
+    <div id="addTeamContainer">
+      <button id="addTeamButton">Add Team</button>
+    </div>
+  </main>
+  <script>
+    /********** Global Data & Variables **********/
+    // Start with 2 teams; allow up to 12.
+    let teams = [1, 2];
+    let nextTeamNumber = 3;
+    const maxTeams = 12;
+    // CSV URLs for statuses (adjust if needed)
+    const csvUrls = {
+      competing:
+        "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=0&single=true&output=csv",
+      overall:
+        "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=116299513&single=true&output=csv",
+      tanking:
+        "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=1543093851&single=true&output=csv"
+    };
+    let playerData = {}; // Loaded player info keyed by status
+    // Track selected players per team
+    let selectedPlayers = { 1: [], 2: [] };
+
+    /********** Data Loading **********/
+    async function loadAllPlayers() {
+      for (const [status, url] of Object.entries(csvUrls)) {
+        try {
+          const response = await fetch(url);
+          const text = await response.text();
+          const rows = text.split("\n").map(row => row.split(","));
+          // Assuming row[1] is name and row[4] is score.
+          playerData[status] = rows.slice(1).map(row => ({
+            name: row[1],
+            score: row[4]
+          }));
+        } catch (error) {
+          console.error(`Error loading ${status} data:`, error);
+        }
+      }
+    }
+
+    /********** Utility Functions **********/
+    // Update send item scores (based on sending team's status)
+    function updateSendScores(team) {
+      const status = document.getElementById(`team${team}Status`).value;
+      const sendsList = document.getElementById(`team${team}Sends`);
+      sendsList.querySelectorAll(".trade-item").forEach(item => {
+        const playerName = item.getAttribute("data-name");
+        const newScore = playerData[status].find(p => p.name === playerName)?.score || "0";
+        item.querySelector(".player-score").textContent = newScore;
+      });
+      updateReceives();
+    }
+
+    // Rebuild each team’s Receives list from other teams’ sends.
+    function updateReceives() {
+      teams.forEach(destTeam => {
+        const receiveList = document.getElementById(`team${destTeam}Receives`);
+        receiveList.innerHTML = "";
+        teams.forEach(sendTeam => {
+          if (sendTeam === destTeam) return;
+          const sendList = document.getElementById(`team${sendTeam}Sends`);
+          sendList.querySelectorAll(".trade-item").forEach(item => {
+            const chosenDest = item.getAttribute("data-dest");
+            if (String(chosenDest) === String(destTeam)) {
+              const playerName = item.getAttribute("data-name");
+              const status = document.getElementById(`team${destTeam}Status`).value;
+              const score = playerData[status].find(p => p.name === playerName)?.score || "0";
+              const li = document.createElement("li");
+              li.className = "trade-item";
+              li.innerHTML = `${playerName} <span class="player-score">${score}</span>`;
+              receiveList.appendChild(li);
+            }
+          });
+        });
+      });
+      updateTotals();
+    }
+
+    // Sum up totals for sends and receives for each team and update trade total.
+    function updateTotals() {
+      teams.forEach(team => {
+        let sendsTotal = 0;
+        let receivesTotal = 0;
+        document.querySelectorAll(`#team${team}Sends .player-score`).forEach(span => {
+          let val = parseFloat(span.textContent);
+          if (isNaN(val)) val = 0;
+          sendsTotal += val;
+        });
+        document.querySelectorAll(`#team${team}Receives .player-score`).forEach(span => {
+          let val = parseFloat(span.textContent);
+          if (isNaN(val)) val = 0;
+          receivesTotal += val;
+        });
+        document.getElementById(`team${team}SendsTotal`).textContent = sendsTotal.toFixed(2);
+        document.getElementById(`team${team}ReceivesTotal`).textContent = receivesTotal.toFixed(2);
+        const tradeTotal = receivesTotal - sendsTotal;
+        const tradeTotalEl = document.getElementById(`team${team}TradeTotal`);
+        tradeTotalEl.textContent = tradeTotal.toFixed(2);
+        tradeTotalEl.classList.remove("positive", "negative");
+        if (tradeTotal > 0) {
+          tradeTotalEl.classList.add("positive");
+        } else if (tradeTotal < 0) {
+          tradeTotalEl.classList.add("negative");
+        }
+      });
+    }
+
+    /********** Adding & Removing Players **********/
+    function addPlayerToTeam(team, playerName) {
+      const teamStatus = document.getElementById(`team${team}Status`).value;
+      const selectedPlayer = playerData[teamStatus].find(p => p.name === playerName);
+      if (!selectedPlayer) return;
+      if (selectedPlayers[team].includes(playerName)) return;
+      selectedPlayers[team].push(playerName);
+
+      const sendsList = document.getElementById(`team${team}Sends`);
+      const defaultDest = teams.find(t => t !== team);
+      let destOptions = "";
+      teams.forEach(t => {
+        if (t !== team) {
+          destOptions += `<option value="${t}">Team ${t}</option>`;
+        }
+      });
+      const li = document.createElement("li");
+      li.className = "trade-item";
+      li.setAttribute("data-name", playerName);
+      li.setAttribute("data-dest", defaultDest);
+      li.innerHTML = `
+        ${selectedPlayer.name} <span class="player-score">${selectedPlayer.score}</span>
+        <select class="dest-select" onchange="destinationChanged(${team}, '${playerName}', this)">
+          ${destOptions}
+        </select>
+        <button class="remove-btn" onclick="removePlayerFromTeam(${team}, '${playerName}')">✖</button>
+      `;
+      sendsList.appendChild(li);
+
+      document.getElementById(`team${team}PlayerInput`).value = "";
+      document.getElementById(`team${team}Suggestions`).style.display = "none";
+
+      updateReceives();
+    }
+
+    function destinationChanged(fromTeam, playerName, selectEl) {
+      const sendsList = document.getElementById(`team${fromTeam}Sends`);
+      const li = sendsList.querySelector(`[data-name="${playerName}"]`);
+      if (li) {
+        li.setAttribute("data-dest", selectEl.value);
+        updateReceives();
+      }
+    }
+
+    function removePlayerFromTeam(team, playerName) {
+      selectedPlayers[team] = selectedPlayers[team].filter(p => p !== playerName);
+      const sendsList = document.getElementById(`team${team}Sends`);
+      const li = sendsList.querySelector(`[data-name="${playerName}"]`);
+      if (li) sendsList.removeChild(li);
+      updateReceives();
+    }
+
+    /********** Search & Autocomplete **********/
+    function handleSearchInput(team) {
+      const inputEl = document.getElementById(`team${team}PlayerInput`);
+      const suggestionsBox = document.getElementById(`team${team}Suggestions`);
+      const query = inputEl.value.trim().toLowerCase();
+      suggestionsBox.innerHTML = "";
+      suggestionsBox.style.display = query ? "block" : "none";
+      if (!query) return;
+      const teamStatus = document.getElementById(`team${team}Status`).value;
+      const suggestions = playerData[teamStatus]
+        .filter(p => p.name.toLowerCase().includes(query))
+        .slice(0, 5);
+      suggestions.forEach(p => {
+        const div = document.createElement("div");
+        div.classList.add("suggestion-item");
+        div.innerText = p.name;
+        div.onclick = () => addPlayerToTeam(team, p.name);
+        suggestionsBox.appendChild(div);
+      });
+    }
+
+    /********** Dynamic Team Creation **********/
+    // Returns the HTML for a team box.
+    function createTeamBox(teamNumber) {
+      return `
+      <div class="trade-box" id="team${teamNumber}Box">
+        <div class="trade-header">
+          <span>Team ${teamNumber}</span>
+          <select id="team${teamNumber}Status">
+            <option value="competing">Competing</option>
+            <option value="overall">Overall</option>
+            <option value="tanking">Tanking</option>
+          </select>
+          <button class="remove-team-btn" onclick="removeTeam(${teamNumber})">Remove Team</button>
+        </div>
+        <div class="trade-sends">
+          <h3>Sends:</h3>
+          <input type="text" id="team${teamNumber}PlayerInput" class="player-search" placeholder="Search for a player" />
+          <div id="team${teamNumber}Suggestions" class="suggestions-box"></div>
+          <ul id="team${teamNumber}Sends" class="trade-list"></ul>
+        </div>
+        <div class="trade-receives">
+          <h3>Receives:</h3>
+          <ul id="team${teamNumber}Receives" class="trade-list"></ul>
+        </div>
+        <div class="trade-totals">
+          <p>Sends Total: <span id="team${teamNumber}SendsTotal">0</span></p>
+          <p>Receives Total: <span id="team${teamNumber}ReceivesTotal">0</span></p>
+          <p>Trade Total: <span id="team${teamNumber}TradeTotal" class="trade-total">0</span></p>
+        </div>
+      </div>
+      `;
+    }
+    // Attaches event listeners for a team box.
+    function attachTeamListeners(team) {
+      document.getElementById(`team${team}Status`).addEventListener("change", () => {
+        updateSendScores(team);
+        updateReceives();
+      });
+      document.getElementById(`team${team}PlayerInput`).addEventListener("input", () => handleSearchInput(team));
+      if (!selectedPlayers[team]) {
+        selectedPlayers[team] = [];
+      }
+    }
+    // Updates the display of all remove buttons—only show if more than 2 teams exist.
+    function updateRemoveButtons() {
+      teams.forEach(team => {
+        const teamBox = document.getElementById(`team${team}Box`);
+        const btn = teamBox.querySelector(".remove-team-btn");
+        if (teams.length > 2) {
+          btn.style.display = "inline-block";
+        } else {
+          btn.style.display = "none";
+        }
+      });
+    }
+    // Adds a new team box dynamically.
+    function addTeam() {
+      if (teams.length >= maxTeams) return;
+      const teamNumber = nextTeamNumber++;
+      teams.push(teamNumber);
+      selectedPlayers[teamNumber] = [];
+      const container = document.getElementById("tradeContainer");
+      container.insertAdjacentHTML("beforeend", createTeamBox(teamNumber));
+      attachTeamListeners(teamNumber);
+      updateReceives();
+      updateRemoveButtons();
+      if (teams.length === maxTeams) {
+        document.getElementById("addTeamButton").disabled = true;
+      }
+    }
+    // Removes a team box. Never allows fewer than 2 teams.
+    function removeTeam(teamNumber) {
+      if (teams.length <= 2) return;
+      // Remove from global arrays.
+      teams = teams.filter(t => t !== teamNumber);
+      delete selectedPlayers[teamNumber];
+      // Remove DOM element.
+      const teamBox = document.getElementById(`team${teamNumber}Box`);
+      if (teamBox) {
+        teamBox.parentNode.removeChild(teamBox);
+      }
+      updateReceives();
+      updateRemoveButtons();
+      // Re-enable the add button if below max.
+      if (teams.length < maxTeams) {
+        document.getElementById("addTeamButton").disabled = false;
+      }
+    }
+
+    /********** Initialization **********/
+    async function initialize() {
+      await loadAllPlayers();
+      teams.forEach(team => attachTeamListeners(team));
+      document.getElementById("addTeamButton").addEventListener("click", addTeam);
+      updateRemoveButtons();
+    }
+    initialize();
+  </script>
+</body>
+</html>
