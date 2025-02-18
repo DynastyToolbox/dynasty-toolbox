@@ -7,6 +7,24 @@
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet" />
+ 
+  <!-- Meta Tags for SEO -->
+  <meta name="description" content="Trade Calculator">
+  <meta name="keywords" content="dynasty fantasy football, dynasty tools, mock drafts, trade calculator, college development players, fantasy football analysis, devy, sleeper, dynasty toolbox">
+
+  <!-- Open Graph Tags -->
+  <meta property="og:title" content="Trade Calculator – Dynasty Fantasy Football Analysis & Tools">
+  <meta property="og:description" content="Explore comprehensive dynasty fantasy football analysis, mock drafts, trade calculators, and more.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.dynasty-toolbox.com">
+  <meta property="og:image" content="https://www.dynasty-toolbox.com/path/to/your-logo.png">
+
+  <!-- Twitter Card Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Trade Calculator – Dynasty Fantasy Football Analysis & Tools">
+  <meta name="twitter:description" content="Explore comprehensive dynasty fantasy football analysis, mock drafts, trade calculators, and more.">
+  <meta name="twitter:image" content="https://www.dynasty-toolbox.com/path/to/your-logo.png">
+
   <script defer src="script.js"></script>
   <style>
     /* ---------- Header & Nav Styles ---------- */
@@ -232,8 +250,8 @@
         <div class="trade-header">
           <span>Team 1</span>
           <select id="team1Status">
-            <option value="competing">Competing</option>
             <option value="overall">Overall</option>
+            <option value="competing">Competing</option>
             <option value="tanking">Tanking</option>
           </select>
           <!-- Remove button will be hidden when only 2 teams remain -->
@@ -259,9 +277,9 @@
         <div class="trade-header">
           <span>Team 2</span>
           <select id="team2Status">
-            <option value="competing">Competing</option>
             <option value="overall">Overall</option>
             <option value="tanking">Tanking</option>
+            <option value="competing">Competing</option>
           </select>
           <button class="remove-team-btn" onclick="removeTeam(2)">Remove Team</button>
         </div>
@@ -472,9 +490,9 @@
         <div class="trade-header">
           <span>Team ${teamNumber}</span>
           <select id="team${teamNumber}Status">
-            <option value="competing">Competing</option>
             <option value="overall">Overall</option>
             <option value="tanking">Tanking</option>
+            <option value="competing">Competing</option>
           </select>
           <button class="remove-team-btn" onclick="removeTeam(${teamNumber})">Remove Team</button>
         </div>

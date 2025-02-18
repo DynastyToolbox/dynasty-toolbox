@@ -3,11 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mock Draft Simulator</title>
+  <title>Devy Mock Draft Simulator</title>
   <!-- External stylesheet with team colors etc. -->
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+
+  <!-- Meta Tags for SEO -->
+  <meta name="description" content="Devy Mock Draft Simulator">
+  <meta name="keywords" content="dynasty fantasy football, dynasty tools, mock drafts, trade calculator, college development players, fantasy football analysis, devy, sleeper, dynasty toolbox">
+
+  <!-- Open Graph Tags -->
+  <meta property="og:title" content="Devy Mock Draft Simulator – Dynasty Fantasy Football Analysis & Tools">
+  <meta property="og:description" content="Explore comprehensive dynasty fantasy football analysis, mock drafts, trade calculators, and more.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.dynasty-toolbox.com">
+  <meta property="og:image" content="https://www.dynasty-toolbox.com/path/to/your-logo.png">
+
+  <!-- Twitter Card Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Devy Mock Draft Simulator – Dynasty Fantasy Football Analysis & Tools">
+  <meta name="twitter:description" content="Explore comprehensive dynasty fantasy football analysis, mock drafts, trade calculators, and more.">
+  <meta name="twitter:image" content="https://www.dynasty-toolbox.com/path/to/your-logo.png">
+
   <style>
     /* Additional inline styles */
     body {
@@ -77,6 +95,7 @@
       cursor: pointer;
     }
     .round-header td { font-weight: bold; }
+    /* Collapsed rows have display:none */
     .collapsed { display: none; }
     /* Highlight selected available player */
     .selected { background-color: #cfe8fc; }
@@ -200,11 +219,10 @@
   
   <script>
     /********** CSV URLs **********/
-    // Use your correct CSV URLs.
     const draftPicksUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS0-gweBPf_H1hdmwWNUnFoVMhKyCaFw1HiflQmHmtiaOaLCGsywBNW0SFxVTD5WAPCzjWDUagpc_Qe/pub?gid=1913028468&single=true&output=csv";
     const availablePlayersUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQIB7_gxUbTXeSXvPdQ_pozQdvF28oYKmQWLuinKqxJ3WF2upn5gHixZTyKC3chz9dA2gqLEE6VWshE/pub?gid=2100855095&single=true&output=csv";
     const teamPosValuesUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRvCf4id2GhAIHZQxe_xy0MnIpbvfp1GJCjHnzt4590C5sXE5AucQlIp8w4ukTm6RSS58F1FzygPWBO/pub?gid=1972908686&single=true&output=csv";
-    
+
     /********** Hit Chances by Position and Round **********/
     const hitChances = {
       "RB": { 1: 0.85, 2: 0.475, 3: 0.375, 4: 0.175, 5: 0.16, 6: 0.12, 7: 0.04 },
@@ -212,13 +230,16 @@
       "QB": { 1: 0.645, 2: 0.425, 3: 0.125, 4: 0.105, 5: 0.0, 6: 0.10, 7: 0.0 },
       "TE": { 1: 0.80, 2: 0.375, 3: 0.27, 4: 0.26, 5: 0.04, 6: 0.075, 7: 0.0 }
     };
-    
+
     /********** Global Data Arrays **********/
     let draftPicks = [];       // From NFL draft board CSV
     let availablePlayers = []; // From available players CSV
     let teamPositionValues = {}; // From team position values CSV
     let selectedAvailablePlayer = null;
-    
+
+    // Global object to store the collapse state for each round.
+    let collapsedRounds = {};
+
     /********** CSV Parsing Utility **********/
     function parseCSV(text) {
       const lines = text.trim().split("\n").filter(line => line.trim().length > 0);
@@ -234,7 +255,7 @@
       });
       return data;
     }
-    
+
     /********** Load Team Position Values **********/
     async function loadTeamPositionValues() {
       try {
@@ -258,7 +279,7 @@
         console.error("Error loading team position values:", error);
       }
     }
-    
+
     /********** Data Loading **********/
     async function loadData() {
       try {
@@ -295,8 +316,21 @@
         console.error("Error loading data:", error);
       }
     }
-    
+
     /********** UI Display Functions **********/
+    // Toggle collapse/expand for a given round.
+    function toggleRound(event, roundNum) {
+      event.stopPropagation();
+      // Toggle the collapse state.
+      collapsedRounds[roundNum] = !collapsedRounds[roundNum];
+      // Update all rows for this round.
+      const rows = document.querySelectorAll(`.round-${roundNum}`);
+      rows.forEach(row => { row.style.display = collapsedRounds[roundNum] ? "none" : ""; });
+      // Update button text.
+      const headerBtn = document.querySelector(`tr.round-header[data-round="${roundNum}"] button`);
+      if (headerBtn) { headerBtn.textContent = collapsedRounds[roundNum] ? "+" : "–"; }
+    }
+
     // Build the NFL Draft Board table grouped by round (collapsible).
     function displayDraftPicks() {
       const tbody = document.getElementById("draftTable").querySelector("tbody");
@@ -322,8 +356,10 @@
         const headerRow = document.createElement("tr");
         headerRow.classList.add("round-header");
         headerRow.setAttribute("data-round", roundNum);
+        // Use the collapsed state if it exists, default to expanded (false).
+        const isCollapsed = collapsedRounds[roundNum] || false;
         headerRow.innerHTML = `<td colspan="5" style="text-align:left; cursor:pointer;">
-                                 Round ${roundNum} <button onclick="toggleRound(event, '${roundNum}')">–</button>
+                                 Round ${roundNum} <button onclick="toggleRound(event, '${roundNum}')">${isCollapsed ? "+" : "–"}</button>
                                </td>`;
         tbody.appendChild(headerRow);
         
@@ -333,7 +369,10 @@
           const tr = document.createElement("tr");
           tr.classList.add("round-row", `round-${roundNum}`);
           tr.setAttribute("data-index", index);
-          
+          // Apply collapse state if set.
+          if (collapsedRounds[roundNum]) {
+            tr.style.display = "none";
+          }
           // TEAM cell with team color.
           const teamName = pick.TEAM || pick.Team || "";
           const teamCell = `<td class="team-cell team-${teamName.toLowerCase()}">${teamName}</td>`;
@@ -357,17 +396,7 @@
         });
       });
     }
-    
-    // Toggle collapse/expand for a given round.
-    function toggleRound(event, roundNum) {
-      event.stopPropagation();
-      const rows = document.querySelectorAll(`.round-${roundNum}`);
-      let isCollapsed = rows.length > 0 && rows[0].style.display === "none";
-      rows.forEach(row => { row.style.display = isCollapsed ? "" : "none"; });
-      const headerBtn = document.querySelector(`tr.round-header[data-round="${roundNum}"] button`);
-      if (headerBtn) { headerBtn.textContent = isCollapsed ? "–" : "+"; }
-    }
-    
+
     // Build the Available Players table.
     function displayAvailablePlayers() {
       const tbody = document.getElementById("playersTable").querySelector("tbody");
@@ -382,7 +411,7 @@
         tbody.appendChild(tr);
       });
     }
-    
+
     // When a plus button is clicked, select an available player.
     function selectPlayer(event, index) {
       event.stopPropagation();
@@ -391,13 +420,13 @@
       const row = event.target.closest("tr");
       row.classList.add("selected");
     }
-    
+
     // Clear selection highlighting.
     function clearSelectedAvailable() {
       const rows = document.querySelectorAll("#playersTable tbody tr");
       rows.forEach(row => row.classList.remove("selected"));
     }
-    
+
     // Assign the selected available player to a draft pick.
     function assignPlayerToPick(pickIndex, player) {
       const round = parseInt(draftPicks[pickIndex].ROUND || draftPicks[pickIndex].Round || "1");
@@ -416,16 +445,16 @@
       if (pos === "QB") posMultiplier = 0.9;
       else if (pos === "TE") posMultiplier = 0.8;
       score = score * posMultiplier;
-  
+
       draftPicks[pickIndex].assignedPlayer = player;
       draftPicks[pickIndex].score = score;
-  
+
       availablePlayers = availablePlayers.filter(p => p.Name !== player.Name);
-  
+
       displayDraftPicks();
       displayAvailablePlayers();
     }
-    
+
     // Remove an assignment from a draft pick.
     function removeAssignment(event, pickIndex) {
       event.stopPropagation();
@@ -439,14 +468,14 @@
         displayAvailablePlayers();
       }
     }
-    
+
     // When Finish Draft is clicked, display results using only assigned picks.
     function finishDraft() {
       const assignedPicks = draftPicks.filter(p => p.assignedPlayer);
       assignedPicks.sort((a, b) => b.score - a.score);
       displayResults(assignedPicks);
     }
-    
+
     function displayResults(picks) {
       const resultsDiv = document.getElementById("results");
       resultsDiv.innerHTML = "<h2>Dynasty Rookie Mock Draft Order</h2>";
@@ -456,15 +485,14 @@
       }
       const ol = document.createElement("ol");
       picks.forEach(pick => {
-        const li = document.createElement("li");
-        li.textContent = `${pick.assignedPlayer.Name} (${pick.assignedPlayer.Position || pick.assignedPlayer.Pos}) – Assigned to ${pick.TEAM || pick.Team} (Round ${pick.ROUND || pick.Round}, Pick ${pick.PICK || pick.Pick}) – Score: ${pick.score.toFixed(2)}`;
-        ol.appendChild(li);
+        ol.appendChild(document.createElement("li")).textContent =
+          `${pick.assignedPlayer.Name} (${pick.assignedPlayer.Position || pick.assignedPlayer.Pos}) – Assigned to ${pick.TEAM || pick.Team} (Round ${pick.ROUND || pick.Round}, Pick ${pick.PICK || pick.Pick}) – Score: ${pick.score.toFixed(2)}`;
       });
       resultsDiv.appendChild(ol);
     }
-    
+
     document.getElementById("finishDraftButton").addEventListener("click", finishDraft);
-    
+
     loadData();
   </script>
 </body>

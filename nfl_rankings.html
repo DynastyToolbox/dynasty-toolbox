@@ -3,10 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NFL Player Rankings</title>
+    <title>NFL Player Rankings – Dynasty Toolbox</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+
+    <!-- Meta Tags for SEO -->
+    <meta name="description" content="NFL Player Rankings for Competing, Overall, and Tanking Dynasty Teams">
+    <meta name="keywords" content="dynasty fantasy football, dynasty tools, mock drafts, trade calculator, college development players, fantasy football analysis, devy, sleeper, dynasty toolbox">
+  
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="NFL Player Rankings – Dynasty Fantasy Football Analysis & Tools">
+    <meta property="og:description" content="Explore comprehensive dynasty fantasy football analysis, mock drafts, trade calculators, and more.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.dynasty-toolbox.com">
+    <meta property="og:image" content="https://www.dynasty-toolbox.com/path/to/your-logo.png">
+  
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="NFL Player Rankings – Dynasty Fantasy Football Analysis & Tools">
+    <meta name="twitter:description" content="Explore comprehensive dynasty fantasy football analysis, mock drafts, trade calculators, and more.">
+    <meta name="twitter:image" content="https://www.dynasty-toolbox.com/path/to/your-logo.png">
 </head>
 <body>
     <header>
@@ -31,22 +48,31 @@
           <a href="#" class="dropbtn">Tools</a>
           <div class="dropdown-content">
             <a href="trade_calculator.html">Trade Calculator</a>
-        <a href="devy_mock_simulator.html">Devy Mock Simulator</a>
-        <a href="league_rankings.html">League Rankings</a>
+            <a href="devy_mock_simulator.html">Devy Mock Simulator</a>
+            <a href="league_rankings.html">League Rankings</a>
           </div>
         </div>
-      </nav>
+    </nav>
     
     <main>
         <section>
             <h2>NFL Player Rankings</h2>
+            <!-- Dropdown for team type -->
             <div class="dropdown">
                 <label for="teamType">Select Team Type: </label>
                 <select id="teamType">
-                    <option value="competing">Competing</option>
                     <option value="overall">Overall</option>
+                    <option value="competing">Competing</option>
                     <option value="tanking">Tanking</option>
                 </select>
+            </div>
+            <!-- Filters for positions and search bar -->
+            <div id="filters">
+                <label><input type="checkbox" value="QB" checked> QB</label>
+                <label><input type="checkbox" value="RB" checked> RB</label>
+                <label><input type="checkbox" value="WR" checked> WR</label>
+                <label><input type="checkbox" value="TE" checked> TE</label>
+                <input type="text" id="searchBar" placeholder="Search players or teams">
             </div>
             <table id="nflRankingsTable">
                 <thead>
@@ -68,12 +94,13 @@
         <p>&copy; 2024 Dynasty Fantasy Football</p>
     </footer>
 
-    <!-- JavaScript to fetch and populate data -->
     <script>
         const teamTypeDropdown = document.getElementById("teamType");
         const nflRankingsTableBody = document.querySelector("#nflRankingsTable tbody");
+        const filtersDiv = document.getElementById("filters");
+        const searchBar = document.getElementById("searchBar");
 
-        // URLs for competing and tanking CSV data
+        // URLs for competing, overall, and tanking CSV data
         const csvUrls = {
             competing: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=0&single=true&output=csv",
             overall: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=116299513&single=true&output=csv",
@@ -95,12 +122,28 @@
             });
         }
 
-        // Function to populate the table
+        // Function to populate the table based on filters and search
         async function populateTable(teamType) {
             const data = await fetchCsvData(csvUrls[teamType]);
-            nflRankingsTableBody.innerHTML = ""; // Clear existing rows
+            // Get the selected positions from checkboxes
+            const selectedPositions = Array.from(document.querySelectorAll('#filters input[type="checkbox"]:checked'))
+                                          .map(checkbox => checkbox.value);
+            // Get the search term from the search bar
+            const searchTerm = searchBar.value.toLowerCase();
 
-            data.forEach((row) => {
+            // Filter data based on position and search query (check both player and team fields)
+            const filteredData = data.filter(row => {
+                const positionMatch = selectedPositions.includes(row["Position"]);
+                const searchMatch = row["Player"].toLowerCase().includes(searchTerm) ||
+                                    (row["Team"] && row["Team"].toLowerCase().includes(searchTerm));
+                return positionMatch && searchMatch;
+            });
+
+            // Clear the existing table rows
+            nflRankingsTableBody.innerHTML = "";
+
+            // Populate the table with the filtered data
+            filteredData.forEach((row) => {
                 const tableRow = document.createElement("tr");
                 Object.values(row).forEach((value) => {
                     const cell = document.createElement("td");
@@ -111,12 +154,24 @@
             });
         }
 
-        // Event listener for dropdown
+        // Event listeners for dropdown, checkboxes, and search bar
         teamTypeDropdown.addEventListener("change", (event) => {
             populateTable(event.target.value);
         });
 
-        // Populate table with default selection
+        // For checkboxes: re-populate table when any is toggled
+        document.querySelectorAll('#filters input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener("change", () => {
+                populateTable(teamTypeDropdown.value);
+            });
+        });
+
+        // For search bar: re-populate table as the user types
+        searchBar.addEventListener("input", () => {
+            populateTable(teamTypeDropdown.value);
+        });
+
+        // Populate table with default selection on initial load
         populateTable("competing");
     </script>
 </body>
