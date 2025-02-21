@@ -114,15 +114,13 @@
                 <thead>
                     <tr>
                         <th onclick="sortTable(0, true)">Toolbox</th>
-                        <th onclick="sortTable(1, true)">Overall</th>
-                        <th onclick="sortTable(2, true)">Position</th>
-                        <th onclick="sortTable(3, false)">Position</th>
-                        <th onclick="sortTable(4, false)">Player</th>
-                        <th onclick="sortTable(5, false)">School</th>
-                        <th onclick="sortTable(6, false)">Build</th>
-                        <th onclick="sortTable(7, false)">Height</th>
-                        <th onclick="sortTable(8, true)">Weight</th>
-                        <th onclick="sortTable(9, true)">Age</th>
+                        <th onclick="sortTable(1, true)">Consensus Rank</th>
+                        <th onclick="sortTable(2, false)">Player</th>
+                        <th onclick="sortTable(3, true)">Position</th>
+                        <th onclick="sortTable(4, false)">College</th>
+                        <th onclick="sortTable(5, true)">Height</th>
+                        <th onclick="sortTable(6, true)">Weight</th>
+                        <th onclick="sortTable(7, true)">Age</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -133,52 +131,10 @@
     </main>
     <footer>
         <p>&copy; 2024 Dynasty Fantasy Football</p>
-    </footer>
-
-    <div class="notes-tab">
-        Notes
-        <div class="notes-content">
-            <p><strong>Build Types:</strong></p>
-            <ul>
-                <li><strong>Quarterbacks:</strong></li>
-                <ul>
-                    <li>Game Manager: Focuses on efficiency and avoiding turnovers.</li>
-                    <li>Gunslinger: Aggressive passer with high-risk, high-reward style.</li>
-                    <li>Pocket Passer: Operates effectively within the pocket.</li>
-                    <li>Dual Threat: Excels at both passing and running.</li>
-                    <li>All Rounder: Well-rounded in all aspects of quarterbacking.</li>
-                </ul>
-                <li><strong>Runningbacks:</strong></li>
-                <ul>
-                    <li>Feature Back (All/Power/Speed): Can handle all responsibilities with a specific focus.</li>
-                    <li>Speed Back: Relies on agility and quickness.</li>
-                    <li>Power Back: Focuses on strength and short-yardage situations.</li>
-                    <li>Third Down Back: Specialized for passing situations.</li>
-                    <li>Change of Pace Back: Provides a contrasting style to the primary back.</li>
-                </ul>
-                <li><strong>Wide Receivers:</strong></li>
-                <ul>
-                    <li>Feature Receiver (Route Running/Jump Ball): Dominates as a primary target.</li>
-                    <li>Yards After Catch: Excels at gaining extra yards post-reception.</li>
-                    <li>Slot: Specializes in short, quick routes from the slot position.</li>
-                    <li>Jump Ball: Thrives in contested catch situations.</li>
-                    <li>Speed: Stretches the field with deep-threat ability.</li>
-                    <li>Possession: Reliable for moving the chains on critical downs.</li>
-                </ul>
-                <li><strong>Tight Ends:</strong></li>
-                <ul>
-                    <li>Feature: Capable of being the focal point in the passing game.</li>
-                    <li>Possession: Reliable for short-to-medium yardage gains.</li>
-                    <li>Route: Effective in advanced route-running techniques.</li>
-                    <li>Blocking: Specializes in aiding the running game.</li>
-                </ul>
-                <li><strong>Athlete:</strong> Versatile Player with exceptional attributes, high potential. </li>
-            </ul>
-        </div>
-    </div>    
+    </footer>    
 
     <script>
-        const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQIB7_gxUbTXeSXvPdQ_pozQdvF28oYKmQWLuinKqxJ3WF2upn5gHixZTyKC3chz9dA2gqLEE6VWshE/pub?gid=335460763&single=true&output=csv';
+        const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR0eVwcIonMiKp6tUIlFhzAsraddB0qKGgWNNEwI4wyO0DbU9G8NHWqKuQG5C8WeNNzFSgBJjGSDEAc/pub?gid=1318370528&single=true&output=csv';
         const positionFilters = document.querySelectorAll('#filters input[type="checkbox"]');
         const searchBar = document.querySelector('#searchBar');
         const rankingsTableBody = document.querySelector('#rankingsTable tbody');

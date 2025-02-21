@@ -41,6 +41,11 @@
     nav .dropdown-content { display: none; position: absolute; background: #004d40; min-width: 160px; z-index: 1; }
     nav .dropdown:hover .dropdown-content { display: block; }
     nav .dropdown-content a { color: #fff; text-decoration: none; display: block; padding: 8px 10px; }
+    /* Devy Rankings Toggle Checkbox */
+    #devyBonusToggle {
+      text-align: center;
+      margin-bottom: 10px;
+    }
     /* Finish Draft button and results at the top */
     #finishDraftButton { display: block; margin: 10px auto 20px; }
     #results {
@@ -95,7 +100,7 @@
       cursor: pointer;
     }
     .round-header td { font-weight: bold; }
-    /* Collapsed rows have display:none */
+    /* Collapsed rows */
     .collapsed { display: none; }
     /* Highlight selected available player */
     .selected { background-color: #cfe8fc; }
@@ -165,6 +170,13 @@
     </div>
   </nav>
   
+  <!-- Devy Rankings Toggle Checkbox -->
+  <div id="devyBonusToggle" style="text-align:center;">
+    <label>
+      <input type="checkbox" id="includeDevyCheckbox" checked> Include Devy Rankings Score
+    </label>
+  </div>
+  
   <!-- Finish Draft button -->
   <div style="text-align:center;">
     <button id="finishDraftButton">Finish Draft</button>
@@ -220,8 +232,12 @@
   <script>
     /********** CSV URLs **********/
     const draftPicksUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS0-gweBPf_H1hdmwWNUnFoVMhKyCaFw1HiflQmHmtiaOaLCGsywBNW0SFxVTD5WAPCzjWDUagpc_Qe/pub?gid=1913028468&single=true&output=csv";
-    const availablePlayersUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQIB7_gxUbTXeSXvPdQ_pozQdvF28oYKmQWLuinKqxJ3WF2upn5gHixZTyKC3chz9dA2gqLEE6VWshE/pub?gid=2100855095&single=true&output=csv";
+    const availablePlayersUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR0eVwcIonMiKp6tUIlFhzAsraddB0qKGgWNNEwI4wyO0DbU9G8NHWqKuQG5C8WeNNzFSgBJjGSDEAc/pub?gid=158349735&single=true&output=csv"
+; // <-- VERIFY URL if needed
+    // (NOTE: Use your correct availablePlayersUrl)
     const teamPosValuesUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRvCf4id2GhAIHZQxe_xy0MnIpbvfp1GJCjHnzt4590C5sXE5AucQlIp8w4ukTm6RSS58F1FzygPWBO/pub?gid=1972908686&single=true&output=csv";
+    // Devy Rankings CSV URL
+    const devyRankingsUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR0eVwcIonMiKp6tUIlFhzAsraddB0qKGgWNNEwI4wyO0DbU9G8NHWqKuQG5C8WeNNzFSgBJjGSDEAc/pub?gid=1999697071&single=true&output=csv";
 
     /********** Hit Chances by Position and Round **********/
     const hitChances = {
@@ -235,6 +251,7 @@
     let draftPicks = [];       // From NFL draft board CSV
     let availablePlayers = []; // From available players CSV
     let teamPositionValues = {}; // From team position values CSV
+    let devyRankings = {};     // From devy rankings CSV
     let selectedAvailablePlayer = null;
 
     // Global object to store the collapse state for each round.
@@ -280,6 +297,25 @@
       }
     }
 
+    async function loadDevyRankings() {
+  try {
+    const res = await fetch(devyRankingsUrl);
+    const text = await res.text();
+    const data = parseCSV(text);
+    // Check for both uppercase and other variations.
+    data.forEach(row => {
+      const name = row["PLAYER NAME"] || row["player name"] || row["Player Name"] || row["Name"] || "";
+      let score = parseFloat(row["SCORE"] || row["score"]);
+      if (isNaN(score)) score = 1;
+      devyRankings[normalizeName(name)] = score;
+    });
+    console.log("Loaded devyRankings:", devyRankings);
+  } catch (error) {
+    console.error("Error loading devy rankings:", error);
+  }
+}
+
+
     /********** Data Loading **********/
     async function loadData() {
       try {
@@ -310,6 +346,9 @@
         // Load team position values.
         await loadTeamPositionValues();
   
+        // Load devy rankings.
+        await loadDevyRankings();
+  
         displayDraftPicks();
         displayAvailablePlayers();
       } catch (error) {
@@ -317,16 +356,42 @@
       }
     }
 
+    /********** Scoring Helper Function **********/
+    function calculateScore(pick, player) {
+      const round = parseInt(pick.ROUND || pick.Round || "1");
+      const pos = (player.Position || player.Pos).toUpperCase();
+      const hitChance = (hitChances[pos] && hitChances[pos][round]) ? hitChances[pos][round] : 0;
+      const teamName = (pick.TEAM || pick.Team || "").toLowerCase();
+      let teamPosNum = 0;
+      if (teamName && teamPositionValues[teamName] && teamPositionValues[teamName][pos] !== undefined) {
+        teamPosNum = teamPositionValues[teamName][pos];
+      }
+      // Base scoring formula.
+      let score = 5000 * hitChance + 500 * teamPosNum;
+      // Additional multipliers.
+      let posMultiplier = 1.0;
+      if (pos === "QB") posMultiplier = 0.9;
+      else if (pos === "TE") posMultiplier = 0.8;
+      score = score * posMultiplier;
+  
+      // Check if Devy Rankings Score is enabled.
+      const includeDevy = document.getElementById("includeDevyCheckbox").checked;
+      if (includeDevy) {
+        let pName = player.Name || player.name || "";
+        const normName = normalizeName(pName);
+        const devyScore = (devyRankings.hasOwnProperty(normName) && !isNaN(devyRankings[normName])) ? devyRankings[normName] : 1;
+        score += 250 * devyScore;
+      }
+      return score;
+    }
+
     /********** UI Display Functions **********/
     // Toggle collapse/expand for a given round.
     function toggleRound(event, roundNum) {
       event.stopPropagation();
-      // Toggle the collapse state.
       collapsedRounds[roundNum] = !collapsedRounds[roundNum];
-      // Update all rows for this round.
       const rows = document.querySelectorAll(`.round-${roundNum}`);
       rows.forEach(row => { row.style.display = collapsedRounds[roundNum] ? "none" : ""; });
-      // Update button text.
       const headerBtn = document.querySelector(`tr.round-header[data-round="${roundNum}"] button`);
       if (headerBtn) { headerBtn.textContent = collapsedRounds[roundNum] ? "+" : "–"; }
     }
@@ -336,7 +401,6 @@
       const tbody = document.getElementById("draftTable").querySelector("tbody");
       tbody.innerHTML = "";
       
-      // Group picks by round.
       let groups = {};
       draftPicks.forEach((pick, index) => {
         let roundStr = pick.ROUND || pick.Round || "";
@@ -349,14 +413,11 @@
         groups[roundStr].push({ pick: pick, index: index });
       });
       
-      // Get sorted rounds.
       const rounds = Object.keys(groups).sort((a, b) => parseInt(a) - parseInt(b));
       rounds.forEach(roundNum => {
-        // Create header row for the round.
         const headerRow = document.createElement("tr");
         headerRow.classList.add("round-header");
         headerRow.setAttribute("data-round", roundNum);
-        // Use the collapsed state if it exists, default to expanded (false).
         const isCollapsed = collapsedRounds[roundNum] || false;
         headerRow.innerHTML = `<td colspan="5" style="text-align:left; cursor:pointer;">
                                  Round ${roundNum} <button onclick="toggleRound(event, '${roundNum}')">${isCollapsed ? "+" : "–"}</button>
@@ -369,16 +430,14 @@
           const tr = document.createElement("tr");
           tr.classList.add("round-row", `round-${roundNum}`);
           tr.setAttribute("data-index", index);
-          // Apply collapse state if set.
           if (collapsedRounds[roundNum]) {
             tr.style.display = "none";
           }
-          // TEAM cell with team color.
           const teamName = pick.TEAM || pick.Team || "";
           const teamCell = `<td class="team-cell team-${teamName.toLowerCase()}">${teamName}</td>`;
           let assignedHTML = "";
           if (pick.assignedPlayer) {
-            assignedHTML = `${pick.assignedPlayer.Name} <button class="remove-assignment-btn" onclick="removeAssignment(event, ${index})">X</button>`;
+            assignedHTML = `${pick.assignedPlayer.Name || pick.assignedPlayer.name} <button class="remove-assignment-btn" onclick="removeAssignment(event, ${index})">X</button>`;
           }
           tr.innerHTML = `<td>${pick.ROUND || pick.Round || ""}</td>
                           <td>${pick.PICK || pick.Pick || ""}</td>
@@ -405,7 +464,7 @@
         const tr = document.createElement("tr");
         tr.setAttribute("data-index", index);
         tr.innerHTML = `<td>${player.Rank}</td>
-                        <td>${player.Name}</td>
+                        <td>${player.Name || player.name}</td>
                         <td>${player.Position || player.Pos}</td>
                         <td><button class="plus-btn" onclick="selectPlayer(event, ${index})">+</button></td>`;
         tbody.appendChild(tr);
@@ -429,28 +488,14 @@
 
     // Assign the selected available player to a draft pick.
     function assignPlayerToPick(pickIndex, player) {
-      const round = parseInt(draftPicks[pickIndex].ROUND || draftPicks[pickIndex].Round || "1");
-      const pos = (player.Position || player.Pos).toUpperCase();
-      const hitChance = (hitChances[pos] && hitChances[pos][round]) ? hitChances[pos][round] : 0;
-      const teamName = (draftPicks[pickIndex].TEAM || draftPicks[pickIndex].Team || "").toLowerCase();
-      let teamPosNum = 0;
-      if (teamName && teamPositionValues[teamName] && teamPositionValues[teamName][pos] !== undefined) {
-        teamPosNum = teamPositionValues[teamName][pos];
-      }
-      // Scoring formula:
-      // score = 5000 * (hit chance) + 500 * (team position number)
-      let score = 5000 * hitChance + 500 * teamPosNum;
-      // Additional multipliers: QB * 0.9, TE * 0.8.
-      let posMultiplier = 1.0;
-      if (pos === "QB") posMultiplier = 0.9;
-      else if (pos === "TE") posMultiplier = 0.8;
-      score = score * posMultiplier;
-
+      // Calculate score using the helper function.
+      const score = calculateScore(draftPicks[pickIndex], player);
       draftPicks[pickIndex].assignedPlayer = player;
       draftPicks[pickIndex].score = score;
-
-      availablePlayers = availablePlayers.filter(p => p.Name !== player.Name);
-
+  
+      const playerName = player.Name || player.name || "";
+      availablePlayers = availablePlayers.filter(p => (p.Name || p.name) !== playerName);
+  
       displayDraftPicks();
       displayAvailablePlayers();
     }
@@ -469,8 +514,18 @@
       }
     }
 
-    // When Finish Draft is clicked, display results using only assigned picks.
+    // Recalculate scores for all assigned picks (to reflect current checkbox state).
+    function recalcAssignedScores() {
+      draftPicks.forEach(pick => {
+        if (pick.assignedPlayer) {
+          pick.score = calculateScore(pick, pick.assignedPlayer);
+        }
+      });
+    }
+
+    // When Finish Draft is clicked, recalc scores then display results.
     function finishDraft() {
+      recalcAssignedScores();
       const assignedPicks = draftPicks.filter(p => p.assignedPlayer);
       assignedPicks.sort((a, b) => b.score - a.score);
       displayResults(assignedPicks);
@@ -486,12 +541,17 @@
       const ol = document.createElement("ol");
       picks.forEach(pick => {
         ol.appendChild(document.createElement("li")).textContent =
-          `${pick.assignedPlayer.Name} (${pick.assignedPlayer.Position || pick.assignedPlayer.Pos}) – Assigned to ${pick.TEAM || pick.Team} (Round ${pick.ROUND || pick.Round}, Pick ${pick.PICK || pick.Pick}) – Score: ${pick.score.toFixed(2)}`;
+          `${pick.assignedPlayer.Name || pick.assignedPlayer.name} (${pick.assignedPlayer.Position || pick.assignedPlayer.Pos}) – Assigned to ${pick.TEAM || pick.Team} (Round ${pick.ROUND || pick.Round}, Pick ${pick.PICK || pick.Pick}) – Score: ${pick.score.toFixed(2)}`;
       });
       resultsDiv.appendChild(ol);
     }
 
     document.getElementById("finishDraftButton").addEventListener("click", finishDraft);
+
+    // Helper: Normalize a name string.
+    function normalizeName(name) {
+      return name.toLowerCase().replace(/[^a-z0-9]/g, "");
+    }
 
     loadData();
   </script>
