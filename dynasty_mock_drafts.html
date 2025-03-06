@@ -24,6 +24,7 @@
     <meta name="twitter:title" content="Dynasty Mock Drafts – Dynasty Fantasy Football Analysis & Tools">
     <meta name="twitter:description" content="Explore comprehensive dynasty fantasy football analysis, mock drafts, trade calculators, and more.">
     <meta name="twitter:image" content="https://www.dynasty-toolbox.com/path/to/your-logo.png">
+    
     <style>
        /* Dynasty Mock Draft Bubble Styles */
        .dynasty-bubble {
@@ -40,14 +41,12 @@
             box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
-
         .dynasty-bubble img {
             width: 150px;
             height: 120px;
             border-radius: 20%;
             margin-right: 20px;
         }
-
         .dynasty-bubble div {
             font-size: 1.8em;
             flex: 1;
@@ -88,7 +87,7 @@
         <section>
             <h2>Select a Dynasty Mock Draft</h2>
             <div id="mockDraftList">
-                <!-- Mock draft cards will be dynamically generated here -->
+                <!-- The mock draft cards will be placed here inside a grid container -->
             </div>
         </section>
 
@@ -112,8 +111,10 @@
         const mockDraftRows = document.getElementById("mockDraftRows");
         const backToListButton = document.getElementById("backToList");
 
+        // Updated csvUrls with two dynasty mock drafts.
         const csvUrls = {
-            "January 2025 10 TM SF Dynasty Mock Draft": "https://docs.google.com/spreadsheets/d/e/2PACX-1vTssZu5UAqIQso_f5KsmwOgk_N6lVc-Ws6Ok6mZCxALKEUxrXPcn2VB7UsdBQ2L3yVGacGiZJyD21-m/pub?gid=68953556&single=true&output=csv"
+            "February - Pre-Combine SF Mock": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSFn2-Dq1t_Ivl3hTdtgznYQN4xgplEAw-Tk5iJKjwVVtbcyqa73Vny9dKIc8DH4qZs76FIVqqBk5P/pub?gid=68953556&single=true&output=csv",
+            "January - 10 TM SF Dynasty Mock Draft": "https://docs.google.com/spreadsheets/d/e/2PACX-1vTssZu5UAqIQso_f5KsmwOgk_N6lVc-Ws6Ok6mZCxALKEUxrXPcn2VB7UsdBQ2L3yVGacGiZJyD21-m/pub?gid=68953556&single=true&output=csv"
         };
 
         const photosPath = "./assets/Photos/"; // Directory for player photos
@@ -133,18 +134,24 @@
             return drafts;
         }
 
-        // Function to display the list of mock drafts
+        // Function to display the list of mock drafts in a condensed grid view.
         async function displayMockDraftList() {
             const drafts = await fetchMockDrafts();
+            // Clear the container.
+            mockDraftList.innerHTML = "";
+            // Create a grid container for the cards.
+            const gridContainer = document.createElement("div");
+            gridContainer.className = "mock-draft-grid"; // Ensure your style.css has grid styling for this class.
             Object.keys(drafts).forEach((title) => {
                 const card = document.createElement("div");
                 card.className = "mock-card";
                 card.innerHTML = `<h3>${title}</h3><button onclick="viewMockDraft('${title}')">View Draft</button>`;
-                mockDraftList.appendChild(card);
+                gridContainer.appendChild(card);
             });
+            mockDraftList.appendChild(gridContainer);
         }
 
-        // Function to display a specific mock draft
+        // Function to display a specific mock draft.
         async function viewMockDraft(title) {
             const drafts = await fetchMockDrafts();
             const picks = drafts[title];
@@ -155,7 +162,7 @@
                 const row = document.createElement("div");
                 row.className = "dynasty-bubble";
 
-                // Instead of using the player name, build the image filename using team and position.
+                // Instead of using the player name for the image filename, use team and position.
                 const photoFileName = (pick.team + "-" + pick.position).toLowerCase().trim().replace(/\s+/g, "-") + ".png";
                 const photoPath = photosPath + photoFileName;
 
@@ -173,13 +180,13 @@
             mockDraftDisplay.style.display = "block";
         }
 
-        // Event listener for "Back to List" button
+        // Event listener for "Back to List" button.
         backToListButton.addEventListener("click", () => {
             mockDraftDisplay.style.display = "none";
             mockDraftList.style.display = "block";
         });
 
-        // Initial load
+        // Initial load.
         displayMockDraftList();
     </script>
 </body>

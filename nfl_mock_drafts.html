@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NFL Mock Drafts</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NFL Mock Drafts</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
   
-    <!-- Meta Tags for SEO -->
+  <!-- Meta Tags for SEO -->
   <meta name="description" content="NFL Mock Drafts">
   <meta name="keywords" content="dynasty fantasy football, dynasty tools, mock drafts, trade calculator, college development players, fantasy football analysis, devy, sleeper, dynasty toolbox">
   
@@ -24,213 +24,348 @@
   <meta name="twitter:title" content="NFL Mock Drafts – Dynasty Fantasy Football Analysis & Tools">
   <meta name="twitter:description" content="Explore comprehensive dynasty fantasy football analysis, mock drafts, trade calculators, and more.">
   <meta name="twitter:image" content="https://www.dynasty-toolbox.com/path/to/your-logo.png">
-    <style>
-.condensed-grid {
-    display: grid;
-    grid-template-columns: repeat(8, 1fr); /* Set to 8 columns wide */
-    gap: 10px;
-    margin: 20px auto;
-    max-width: 1200px; /* Adjust as needed to center the grid */
-}
-
-.condensed-card {
-    background: #f9f9f9;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 10px;
-    text-align: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    font-size: 0.9em;
-    overflow: hidden; /* Prevent content overflow */
-}
-
-.condensed-card img {
-    max-width: 40px;
-    max-height: 40px;
-    margin-bottom: 5px;
-}
-
-    </style>
+  
+  <style>
+    /* Condensed grid styles for non-hyper view */
+    .condensed-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin: 20px auto;
+      max-width: 1200px;
+    }
+    /* Hyper grid: team cards with a larger min-width */
+    .hyper-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 10px;
+      margin: 20px auto;
+      max-width: 1200px;
+    }
+    .condensed-card {
+      background: #f9f9f9;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      font-size: 0.9em;
+      overflow: hidden;
+    }
+    .condensed-card img {
+      max-width: 40px;
+      max-height: 40px;
+      margin-bottom: 5px;
+    }
+    /* New team-card class for hyper view cards */
+    .team-card {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      margin: 5px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      font-size: 0.9em;
+      overflow: hidden;
+    }
+    /* Ensure logos in team cards stay small */
+    .team-card img {
+      max-width: 50px;
+      max-height: 50px;
+      margin-bottom: 5px;
+    }
+    /* Existing dynasty bubble styles for full view */
+    .dynasty-bubble {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f9f9f9;
+      border: 2px solid #ccc;
+      border-radius: 30px;
+      padding: 35px;
+      margin: 20px auto;
+      width: 85%;
+      max-width: 900px;
+      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    .dynasty-bubble img {
+      width: 150px;
+      height: 120px;
+      border-radius: 20%;
+      margin-right: 20px;
+    }
+    .dynasty-bubble div {
+      font-size: 1.8em;
+      flex: 1;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <h1>NFL Mock Drafts</h1>
-    </header>
-    <nav>
-        <div class="dropdown">
-          <a href="#" class="dropbtn">Rankings</a>
-          <div class="dropdown-content">
-            <a href="college_rankings.html">Devy Rankings</a>
-            <a href="nfl_rankings.html">NFL Player Rankings</a>
-          </div>
-        </div>
-        <div class="dropdown">
-          <a href="#" class="dropbtn">Draft</a>
-          <div class="dropdown-content">
-            <a href="dynasty_mock_drafts.html">Dynasty</a>
-            <a href="nfl_mock_drafts.html">NFL</a>
-          </div>
-        </div>
-        <div class="dropdown">
-          <a href="#" class="dropbtn">Tools</a>
-          <div class="dropdown-content">
-            <a href="trade_calculator.html">Trade Calculator</a>
+  <header>
+    <h1>NFL Mock Drafts</h1>
+  </header>
+  <nav>
+    <div class="dropdown">
+      <a href="#" class="dropbtn">Rankings</a>
+      <div class="dropdown-content">
+        <a href="college_rankings.html">Devy Rankings</a>
+        <a href="nfl_rankings.html">NFL Player Rankings</a>
+      </div>
+    </div>
+    <div class="dropdown">
+      <a href="#" class="dropbtn">Draft</a>
+      <div class="dropdown-content">
+        <a href="dynasty_mock_drafts.html">Dynasty</a>
+        <a href="nfl_mock_drafts.html">NFL</a>
+      </div>
+    </div>
+    <div class="dropdown">
+      <a href="#" class="dropbtn">Tools</a>
+      <div class="dropdown-content">
+        <a href="trade_calculator.html">Trade Calculator</a>
         <a href="devy_mock_simulator.html">Devy Mock Simulator</a>
         <a href="league_rankings.html">League Rankings</a>
-          </div>
-        </div>
-      </nav>
-
-    <main>
-        <section>
-            <h2>Select an NFL Mock Draft</h2>
-            <div id="mockDraftList">
-                <!-- Mock draft cards will be dynamically generated here -->
-            </div>
-        </section>
-
-        <section id="mockDraftDisplay" style="display: none;">
-            <button id="backToList" style="margin-bottom: 20px;">Back to List</button>
-            <h2 id="mockTitle">Mock Draft Title</h2>
-            <div>
-                <button id="toggleCondensedView" style="margin-bottom: 20px;">View Condensed</button>
-            </div>
-            <div id="mockDraftRows">
-                <!-- Draft rows will be dynamically populated here -->
-            </div>
-        </section>
-
-    </main>
-
-    <footer>
-        <p>&copy; 2025 Dynasty Fantasy Football</p>
-    </footer>
-
-    <script>
-        const mockDraftList = document.getElementById("mockDraftList");
-        const mockDraftDisplay = document.getElementById("mockDraftDisplay");
-        const mockTitle = document.getElementById("mockTitle");
-        const mockDraftRows = document.getElementById("mockDraftRows");
-        const backToListButton = document.getElementById("backToList");
-        const toggleCondensedViewButton = document.getElementById("toggleCondensedView");
-
-        const csvUrls = {
-    "January 2025 NFL Mock Draft": "https://docs.google.com/spreadsheets/d/e/2PACX-1vTssZu5UAqIQso_f5KsmwOgk_N6lVc-Ws6Ok6mZCxALKEUxrXPcn2VB7UsdBQ2L3yVGacGiZJyD21-m/pub?gid=0&single=true&output=csv",
-    "February 2025 NFL Mock Draft": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSFn2-Dq1t_Ivl3hTdtgznYQN4xgplEAw-Tk5iJKjwVVtbcyqa73Vny9dKIc8DH4qZs76FIVqqBk5P/pub?gid=0&single=true&output=csv"
-};
-const logosPath = "./assets/Logos/";
-let currentDraft = [];
-let isCondensedView = false;
-
-async function fetchMockDrafts() {
-    const drafts = {};
-
-    for (const [title, url] of Object.entries(csvUrls)) {
+      </div>
+    </div>
+  </nav>
+  
+  <main>
+    <section>
+      <h2>Select an NFL Mock Draft</h2>
+      <div id="mockDraftList">
+        <!-- Mock draft cards will be dynamically generated here -->
+      </div>
+    </section>
+  
+    <section id="mockDraftDisplay" style="display: none;">
+      <button id="backToList" style="margin-bottom: 20px;">Back to List</button>
+      <h2 id="mockTitle">Mock Draft Title</h2>
+      <div style="text-align:center; margin-bottom:20px;">
+        <button id="toggleViewButton">View Condensed</button>
+      </div>
+      <div id="mockDraftRows">
+        <!-- Draft rows or team cards will be dynamically populated here -->
+      </div>
+    </section>
+  </main>
+  
+  <footer>
+    <p>&copy; 2025 Dynasty Fantasy Football</p>
+  </footer>
+  
+  <script>
+    const mockDraftList = document.getElementById("mockDraftList");
+    const mockDraftDisplay = document.getElementById("mockDraftDisplay");
+    const mockTitle = document.getElementById("mockTitle");
+    const mockDraftRows = document.getElementById("mockDraftRows");
+    const backToListButton = document.getElementById("backToList");
+    const toggleViewButton = document.getElementById("toggleViewButton");
+  
+    // Global variable for view mode: "full", "condensed", "hyper"
+    let viewMode = "full";
+    let currentDraft = [];
+  
+    // CSV URLs for mock drafts.
+    const csvUrls = {
+      "February - Pre-Combine": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSFn2-Dq1t_Ivl3hTdtgznYQN4xgplEAw-Tk5iJKjwVVtbcyqa73Vny9dKIc8DH4qZs76FIVqqBk5P/pub?gid=0&single=true&output=csv",
+      "January 2025 NFL Mock Draft": "https://docs.google.com/spreadsheets/d/e/2PACX-1vTssZu5UAqIQso_f5KsmwOgk_N6lVc-Ws6Ok6mZCxALKEUxrXPcn2VB7UsdBQ2L3yVGacGiZJyD21-m/pub?gid=0&single=true&output=csv"
+    };
+  
+    const logosPath = "./assets/Logos/";
+  
+    // Helper: Normalize team class names: keep digits, remove spaces and punctuation.
+    function normalizeTeamClass(team) {
+      return team.toLowerCase().replace(/[^a-z0-9]/g, "").trim();
+    }
+    // Helper: Normalize team display names: remove extra symbols and set to all caps.
+    function normalizeTeamDisplay(team) {
+      return team.toUpperCase().replace(/[^A-Z0-9]/g, "").trim();
+    }
+  
+    // Helper: Compute round number from pick.
+    function getRoundFromPick(pick) {
+      let pickStr = pick.trim();
+      if (/^\d+$/.test(pickStr)) {
+        const n = parseInt(pickStr);
+        if (n <= 32) return "1";
+        else if (n <= 64) return "2";
+        else if (n <= 96) return "3";
+        else if (n <= 133) return "4";
+        else if (n <= 169) return "5";
+        else if (n <= 210) return "6";
+        else if (n <= 250) return "7";
+        else return "";
+      } else if (/^[cC](\d+)$/g.test(pickStr)) {
+        const numPart = parseInt(pickStr.replace(/^[cC]/, ""));
+        if (numPart <= 5) return "3";
+        else if (numPart <= 11) return "4";
+        else if (numPart <= 20) return "5";
+        else if (numPart <= 28) return "6";
+        else if (numPart <= 35) return "7";
+        else return "";
+      } else {
+        const matches = pickStr.match(/\d+/);
+        if (matches) {
+          const n = parseInt(matches[0]);
+          if (n <= 32) return "1";
+          else if (n <= 64) return "2";
+          else if (n <= 96) return "3";
+          else if (n <= 133) return "4";
+          else if (n <= 169) return "5";
+          else if (n <= 210) return "6";
+          else if (n <= 250) return "7";
+          else return "";
+        }
+        return "";
+      }
+    }
+  
+    // Function to fetch and parse CSV for mock drafts.
+    async function fetchMockDrafts() {
+      const drafts = {};
+      for (const [title, url] of Object.entries(csvUrls)) {
         const response = await fetch(url);
         const csvText = await response.text();
         const rows = csvText.split("\n").slice(1);
         drafts[title] = rows.map(row => {
-            const [pick, team, player, position, college] = row.split(",");
-            return { pick, team, player, position, college };
+          const [pick, team, player, position, college] = row.split(",");
+          return { pick, team, player, position, college };
         });
+      }
+      return drafts;
     }
-
-    return drafts;
-}
-
-async function displayMockDraftList() {
-    const drafts = await fetchMockDrafts();
-
-    Object.keys(drafts).forEach(title => {
+  
+    // Display the list of mock drafts as cards in a grid.
+    async function displayMockDraftList() {
+      const drafts = await fetchMockDrafts();
+      mockDraftList.innerHTML = "";
+      const gridContainer = document.createElement("div");
+      gridContainer.className = "mock-draft-grid"; // Use your grid layout from style.css.
+      Object.keys(drafts).forEach(title => {
         const card = document.createElement("div");
         card.className = "mock-card";
-        card.innerHTML = `
-            <h3>${title}</h3>
-            <button onclick="viewMockDraft('${title}')">View Draft</button>
-        `;
-        mockDraftList.appendChild(card);
-    });
-}
-
-async function viewMockDraft(title) {
-    const drafts = await fetchMockDrafts();
-    currentDraft = drafts[title];
-    mockTitle.textContent = title;
-    renderDraftRows(currentDraft);
-    mockDraftList.style.display = "none";
-    mockDraftDisplay.style.display = "block";
-}
-
-function renderDraftRows(data) {
-    mockDraftRows.innerHTML = ""; // Clear existing rows
-
-    if (isCondensedView) {
-        mockDraftRows.className = "condensed-grid";
-        data.forEach(pick => {
-            const card = document.createElement("div");
-            card.className = "condensed-card";
-
-            const logoFileName = pick.team
-                ? pick.team.toLowerCase().replace(/\s+/g, "-") + ".png"
-                : "";
-            const logoPath = logosPath + logoFileName;
-
-            card.innerHTML = `
-                ${pick.team ? `<img src="${logoPath}" alt="${pick.team} logo">` : ""}
-                <div>Pick: ${pick.pick || "N/A"}</div>
-                <div>${pick.player || ""}</div>
-                <div>${pick.position || ""}</div>
-                <div>${pick.college || ""}</div>
-            `;
-            mockDraftRows.appendChild(card);
-        });
-    } else {
-        mockDraftRows.className = ""; // Reset grid class for uncondensed view
-        data.forEach(pick => {
-            const row = document.createElement("div");
-
-            // Dynamically assign team colors
-            const teamColorClass = pick.team
-                ? `team-${pick.team.toLowerCase().replace(/\s+/g, "-")}`
-                : "";
-
-            row.className = `draft-row ${teamColorClass}`;
-            const logoFileName = pick.team
-                ? pick.team.toLowerCase().replace(/\s+/g, "-") + ".png"
-                : "";
-            const logoPath = logosPath + logoFileName;
-
-            const logoHTML = pick.team
-                ? `<img src="${logoPath}" alt="${pick.team} logo" class="team-logo">`
-                : "";
-
-            row.innerHTML = `
-                <div>${pick.pick || ""}</div>
-                <div>${logoHTML}</div>
-                <div>${pick.team || ""}</div>
-                <div>${pick.player || ""}</div>
-                <div>${pick.position || ""}</div>
-                <div>${pick.college || ""}</div>
-            `;
-            mockDraftRows.appendChild(row);
-        });
+        card.innerHTML = `<h3>${title}</h3><button onclick="viewMockDraft('${title}')">View Draft</button>`;
+        gridContainer.appendChild(card);
+      });
+      mockDraftList.appendChild(gridContainer);
     }
-}
-
-
-toggleCondensedViewButton.addEventListener("click", () => {
-    isCondensedView = !isCondensedView;
-    toggleCondensedViewButton.textContent = isCondensedView ? "View Full" : "View Condensed";
-    renderDraftRows(currentDraft);
-});
-
-backToListButton.addEventListener("click", () => {
-    mockDraftDisplay.style.display = "none";
-    mockDraftList.style.display = "block";
-});
-
-displayMockDraftList();
-
-    </script>
+  
+    // Display a specific mock draft.
+    async function viewMockDraft(title) {
+      const drafts = await fetchMockDrafts();
+      currentDraft = drafts[title];
+      mockTitle.textContent = title;
+      renderDraftRows(currentDraft);
+      mockDraftList.style.display = "none";
+      mockDraftDisplay.style.display = "block";
+      viewMode = "full";
+      toggleViewButton.textContent = "View Condensed";
+    }
+  
+    // Render draft rows based on view mode.
+    function renderDraftRows(data) {
+      mockDraftRows.innerHTML = "";
+      if (viewMode === "hyper") {
+        // Hyper view: group picks by team.
+        const teams = {};
+        data.forEach(pick => {
+          if (!pick.team || pick.team.trim().toUpperCase() === "TEAM") return;
+          const teamKey = normalizeTeamClass(pick.team);
+          if (!teams[teamKey]) {
+            teams[teamKey] = { displayName: normalizeTeamDisplay(pick.team), picks: [] };
+          }
+          teams[teamKey].picks.push(pick);
+        });
+        const gridContainer = document.createElement("div");
+        gridContainer.className = "hyper-grid";
+        Object.keys(teams).forEach(teamKey => {
+          const teamData = teams[teamKey];
+          const card = document.createElement("div");
+          // Use a dedicated team-card class so external CSS applies.
+          card.className = "team-card team-" + teamKey;
+          let innerHTML = "";
+          const logoFileName = teamKey + ".png";
+          const logoPath = logosPath + logoFileName;
+          innerHTML += `<img src="${logoPath}" alt="${teamData.displayName} logo" onerror="this.style.display='none'">`;
+          innerHTML += `<h3>${teamData.displayName}</h3>`;
+          innerHTML += `<ul style="text-align: left; padding-left: 10px; margin: 0;">`;
+          teamData.picks.forEach(pick => {
+            const roundDisplay = getRoundFromPick(pick.pick);
+            innerHTML += `<li>${roundDisplay ? roundDisplay + ": " : ""}${pick.player} (${pick.position})</li>`;
+          });
+          innerHTML += "</ul>";
+          card.innerHTML = innerHTML;
+          gridContainer.appendChild(card);
+        });
+        mockDraftRows.appendChild(gridContainer);
+      } else if (viewMode === "condensed") {
+        // Condensed view: each pick as a small card.
+        const gridContainer = document.createElement("div");
+        gridContainer.className = "condensed-grid";
+        gridContainer.style.gridTemplateColumns = "repeat(auto-fit, minmax(150px, 1fr))";
+        data.forEach(pick => {
+          if (!pick.team || pick.team.trim().toUpperCase() === "TEAM") return;
+          const card = document.createElement("div");
+          card.className = "condensed-card";
+          const logoFileName = pick.team ? pick.team.toLowerCase().replace(/\s+/g, "-") + ".png" : "";
+          const logoPath = logosPath + logoFileName;
+          card.innerHTML = `
+            ${pick.team ? `<img src="${logoPath}" alt="${pick.team} logo">` : ""}
+            <div>Pick: ${pick.pick || "N/A"}</div>
+            <div>${pick.player || ""}</div>
+            <div>${pick.position || ""}</div>
+            <div>${pick.college || ""}</div>
+          `;
+          gridContainer.appendChild(card);
+        });
+        mockDraftRows.appendChild(gridContainer);
+      } else {
+        // Full view: uncondensed list.
+        mockDraftRows.className = "";
+        data.forEach(pick => {
+          if (!pick.team || pick.team.trim().toUpperCase() === "TEAM") return;
+          const row = document.createElement("div");
+          const teamColorClass = pick.team ? "team-" + pick.team.toLowerCase().replace(/\s+/g, "-") : "";
+          row.className = `draft-row ${teamColorClass}`;
+          const logoFileName = pick.team ? pick.team.toLowerCase().replace(/\s+/g, "-") + ".png" : "";
+          const logoPath = logosPath + logoFileName;
+          const logoHTML = pick.team ? `<img src="${logoPath}" alt="${pick.team} logo" class="team-logo">` : "";
+          row.innerHTML = `
+            <div>${pick.pick || ""}</div>
+            <div>${logoHTML}</div>
+            <div>${pick.team || ""}</div>
+            <div>${pick.player || ""}</div>
+            <div>${pick.position || ""}</div>
+            <div>${pick.college || ""}</div>
+          `;
+          mockDraftRows.appendChild(row);
+        });
+      }
+    }
+  
+    // Toggle view mode: cycles through full -> condensed -> hyper -> full.
+    toggleViewButton.addEventListener("click", () => {
+      if (viewMode === "full") {
+        viewMode = "condensed";
+        toggleViewButton.textContent = "View By Team";
+      } else if (viewMode === "condensed") {
+        viewMode = "hyper";
+        toggleViewButton.textContent = "View Full";
+      } else {
+        viewMode = "full";
+        toggleViewButton.textContent = "View Condensed";
+      }
+      renderDraftRows(currentDraft);
+    });
+  
+    backToListButton.addEventListener("click", () => {
+      mockDraftDisplay.style.display = "none";
+      mockDraftList.style.display = "block";
+    });
+  
+    displayMockDraftList();
+  </script>
 </body>
 </html>
