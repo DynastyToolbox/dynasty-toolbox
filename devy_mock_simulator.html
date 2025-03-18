@@ -377,7 +377,7 @@
         teamPosNum = teamPositionValues[teamName][pos];
       }
       // Base scoring formula.
-      let score = 5000 * hitChance + 500 * teamPosNum;
+      let score = 5000 * hitChance + 300 * teamPosNum;
       // Additional multipliers.
       let posMultiplier = 1.0;
       if (pos === "QB") posMultiplier = 0.9;
@@ -390,7 +390,7 @@
         let pName = player.Name || player.name || "";
         const normName = normalizeName(pName);
         const devyScore = (devyRankings.hasOwnProperty(normName) && !isNaN(devyRankings[normName])) ? devyRankings[normName] : 1;
-        score += 250 * devyScore;
+        score += 300 * devyScore;
       }
       return score;
     }
