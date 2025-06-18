@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Team Analyzer</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet" />
+  <!-- SEO & Social -->
+  <meta name="description" content="Dynasty Team Analyzer – In-depth analysis of your fantasy football team.">
+  <meta name="keywords" content="dynasty fantasy football, sleeper, team analysis, trade suggestions, mock drafts, dynasty toolbox">
+  <meta property="og:title" content="Team Analyzer – Dynasty Fantasy Football Tools">
+  <meta property="og:description" content="Analyze your dynasty fantasy football team using real data and rankings.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.dynasty-toolbox.com/team_analyzer.html">
+  <meta property="og:image" content="https://www.dynasty-toolbox.com/path/to/your-logo.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Team Analyzer – Dynasty Toolbox">
+  <meta name="twitter:description" content="Compare, rank, and evaluate your dynasty team.">
+  <meta name="twitter:image" content="https://www.dynasty-toolbox.com/path/to/your-logo.png">
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-1C5TVEGFXT"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1C5TVEGFXT');
+  </script>
+  <style>
+    body {
+      font-family: 'Bree Serif', serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      text-align: center;
+      padding: 20px 0 0 0;
+    }
+    h1 {
+      margin-bottom: 5px;
+    }
+    nav {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    nav .dropdown {
+      display: inline-block;
+      position: relative;
+      margin: 0 10px;
+    }
+    nav .dropbtn {
+      text-decoration: none;
+      color: #fff;
+      background: #004d40;
+      padding: 10px 15px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    nav .dropdown-content {
+      display: none;
+      position: absolute;
+      background: #004d40;
+      min-width: 160px;
+      z-index: 1;
+    }
+    nav .dropdown:hover .dropdown-content {
+      display: block;
+    }
+    nav .dropdown-content a {
+      color: #fff;
+      text-decoration: none;
+      display: block;
+      padding: 8px 10px;
+    }
+
+    #mainContainer {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 30px;
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 10px 10px 40px 10px;
+    }
+    #leftContent {
+      flex: 2;
+      min-width: 350px;
+      max-width: 730px;
+    }
+    #rightContent {
+      flex: 1;
+      min-width: 320px;
+      max-width: 350px;
+    }
+    #teamInputContainer {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    #analyzerLeagueId, #analyzeBtn, #teamDropdown {
+      padding: 10px;
+      font-size: 1em;
+      margin: 5px;
+    }
+    #analyzeBtn {
+      background: #004d40;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #results {
+      background: white;
+      padding: 24px 32px;
+      border-radius: 10px;
+      border: 2px solid #004d40;
+      box-shadow: 0px 4px 10px rgba(0,0,0,0.16);
+      margin-bottom: 40px;
+    }
+    .category {
+      margin-bottom: 28px;
+    }
+    .category h3 {
+      color: #004d40;
+      border-bottom: 2px solid #004d40;
+      padding-bottom: 5px;
+      margin-bottom: 12px;
+    }
+    .player-list {
+      columns: 2;
+      padding-left: 20px;
+    }
+    .player-list li {
+      margin-bottom: 5px;
+    }
+
+    /* Depth Chart Side Panel */
+    #sideDepthPanel {
+      background: #fff;
+      border: 2px solid #004d40;
+      border-radius: 10px;
+      box-shadow: 0px 4px 10px rgba(0,0,0,0.11);
+      padding: 18px 18px 14px 18px;
+      min-width: 290px;
+      max-width: 330px;
+      margin-top: 0;
+      display: none;
+    }
+    #depthChartType {
+      width: 95%;
+      margin-bottom: 12px;
+      padding: 8px;
+      border-radius: 5px;
+      border: 1.5px solid #004d40;
+      background: #e0f2f1;
+      color: #004d40;
+      font-weight: bold;
+      font-size: 1.07em;
+    }
+    .depth-team-card h3 {
+      text-align: center;
+      margin-bottom: 6px;
+      margin-top: 0;
+    }
+    .position-group {
+      margin-bottom: 10px;
+      border-radius: 6px;
+      padding: 7px 7px 3px 7px;
+    }
+    .position-QB { background-color: #e0f7fa; }
+    .position-RB { background-color: #fff9c4; }
+    .position-WR { background-color: #fce4ec; }
+    .position-TE { background-color: #e8f5e9; }
+    .position-group h4 {
+      margin: 0 0 5px 0;
+      font-size: 1em;
+      font-weight: bold;
+      color: #00332d;
+    }
+    .position-group ul {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+      font-size: 0.98em;
+    }
+    .position-group li {
+      margin-bottom: 2px;
+    }
+
+    @media (max-width: 1000px) {
+      #mainContainer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 18px;
+      }
+      #rightContent, #leftContent {
+        max-width: 100%;
+        min-width: 0;
+      }
+      #results {
+        padding: 18px 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Team Analyzer</h1>
+    <p>Enter your Sleeper League ID and choose your team to get an in-depth breakdown.</p>
+  </header>
+  <nav>
+    <div class="dropdown">
+      <a href="#" class="dropbtn">Rankings</a>
+      <div class="dropdown-content">
+        <a href="college_rankings.html">Devy Rankings</a>
+        <a href="nfl_rankings.html">NFL Player Rankings</a>
+      </div>
+    </div>
+    <div class="dropdown">
+      <a href="#" class="dropbtn">Draft</a>
+      <div class="dropdown-content">
+        <a href="dynasty_mock_drafts.html">Dynasty</a>
+        <a href="nfl_mock_drafts.html">NFL</a>
+      </div>
+    </div>
+    <div class="dropdown">
+      <a href="#" class="dropbtn">Tools</a>
+      <div class="dropdown-content">
+        <a href="trade_calculator.html">Trade Calculator</a>
+        <a href="devy_mock_simulator.html">Devy Mock Simulator</a>
+        <a href="league_rankings.html">League Rankings</a>
+        <a href="team_analyzer.html">Team Analyzer</a>
+      </div>
+    </div>
+  </nav>
+
+  <div id="teamInputContainer">
+    <input type="text" id="analyzerLeagueId" placeholder="Enter Sleeper League ID" />
+    <button id="analyzeBtn">Load Teams</button>
+    <br />
+    <select id="teamDropdown" style="display: none;"></select>
+  </div>
+
+  <div id="mainContainer">
+    <!-- Left: Main Team Analysis -->
+    <div id="leftContent">
+      <div id="results">
+        <!-- Team title card -->
+        <div class="category" id="teamTitle"></div>
+
+        <!-- Cornerstones: top-8 at each position -->
+        <div class="category" id="cornerstones"></div>
+
+        <div class="category" id="startingLineup"></div>
+
+        <!-- Needs & Surplus -->
+        <div class="category" id="needsSurplus"></div>
+
+        <!-- Trade Ideas -->
+        <div class="category" id="tradeIdeas"></div>
+      </div>
+    </div>
+
+    <!-- Right: Depth Chart Side Panel -->
+    <div id="rightContent">
+      <div id="sideDepthPanel">
+        <select id="depthChartType">
+          <option value="competing">Competing</option>
+          <option value="overall">Overall</option>
+          <option value="tanking">Tanking</option>
+        </select>
+        <div id="depthChartTeamCard"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Your analysis logic -->
+  <script src="team_analyzer.js"></script>
+</body>
+</html>

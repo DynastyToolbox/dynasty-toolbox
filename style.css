@@ -341,4 +341,340 @@ footer p {
     background: #004d40;
     color: #fff;
   }
-  
+  /* ------------------------------------------------------------------
+   Team Title Card
+   ------------------------------------------------------------------ */
+#teamTitle > div {
+  text-align: center;    /* center all text inside the card */
+  margin-bottom: 40px;   /* extra space below */
+}
+
+/* Team Title Card */
+.title-card {
+  background: #e0f2f1;
+  border-radius: 9px;
+  border: 2.5px solid #004d40;
+  padding: 32px 22px 18px;
+  box-shadow: 0 2px 10px rgba(0,77,64,0.07);
+  margin-bottom: 22px;
+}
+.title-card h1 {
+  font-family: 'Montserrat', sans-serif;
+  color: #004d40;
+  font-size: 2.5em;
+  margin-bottom: 8px;
+}
+.title-card p {
+  margin-top: 18px;
+  font-size: 1.12em;
+  font-weight: 500;
+}
+
+/* ------------------------------------------------------------------
+   Cornerstone Bubbles
+   ------------------------------------------------------------------ */
+#cornerstones {
+  text-align: center;    /* center the whole block */
+}
+
+/* Cornerstones grid container */
+.cornerstones-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+/* Base bubble style */
+.cornerstone-bubble {
+  padding: 10px 16px;
+  border-radius: 20px;
+  text-align: center;
+  font-weight: 600;
+  color: #fff;                /* make the text white */
+  font-size: 0.95em;
+  line-height: 1.2;
+  min-width: 100px;
+}
+
+/* Position-specific colors */
+.cs-QB { background-color: #003a7c; }   /* blue */
+.cs-RB { background-color: #6601a0; }   /* gold */
+.cs-WR { background-color: #b6001b; }   /* red */
+.cs-TE { background-color: #217400; }   /* dark green */
+
+/* Smaller “(QB)” text under name */
+.cornerstone-pos {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.8em;
+  font-weight: 400;
+  opacity: 0.8;
+}
+.gs-list { list-style: none; padding-left: 1em; }
+.gs-list li::before { content: "• "; color: inherit; }
+
+/* Tier colors */
+.tier-extreme-gap          { color: #8B0000; }
+.tier-significant-gap      { color: #C04000; }
+.tier-well-gap             { color: #E06500; }
+.tier-gap                  { color: #FF8C00; }
+
+.tier-strength             { color: #006400; }
+.tier-well-strength        { color: #008000; }
+.tier-significant-strength { color: #00A000; }
+.tier-extreme-strength     { color: #00C000; }
+
+
+.draft-picks h4 {
+  margin: 0 0 6px;
+  font-size: 1em;
+  font-weight: bold;
+  color: #00332d;
+}
+.draft-picks ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.draft-picks li {
+  margin-bottom: 4px;
+  font-size: 0. nineem;
+}
+
+.position-group.draft-picks ul li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.pick-origin {
+  opacity: 0.7;
+  font-size: 0.9em;
+  font-style: italic;
+}
+.pick-score {
+  opacity: 0.7;
+  font-size: 0.9em;
+}
+
+/* Top Targets */
+#topTargets h3 {
+  color: #004d40;
+  border-bottom: 2px solid #004d40;
+  padding-bottom: 4px;
+  margin-bottom: 12px;
+}
+
+#topTargets p {
+  font-size: 1em;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.targets-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.target-bubble {
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-weight: 600;
+  color: #fff;
+  font-size: 0.95em;
+  text-align: center;
+  min-width: 100px;
+}
+
+/* Position-specific bubble colors */
+.tb-QB    { background-color: #003a7c; }
+.tb-RB    { background-color: #6601a0; }
+.tb-WR    { background-color: #b6001b; }
+.tb-TE    { background-color: #217400; }
+.tb-FLEX  { background-color: #FFD700; color: #000; }
+
+
+
+/* keep the old caps for core positions, but non-caps for Flex & Super Flex */
+.pos-QB, .pos-RB, .pos-WR, .pos-TE {
+  text-transform: uppercase;
+}
+.pos-Flex, .pos-Super\ Flex {
+  text-transform: none;
+}
+
+/* ensure Flex & Super Flex bubbles use the same gold background */
+.tb-FLEX, .tb-Super\ Flex {
+  background-color: #FFD700;
+  color: #000;
+}
+
+/*────────────────────────────────────────────────────
+  STARTING LINEUP
+────────────────────────────────────────────────────*/
+#startingLineup ul.player-list li {
+  background: #ffffff;           /* white card */
+  border: 1px solid #004d40;     /* dark green border */
+  color: #333;                   /* dark text */
+  padding: 8px 12px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.15s ease-out, background 0.15s ease-out;
+}
+
+#startingLineup ul.player-list li:hover {
+  background: #e0f2f1;
+  transform: translateY(-2px);
+}
+
+/* label colouring */
+.pos-QB  { color: #003a7c; text-transform: uppercase; }
+.pos-RB  { color: #6601a0; text-transform: uppercase; }
+.pos-WR  { color: #b6001b; text-transform: uppercase; }
+.pos-TE  { color: #217400; text-transform: uppercase; }
+.pos-Flex { color: #FFD700; /* no uppercase */ }
+.pos-SUPER { color: #FFD700; /* no uppercase */ }
+
+/* tighten up the “LABEL : Name” spacing */
+#startingLineup ul.player-list li strong {
+  margin-right: 4px;
+}
+
+/*────────────────────────────────────────────────────
+  STRENGTHS & GAPS (needsSurplus)
+────────────────────────────────────────────────────*/
+#needsSurplus h3 {
+  color: #004d40;
+  border-bottom: 2px solid #004d40;
+  padding-bottom: 4px;
+  margin-top: 24px;
+  margin-bottom: 12px;
+}
+
+#needsSurplus ul.gs-list {
+  list-style: none;
+  padding-left: 1em;
+  margin-bottom: 24px;
+}
+
+#needsSurplus ul.gs-list li {
+  position: relative;
+  margin-bottom: 8px;
+  padding-left: 1.2em;
+  line-height: 1.4;
+}
+
+#needsSurplus ul.gs-list li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: inherit;
+}
+
+#needsSurplus ul.gs-list li span {
+  font-weight: 700;
+}
+
+/*────────────────────────────────────────────────────────
+  STARTING LINEUP — center & recolor labels
+────────────────────────────────────────────────────────*/
+#startingLineup ul.player-list li {
+  justify-content: center;     /* center both label and name */
+  text-align: center;          /* center in any wrapping case */
+}
+
+/* bump the spacing back out (optional) */
+#startingLineup ul.player-list li strong {
+  margin-right: 8px;
+}
+
+/* re-apply your position colors to the label */
+#startingLineup ul.player-list li.pos-QB strong  { color: #003a7c; }
+#startingLineup ul.player-list li.pos-RB strong  { color: #6601a0; }
+#startingLineup ul.player-list li.pos-WR strong  { color: #b6001b; }
+#startingLineup ul.player-list li.pos-TE strong  { color: #217400; }
+#startingLineup ul.player-list li.pos-Flex strong{ color: #FFD700; }
+#startingLineup ul.player-list li.pos-SUPER strong{ color: #FFD700; }
+/*────────────────────────────────────────────────────────
+  ALIGN STARTING‐LINEUP COLONS
+────────────────────────────────────────────────────────*/
+#startingLineup ul.player-list {
+  justify-content: start;  /* left‐align the cards so they all start in the same column */
+}
+
+#startingLineup ul.player-list li {
+  /* revert back to flex‐start so our inline‐block labels align */
+  justify-content: flex-start;
+}
+
+#startingLineup ul.player-list li strong {
+  display: inline-block;   /* turn the slot label into a fixed‐width box */
+  width: 6ch;              /* adjust this to fit your longest label (e.g. “SUPER_FLEX1”) */
+  text-align: right;       /* right‐align the label inside its box */
+  margin-right: 0.5ch;     /* small gap before the colon */
+}
+
+/*───────────────────────────────────────────────────────────
+  STARTING LINEUP: only the slot labels stay uppercase
+───────────────────────────────────────────────────────────*/
+#startingLineup ul.player-list li {
+  /* kill any inherited all-caps on the whole card */
+  text-transform: none;
+}
+
+#startingLineup ul.player-list li strong {
+  /* slot labels like “QB1” remain uppercase */
+  text-transform: uppercase;
+}
+
+/* STARTING LINEUP: more specific so it wins */
+#startingLineup ul.player-list li.pos-QB    { color: #003a7c; }
+#startingLineup ul.player-list li.pos-RB    { color: #6601a0; }
+#startingLineup ul.player-list li.pos-WR    { color: #b6001b; }
+#startingLineup ul.player-list li.pos-TE    { color: #217400; }
+#startingLineup ul.player-list li.pos-Flex  { color: #FFD700; }
+#startingLineup ul.player-list li.pos-Super { color: #FFD700; }
+#startingLineup ul.player-list li.pos-K     { color: #004d40; }
+#startingLineup ul.player-list li.pos-DEF   { color: #004d40; }
+
+/* colour the entire <li> and bullet */
+#needsSurplus ul.gs-list li.tier-extreme-gap      { color: #8B0000; }
+#needsSurplus ul.gs-list li.tier-significant-gap  { color: #C04000; }
+#needsSurplus ul.gs-list li.tier-well-gap         { color: #E06500; }
+#needsSurplus ul.gs-list li.tier-slight-gap       { color: #FF8C00; }
+
+#needsSurplus ul.gs-list li.tier-extreme-strength  { color: #00C000; }
+#needsSurplus ul.gs-list li.tier-significant-strength { color: #00A000; }
+#needsSurplus ul.gs-list li.tier-well-strength     { color: #008000; }
+#needsSurplus ul.gs-list li.tier-slight-strength   { color: #57a773; }
+
+/* restore per-position colors */
+#startingLineup ul.player-list li.pos-QB  { color: #003a7c; }
+#startingLineup ul.player-list li.pos-RB  { color: #6601a0; }
+#startingLineup ul.player-list li.pos-WR  { color: #b6001b; }
+#startingLineup ul.player-list li.pos-TE  { color: #217400; }
+#startingLineup ul.player-list li.pos-Flex{ color: #FFD700; }
+#startingLineup ul.player-list li.pos-SF  { color: #FFD700; }
+#startingLineup ul.player-list li.pos-K   { color: #004d40; }
+#startingLineup ul.player-list li.pos-DEF { color: #004d40; }
+
+/* top-targets bubble for SF */
+.tb-SF { background-color: #FFD700; color: #000; }
+
+/* Group each slot’s title + bubbles together */
+.slot-group {
+  margin-bottom: 24px;
+}
+
+.slot-group h4 {
+  margin: 0 0 8px;
+  font-size: 1.1em;
+  color: #004d40;
+}
