@@ -23,53 +23,46 @@
         <h1>Dynasty Toolbox</h1>
         <p>NFL & Devy Rankings, Mock Drafts, and Dynasty Team Building Tools</p>
     </header>
-    <nav>
-        <a href="index.html">Home</a>
-        <div class="dropdown">
-            <a href="#" class="dropbtn">Rankings</a>
-            <div class="dropdown-content">
-                <a href="college_rankings.html">Devy Rankings</a>
-                <a href="nfl_rankings.html">NFL Player Rankings</a>
-            </div>
-        </div>
-        <div class="dropdown">
-            <a href="#" class="dropbtn">Draft</a>
-            <div class="dropdown-content">
-                <a href="dynasty_mock_drafts.html">Dynasty</a>
-                <a href="nfl_mock_drafts.html">NFL</a>
-            </div>
-        </div>
-        <div class="dropdown">
-            <a href="#" class="dropbtn">Tools</a>
-            <div class="dropdown-content">
-                <a href="trade_calculator.html">Trade Calculator</a>
-        <a href="devy_mock_simulator.html">Devy Mock Simulator</a>
-        <a href="league_rankings.html">League Rankings</a>
-        <a href="team_analyzer.html">Team Analyzer</a>
-            </div>
-        </div>
-    </nav>
+  <!-- Nav placeholder; loads /nav.html -->
+  <div id="nav-placeholder"></div>
     <main>
         <section id="rankings">
             <h2>Rankings</h2>
-            <p>NFL Player Rankings categorized for Competing Dynasty Teams, Tanking, and Overall</p>
+            <p>NFL and College player rankings using our three ranking systems</p>
         </section>
-        <section id="mock drafts">
+        <section id="Draft">
             <h2>Mock Drafts</h2>
             <p>Our thoughts on what we think will happen in the NFL Draft and Dynasty Rookie Drafts</p>
+            <h2>Devy Mock Draft Simulator</h2>
+            <p>Combines a NFL mock draft with your landing spots for fantasy relevent rookies to create a dynasty rookie mock based on team opporitunity, draft round, and our devy rankings</p>
         </section>
         <section id="tools">
+           <h2>League Rankings</h2>
+            <p>Provides team and position rankings for your sleeper league based on one of our three rankings systems, and a three year future projection</p>
+            <h2>Team Analyzer</h2>
+            <p>Analysis on where your team stacks up against your league, as well as targets and advice for team building</p>
             <h2>Trade Calculator</h2>
             <p>2-12 team trade calculator utilizing our three different ranking systems</p>
-            <h2>Devy Mock Draft Simulator</h2>
-            <p>Combines a NFL mock draft with fantasy relevent rookies to create a dynasty rookie mock based on team position opporitunity and draft round hit percentage </p>
-            <h2>League Rankings</h2>
-            <p>Provides team and position rankings for your sleeper league based on one of our three rankings systems, and a three year future projection</p>
+        </section>
+        <section id="Insights">
+           <h2>Strength of Schedule</h2>
+            <p>Schedule heat map separated by season, playoffs, rushing, and passing</p>
+            <h2>Trade Market</h2>
+            <p>A few trade for/away ideas separated for competing and tanking teams</p>
         </section>
     </main>
     <footer>
         <p>&copy; 2025 Dynasty Toolbox</p>
     </footer>
+     <!-- === Nav‐loader script === -->
+  <script>
+    fetch('/nav.html')
+      .then(r => r.text())
+      .then(html => {
+        document.getElementById('nav-placeholder').innerHTML = html;
+      })
+      .catch(err => console.error('Nav load failed:', err));
+  </script>
 </body>
 </html>
 

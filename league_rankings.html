@@ -2,59 +2,33 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>League Rankings</title>
-  <!-- External stylesheet -->
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet" />
-  <!-- Meta Tags for SEO -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>League Roster Rankings</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet"/>
   <meta name="description" content="League Rankings">
   <meta name="keywords" content="dynasty fantasy football, dynasty tools, mock drafts, trade calculator, college development players, fantasy football analysis, devy, sleeper, dynasty toolbox">
 
-  <!-- Open Graph Tags -->
-  <meta property="og:title" content="League Rankings – Dynasty Fantasy Football Analysis & Tools">
-  <meta property="og:description" content="Explore comprehensive dynasty fantasy football analysis, mock drafts, trade calculators, and more.">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://www.dynasty-toolbox.com">
-  <meta property="og:image" content="https://www.dynasty-toolbox.com/path/to/your-logo.png">
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-1C5TVEGFXT"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1C5TVEGFXT');
+  </script>
 
-  <!-- Twitter Card Tags -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="League Rankings – Dynasty Fantasy Football Analysis & Tools">
-  <meta name="twitter:description" content="Explore comprehensive dynasty fantasy football analysis, mock drafts, trade calculators, and more.">
-  <meta name="twitter:image" content="https://www.dynasty-toolbox.com/path/to/your-logo.png">
-
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-1C5TVEGFXT"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-1C5TVEGFXT');
-</script>
-
-  <!-- Chart.js for the projection graph -->
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     /* Basic styling similar to your other pages */
-  
-    nav {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-  
+    nav { text-align: center; margin-bottom: 20px; }
+
     /* Controls at the top */
-    #leagueInputContainer {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    #leagueId {
-      padding: 5px;
-      font-size: 1em;
-      width: 250px;
-    }
+    #leagueInputContainer { text-align: center; margin-bottom: 20px; }
+    #leagueId { padding: 5px; font-size: 1em; width: 250px; }
     #rankingSelect, #loadLeagueBtn {
       padding: 6px 12px;
       font-size: 1em;
@@ -65,23 +39,22 @@
       border-radius: 4px;
       cursor: pointer;
     }
+
     /* Results area */
     #rankings {
       max-width: 1200px;
-      margin: 20px auto 20px;
+      margin: 20px auto;
       background: #fff;
       border: 2px solid #004d40;
       border-radius: 8px;
       padding: 10px;
       box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
     }
+
     /* Summary table above team cards */
-    #summaryRankings {
-      margin-bottom: 20px;
-    }
+    #summaryRankings { margin-bottom: 20px; }
     #summaryRankings table {
-      width: 100%;
-      border-collapse: collapse;
+      width: 100%; border-collapse: collapse;
     }
     #summaryRankings th, #summaryRankings td {
       border: 2px solid #004d40;
@@ -89,15 +62,11 @@
       text-align: center;
       font-size: 1em;
     }
+
     /* Projection chart container */
-    #projectionContainer {
-      max-width: 1200px;
-      margin: 20px auto;
-    }
-    #projectionChart {
-      width: 100% !important;
-      height: 600px;
-    }
+    #projectionContainer { max-width: 1200px; margin: 20px auto; }
+    #projectionChart { width: 100% !important; height: 600px; }
+
     /* Team cards grid */
     #teamCards {
       display: flex;
@@ -113,17 +82,10 @@
       width: 280px;
       box-shadow: 0px 2px 6px rgba(0,0,0,0.1);
     }
-    .team-card h3 {
-      margin: 0 0 10px;
-      font-size: 1.2em;
-    }
-    .overall-score {
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-    .position-group {
-      margin-top: 5px;
-    }
+    .team-card h3 { margin: 0 0 10px; font-size: 1.2em; }
+    .overall-score { font-weight: bold; margin-bottom: 10px; }
+
+    .position-group { margin-top: 5px; }
     .position-group h4 {
       margin: 5px 0;
       font-size: 1em;
@@ -136,15 +98,14 @@
       padding-left: 10px;
       margin: 0;
     }
-    .position-group li {
-      margin-bottom: 2px;
-      font-size: 0.9em;
-    }
+    .position-group li { margin-bottom: 2px; font-size: 0.9em; }
+
     /* Unique colors for positions */
     .position-QB { background-color: #e0f7fa; }
     .position-RB { background-color: #fff9c4; }
     .position-WR { background-color: #fce4ec; }
     .position-TE { background-color: #e8f5e9; }
+
     /* Draft picks styling */
     .draft-picks h4 {
       margin: 5px 0;
@@ -162,6 +123,15 @@
       margin-bottom: 2px;
       font-size: 0.9em;
     }
+
+    /* Responsive tweaks */
+    @media (max-width: 600px) {
+      #projectionChart { height: 300px !important; }
+      .team-card {
+        width: 100% !important;
+        margin-bottom: 20px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -169,587 +139,451 @@
     <h1>League Roster Rankings</h1>
     <p>Enter your Sleeper League ID and select the NFL rankings type to generate team rankings.</p>
   </header>
-  
-  <!-- Navigation: Tools dropdown -->
-  <nav>
-    <div class="dropdown">
-      <a href="#" class="dropbtn">Rankings</a>
-      <div class="dropdown-content">
-        <a href="college_rankings.html">Devy Rankings</a>
-        <a href="nfl_rankings.html">NFL Player Rankings</a>
-      </div>
-    </div>
-    <div class="dropdown">
-      <a href="#" class="dropbtn">Draft</a>
-      <div class="dropdown-content">
-        <a href="dynasty_mock_drafts.html">Dynasty</a>
-        <a href="nfl_mock_drafts.html">NFL</a>
-      </div>
-    </div>
-    <div class="dropdown">
-      <a href="#" class="dropbtn">Tools</a>
-      <div class="dropdown-content">
-        <a href="trade_calculator.html">Trade Calculator</a>
-        <a href="devy_mock_simulator.html">Devy Mock Simulator</a>
-        <a href="league_rankings.html">League Rankings</a>
-        <a href="team_analyzer.html">Team Analyzer</a>
-      </div>
-    </div>
-  </nav>
-  
-  <!-- League ID input and ranking selection -->
+
+  <!-- Nav placeholder; loads /nav.html -->
+  <div id="nav-placeholder"></div>
+
+  <div class="explanation-note">
+    <p>
+      We use <strong>three</strong> ranking systems on this page:
+      <em>Overall</em> is our best reflection of true dynasty value,
+      while <em>Competing</em> and <em>Tanking</em> are more “value-to-you” systems—
+      Competing if you’re chasing a title today, Tanking if you’re rebuilding for the future.
+    </p>
+  </div>
+
   <div id="leagueInputContainer">
     <input type="text" id="leagueId" placeholder="Enter Sleeper League ID" />
     <select id="rankingSelect">
       <option value="competing">Competing</option>
-      <option value="overall">Overall</option>
+      <option value="overall" selected>Overall</option>
       <option value="tanking">Tanking</option>
     </select>
     <button id="loadLeagueBtn">Load League</button>
   </div>
-  
-  <!-- Summary Rankings -->
-  <div id="summaryRankings">
-    <!-- Summary table will be inserted here -->
-  </div>
-  
-  <!-- Projection Chart -->
+
+  <div id="summaryRankings"></div>
+
   <div id="projectionContainer">
     <canvas id="projectionChart"></canvas>
   </div>
-  
-  <!-- Team Cards -->
+
   <div id="rankings">
-    <div id="teamCards">
-      <!-- Team cards will be inserted here -->
-    </div>
+    <div id="teamCards"></div>
   </div>
-  
+
   <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      // Global variable for the projection chart instance.
-      let projectionChartInstance = null;
-  
-      // Helper function to normalize names.
-      function normalizeName(name) {
-        return name.toLowerCase().replace(/[^a-z0-9]/g, "");
-      }
-  
-      // Helper function to convert a number to its ordinal string.
-      function ordinalSuffix(i) {
-        let j = i % 10, k = i % 100;
-        if (j === 1 && k !== 11) return i + "st";
-        if (j === 2 && k !== 12) return i + "nd";
-        if (j === 3 && k !== 13) return i + "rd";
-        return i + "th";
-      }
-  
-      /********** Projection URLs (declared only once) **********/
-      const projectionUrls = {
-        proj1: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=936576734&single=true&output=csv",
-        proj2: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=2003106464&single=true&output=csv",
-        proj3: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=991171708&single=true&output=csv"
-      };
-  
-      /********** NFL Rankings CSV URLs **********/
-      const nflRankingsUrls = {
-        competing: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=0&single=true&output=csv",
-        overall: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=116299513&single=true&output=csv",
-        tanking: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=1543093851&single=true&output=csv"
-      };
-  
-      let nflRankings = {}; // Lookup: normalized player name -> score
-  
-      async function loadNFLRankings(rankingType) {
-        try {
-          const url = nflRankingsUrls[rankingType];
-          const res = await fetch(url);
-          const text = await res.text();
-          const data = parseCSV(text);
-          data.forEach(row => {
-            const name = row["Player"] ? normalizeName(row["Player"]) : "";
-            const score = parseFloat(row["Score"]) || 0;
-            nflRankings[name] = score;
-          });
-          console.log("Loaded NFL Rankings:", nflRankings);
-        } catch (error) {
-          console.error("Error loading NFL rankings:", error);
-        }
-      }
-  
-      /********** Sleeper API & NFL Players **********/
-      let sleeperPlayers = {};
-      async function fetchSleeperPlayers() {
-        try {
-          const res = await fetch("https://api.sleeper.app/v1/players/nfl");
-          const data = await res.json();
-          sleeperPlayers = data;
-          console.log("Loaded sleeperPlayers:", sleeperPlayers);
-        } catch (error) {
-          console.error("Error fetching sleeper players:", error);
-        }
-      }
-  
-      async function fetchLeagueRosters(leagueId) {
-        const url = `https://api.sleeper.app/v1/league/${leagueId}/rosters`;
-        const res = await fetch(url);
-        return res.json();
-      }
-  
-      async function fetchLeagueUsers(leagueId) {
-        const url = `https://api.sleeper.app/v1/league/${leagueId}/users`;
-        const res = await fetch(url);
-        return res.json();
-      }
-  
-      // Optional: Fetch draft picks (if available)
-      async function fetchDraftPicks(leagueId) {
-        const url = `https://api.sleeper.app/v1/league/${leagueId}/draft_picks`;
-        try {
-          const res = await fetch(url);
-          if (!res.ok) {
-            console.warn("Draft picks endpoint returned", res.status);
-            return [];
-          }
-          return await res.json();
-        } catch (error) {
-          console.error("Error fetching draft picks:", error);
-          return [];
-        }
-      }
-  
-      function getPlayerScore(playerId) {
-        if (sleeperPlayers[playerId]) {
-          const rawName = sleeperPlayers[playerId].full_name;
-          const normalized = normalizeName(rawName);
-          const score = nflRankings[normalized];
-          if (score === undefined) {
-            console.log(`No ranking found for "${rawName}" normalized as "${normalized}"`);
-          } else {
-            console.log(`Found ranking for "${rawName}" normalized as "${normalized}": ${score}`);
-          }
-          return score !== undefined ? score : 0;
-        }
-        return 0;
-      }
-  
-      /********** CSV Parsing Utility **********/
-      function parseCSV(text) {
-        const lines = text.trim().split("\n").filter(line => line.trim().length > 0);
-        if (lines.length === 0) return [];
-        const headers = lines[0].split(",").map(h => h.trim().replace(/"/g, ""));
-        const data = lines.slice(1).map(line => {
-          const values = line.split(",").map(v => v.trim().replace(/"/g, ""));
-          let obj = {};
-          headers.forEach((header, i) => {
-            obj[header] = values[i] || "";
-          });
-          return obj;
-        });
-        return data;
-      }
-  
-      /********** Compute Team Scores & Position Averages **********/
-      async function computeTeamScores(leagueId) {
-        await fetchSleeperPlayers();
-        const rankingType = document.getElementById("rankingSelect").value;
-        await loadNFLRankings(rankingType);
-  
-        // Fetch rosters, users, and draft picks concurrently.
-        const [rosters, users, draftPicksData] = await Promise.all([
-          fetchLeagueRosters(leagueId),
-          fetchLeagueUsers(leagueId),
-          fetchDraftPicks(leagueId)
-        ]);
-  
-        // Group draft picks by owner id.
-        const picksByOwner = {};
-        draftPicksData.forEach(pick => {
-          if (!picksByOwner[pick.owner_id]) {
-            picksByOwner[pick.owner_id] = [];
-          }
-          picksByOwner[pick.owner_id].push(pick);
-        });
-  
-        const userMap = {};
-        users.forEach(user => {
-          userMap[user.user_id] = user.display_name;
-        });
-  
-        // Define limits for computing position averages.
-        const posLimits = { QB: 3, RB: 5, WR: 5, TE: 2 };
-  
-        const teamScores = rosters.map(roster => {
-          let allScores = [];
-          const breakdown = { QB: [], RB: [], WR: [], TE: [] };
-          roster.players.forEach(playerId => {
-            const playerData = sleeperPlayers[playerId];
-            if (playerData) {
-              const fullName = playerData.full_name;
-              const pos = (playerData.position || "").toUpperCase();
-              const score = getPlayerScore(playerId);
-              allScores.push(score);
-              if (breakdown[pos]) {
-                breakdown[pos].push({ name: fullName, score: score });
-              }
-            }
-          });
-  
-          // Compute overall average from top 15 scores.
-          allScores.sort((a, b) => b - a);
-          const top15 = allScores.slice(0, 15);
-          const overallAvg = top15.length > 0 ? (top15.reduce((sum, s) => sum + s, 0) / top15.length) : 0;
-  
-          // Compute position averages.
-          const positionAverages = {};
-          for (const pos in breakdown) {
-            let scores = breakdown[pos].map(p => p.score);
-            scores.sort((a, b) => b - a);
-            const limit = posLimits[pos] || scores.length;
-            const topScores = scores.slice(0, limit);
-            const avg = topScores.length > 0 ? (topScores.reduce((sum, s) => sum + s, 0) / topScores.length) : 0;
-            positionAverages[pos] = avg;
-          }
-  
-          return {
-            team: userMap[roster.owner_id] || "Unknown",
-            overallScore: overallAvg,
-            breakdown: breakdown,
-            positionAverages: positionAverages,
-            draftPicks: picksByOwner[roster.owner_id] || []
-          };
-        });
-  
-        return teamScores;
-      }
-  
-      /********** Compute Rankings (Overall & Positional) **********/
-      function computeRankings(teamScores) {
-        let sortedOverall = [...teamScores].sort((a, b) => b.overallScore - a.overallScore);
-        sortedOverall.forEach((team, index) => {
-          team.overallRank = index + 1;
-        });
-        const posList = ["QB", "RB", "WR", "TE"];
-        let posRankings = {};
-        posList.forEach(pos => {
-          let arr = teamScores.map(team => {
-            return { team: team.team, avg: team.positionAverages[pos] };
-          }).filter(item => item.avg > 0);
-          arr.sort((a, b) => b.avg - a.avg);
-          arr.forEach((item, index) => {
-            posRankings[item.team + "_" + pos] = index + 1;
-          });
-        });
-        teamScores.forEach(team => {
-          team.positionRanks = {};
-          posList.forEach(pos => {
-            team.positionRanks[pos] = posRankings[team.team + "_" + pos] || "N/A";
-          });
-        });
-      }
-  
-      /********** Compute Future Projections **********/
-      async function computeFutureProjections(leagueId, currentTeamScores) {
-        const proj1Lookup = await loadProjectionRankings(projectionUrls.proj1);
-        const proj2Lookup = await loadProjectionRankings(projectionUrls.proj2);
-        const proj3Lookup = await loadProjectionRankings(projectionUrls.proj3);
-  
-        const [rosters, users] = await Promise.all([
-          fetchLeagueRosters(leagueId),
-          fetchLeagueUsers(leagueId)
-        ]);
-  
-        const userMap = {};
-        users.forEach(user => {
-          userMap[user.user_id] = user.display_name;
-        });
-  
-        // Map current overall scores by team name.
-        const currentMap = {};
-        currentTeamScores.forEach(team => {
-          currentMap[team.team] = team.overallScore;
-        });
-  
-        let projections = [];
-        rosters.forEach(roster => {
-          let scoresProj1 = [];
-          let scoresProj2 = [];
-          let scoresProj3 = [];
-          roster.players.forEach(playerId => {
-            const playerData = sleeperPlayers[playerId];
-            if (playerData) {
-              const normalized = normalizeName(playerData.full_name);
-              scoresProj1.push(proj1Lookup[normalized] || 0);
-              scoresProj2.push(proj2Lookup[normalized] || 0);
-              scoresProj3.push(proj3Lookup[normalized] || 0);
-            }
-          });
-          scoresProj1.sort((a, b) => b - a);
-          scoresProj2.sort((a, b) => b - a);
-          scoresProj3.sort((a, b) => b - a);
-          const top15Proj1 = scoresProj1.slice(0, 15);
-          const top15Proj2 = scoresProj2.slice(0, 15);
-          const top15Proj3 = scoresProj3.slice(0, 15);
-          const proj1Avg = top15Proj1.length > 0 ? (top15Proj1.reduce((sum, s) => sum + s, 0) / top15Proj1.length) : 0;
-          const proj2Avg = top15Proj2.length > 0 ? (top15Proj2.reduce((sum, s) => sum + s, 0) / top15Proj2.length) : 0;
-          const proj3Avg = top15Proj3.length > 0 ? (top15Proj3.reduce((sum, s) => sum + s, 0) / top15Proj3.length) : 0;
-          const teamName = userMap[roster.owner_id] || "Unknown";
-          projections.push({
-            team: teamName,
-            current: currentMap[teamName] || 0,
-            proj1: proj1Avg,
-            proj2: proj2Avg,
-            proj3: proj3Avg
-          });
-        });
-        return computeAdjustedProjections(projections, currentTeamScores);
-      }
-  
-      /********** Compute Adjusted Projections with Bonus Adjustments **********/
-      function computeAdjustedProjections(projectionsData, teamScores) {
-        // Map current overall ranks.
-        const currentRankMap = {};
-        teamScores.forEach(team => {
-          currentRankMap[team.team] = team.overallRank;
-        });
-        // For each team, compute adjusted projections.
-        projectionsData.forEach(team => {
-          team.r0 = currentRankMap[team.team] || 0;
-          team.proj1_adjusted = team.proj1 + (150 * team.r0);
-        });
-        let sortedProj1 = [...projectionsData].sort((a, b) => b.proj1_adjusted - a.proj1_adjusted);
-        sortedProj1.forEach((team, index) => {
-          team.r1 = index + 1;
-        });
-  
-        projectionsData.forEach(team => {
-          team.proj2_adjusted = team.proj2 + (150 * team.r0 * 0.9) + (150 * team.r1);
-        });
-        let sortedProj2 = [...projectionsData].sort((a, b) => b.proj2_adjusted - a.proj2_adjusted);
-        sortedProj2.forEach((team, index) => {
-          team.r2 = index + 1;
-        });
-  
-        projectionsData.forEach(team => {
-          team.proj3_adjusted = team.proj3 + (150 * team.r0 * 0.8) + (150 * team.r1 * 0.9) + (150 * team.r2);
-        });
-        let sortedProj3 = [...projectionsData].sort((a, b) => b.proj3_adjusted - a.proj3_adjusted);
-        sortedProj3.forEach((team, index) => {
-          team.r3 = index + 1;
-        });
-  
-        return projectionsData;
-      }
-  
-      /********** Render Projection Chart using Chart.js **********/
-      function renderProjectionChart(projectionsData) {
-        const ctx = document.getElementById("projectionChart").getContext("2d");
-        const labels = ["Current", "+1 Year", "+2 Years", "+3 Years"];
-        const datasets = projectionsData.map(team => {
-          const r = Math.floor(Math.random() * 200);
-          const g = Math.floor(Math.random() * 200);
-          const b = Math.floor(Math.random() * 200);
-          const color = `rgb(${r}, ${g}, ${b})`;
-          return {
-            label: team.team,
-            data: [team.current, team.proj1_adjusted, team.proj2_adjusted, team.proj3_adjusted].map(s => parseFloat(s.toFixed(2))),
-            borderColor: color,
-            backgroundColor: color,
-            fill: false,
-            tension: 0.1,
-            borderWidth: 3
-          };
-        });
-  
-        // Compute global min and max.
-        let allData = [];
-        datasets.forEach(ds => {
-          allData = allData.concat(ds.data);
-        });
-        const minValue = Math.min(...allData);
-        const maxValue = Math.max(...allData);
-  
-        if (window.projectionChartInstance) {
-          window.projectionChartInstance.destroy();
-        }
-        window.projectionChartInstance = new Chart(ctx, {
-          type: 'line',
-          data: { labels: labels, datasets: datasets },
-          options: {
-            responsive: true,
-            plugins: { title: { display: true, text: 'Future Projection Scores' } },
-            scales: {
-              y: {
-                beginAtZero: false,
-                min: minValue - 500,
-                max: maxValue + 500,
-                title: { display: true, text: 'Score' }
-              }
-            }
-          }
-        });
-      }
-  
-      /********** Display Team Rankings **********/
-      async function displayTeamRankings(teamScores) {
-        computeRankings(teamScores);
-        teamScores.sort((a, b) => a.overallRank - b.overallRank);
-  
-        // Build summary table (without overall score column)
-        let summaryHtml = `<h3>Summary Rankings</h3>`;
-        summaryHtml += `<table><thead><tr><th>Rank</th><th>Team</th><th>QB</th><th>RB</th><th>WR</th><th>TE</th></tr></thead><tbody>`;
-        const posList = ["QB", "RB", "WR", "TE"];
-        let posRankings = {};
-        posList.forEach(pos => {
-          let arr = teamScores.map(team => { return { team: team.team, avg: team.positionAverages[pos] }; }).filter(item => item.avg > 0);
-          arr.sort((a, b) => b.avg - a.avg);
-          arr.forEach((item, index) => {
-            posRankings[item.team + "_" + pos] = index + 1;
-          });
-        });
-        teamScores.forEach((team, index) => {
-          summaryHtml += `<tr>`;
-          summaryHtml += `<td>${ordinalSuffix(index + 1)}</td>`;
-          summaryHtml += `<td>${team.team}</td>`;
-          posList.forEach(pos => {
-            const rank = posRankings[team.team + "_" + pos] ? ordinalSuffix(posRankings[team.team + "_" + pos]) : "N/A";
-            summaryHtml += `<td>${rank}</td>`;
-          });
-          summaryHtml += `</tr>`;
-        });
-        summaryHtml += `</tbody></table>`;
-        document.getElementById("summaryRankings").innerHTML = summaryHtml;
-  
-        // Build team cards.
-        const teamCardsDiv = document.getElementById("teamCards");
-        teamCardsDiv.innerHTML = "";
-        teamScores.forEach(team => {
-          const card = document.createElement("div");
-          card.classList.add("team-card");
-  
-          let html = `<h3>${team.team}</h3>`;
-          html += `<p class="overall-score">Overall: ${ordinalSuffix(team.overallRank)}</p>`;
-          html += `<div class="position-breakdown">`;
-          for (const pos of ["QB", "RB", "WR", "TE"]) {
-            html += `<div class="position-group position-${pos}">`;
-            html += `<h4>${pos} (Rank: ${team.positionRanks[pos] !== "N/A" ? ordinalSuffix(team.positionRanks[pos]) : "N/A"})</h4>`;
-            if (team.breakdown[pos] && team.breakdown[pos].length > 0) {
-              let sortedPlayers = team.breakdown[pos].sort((a, b) => b.score - a.score);
-              html += `<ul>`;
-              sortedPlayers.forEach(player => {
-                html += `<li>${player.name} (${parseFloat(player.score).toFixed(2)})</li>`;
-              });
-              html += `</ul>`;
-            }
-            html += `</div>`;
-          }
-          html += `</div>`;
-          if (team.draftPicks && team.draftPicks.length > 0) {
-            html += `<div class="draft-picks"><h4>Draft Picks:</h4><ul>`;
-            team.draftPicks.forEach(pick => {
-              html += `<li>Round ${pick.round || pick.round_number || "?"} - Pick ${pick.pick_no || pick.pick || "?"}</li>`;
+  document.addEventListener("DOMContentLoaded", function() {
+    let projectionChartInstance = null;
+
+    function normalizeName(name) {
+  if (typeof name !== "string") return "";
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+    function ordinalSuffix(i) {
+      let j=i%10, k=i%100;
+      if(j===1&&k!==11) return i+"st";
+      if(j===2&&k!==12) return i+"nd";
+      if(j===3&&k!==13) return i+"rd";
+      return i+"th";
+    }
+    function parseCSV(text) {
+      const lines = text.trim().split("\n").filter(l=>l.trim());
+      const hdr = lines.shift().split(",").map(h=>h.replace(/"/g,"").trim());
+      return lines.map(l=>{
+        const vals = l.split(",").map(v=>v.replace(/"/g,"").trim());
+        let o={};
+        hdr.forEach((h,i)=> o[h]=vals[i]||"");
+        return o;
+      });
+    }
+
+    const projectionUrls = {
+      proj1: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=936576734&single=true&output=csv",
+      proj2: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=2003106464&single=true&output=csv",
+      proj3: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=991171708&single=true&output=csv"
+    };
+    const nflRankingsUrls = {
+      competing: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=0&single=true&output=csv",
+      overall:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=116299513&single=true&output=csv",
+      tanking:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=1543093851&single=true&output=csv"
+    };
+    let nflRankings = {};
+
+    async function loadNFLRankings(type) {
+      nflRankings = {};
+      const res = await fetch(nflRankingsUrls[type]);
+      const text = await res.text();
+      parseCSV(text).forEach(r => {
+        const nm = normalizeName(r["Player"]||"");
+        nflRankings[nm] = parseFloat(r["Score"])||0;
+      });
+    }
+
+    let sleeperPlayers = {};
+    async function fetchSleeperPlayers() {
+      sleeperPlayers = await (await fetch("https://api.sleeper.app/v1/players/nfl")).json();
+    }
+    async function fetchLeagueRosters(lid) {
+      return await (await fetch(`https://api.sleeper.app/v1/league/${lid}/rosters`)).json();
+    }
+    async function fetchLeagueUsers(lid) {
+      return await (await fetch(`https://api.sleeper.app/v1/league/${lid}/users`)).json();
+    }
+    async function fetchLeagueMeta(lid) {
+      return await (await fetch(`https://api.sleeper.app/v1/league/${lid}`)).json();
+    }
+    async function fetchLeagueDrafts(lid) {
+      try { return await (await fetch(`https://api.sleeper.app/v1/league/${lid}/drafts`)).json(); }
+      catch { return []; }
+    }
+    async function fetchTradedPicks(lid) {
+      try { return await (await fetch(`https://api.sleeper.app/v1/league/${lid}/traded_picks`)).json(); }
+      catch { return []; }
+    }
+
+    async function computeTeamScores(lid) {
+      await fetchSleeperPlayers();
+      const rankingType = document.getElementById("rankingSelect").value;
+      await loadNFLRankings(rankingType);
+
+      const [rosters, users, meta, drafts, traded] = await Promise.all([
+        fetchLeagueRosters(lid),
+        fetchLeagueUsers(lid),
+        fetchLeagueMeta(lid),
+        fetchLeagueDrafts(lid),
+        fetchTradedPicks(lid)
+      ]);
+
+      const userMap = {};
+      users.forEach(u=> userMap[u.user_id] = u.display_name);
+
+      const rosterMap = {};
+      rosters.forEach(r=> {
+        r.picks = [];
+        rosterMap[r.roster_id] = r;
+      });
+
+      const seasons = drafts.filter(d=>d.status==="complete").map(d=>+d.season);
+      const last = seasons.length ? Math.max(...seasons) : 0;
+      const rounds = meta.settings.draft_rounds||0;
+
+      [last+1, last+2, last+3].forEach(season=>{
+        rosters.forEach(r=>{
+          for(let rd=1; rd<=rounds; rd++){
+            r.picks.push({
+              season:String(season),
+              round: rd,
+              previous_owner_id: r.roster_id,
+              owner_id: r.roster_id
             });
-            html += `</ul></div>`;
-          }
-          card.innerHTML = html;
-          teamCardsDiv.appendChild(card);
-        });
-      }
-  
-      /********** Render Projection Chart using Chart.js **********/
-      function renderProjectionChart(projectionsData) {
-        const ctx = document.getElementById("projectionChart").getContext("2d");
-        const labels = ["Current", "+1 Year", "+2 Years", "+3 Years"];
-        const datasets = projectionsData.map(team => {
-          const r = Math.floor(Math.random() * 200);
-          const g = Math.floor(Math.random() * 200);
-          const b = Math.floor(Math.random() * 200);
-          const color = `rgb(${r}, ${g}, ${b})`;
-          return {
-            label: team.team,
-            data: [team.current, team.proj1_adjusted, team.proj2_adjusted, team.proj3_adjusted].map(s => parseFloat(s.toFixed(2))),
-            borderColor: color,
-            backgroundColor: color,
-            fill: false,
-            tension: 0.1,
-            borderWidth: 3
-          };
-        });
-  
-        // Compute global min and max.
-        let allData = [];
-        datasets.forEach(ds => {
-          allData = allData.concat(ds.data);
-        });
-        const minValue = Math.min(...allData);
-        const maxValue = Math.max(...allData);
-  
-        if (window.projectionChartInstance) {
-          window.projectionChartInstance.destroy();
-        }
-        window.projectionChartInstance = new Chart(ctx, {
-          type: 'line',
-          data: { labels: labels, datasets: datasets },
-          options: {
-            responsive: true,
-            plugins: { title: { display: true, text: 'Future Projection Scores' } },
-            scales: {
-              y: {
-                beginAtZero: false,
-                min: minValue - 500,
-                max: maxValue + 500,
-                title: { display: true, text: 'Score' }
-              }
-            }
           }
         });
-      }
-  
-      /********** Render Everything **********/
-      async function renderAll(leagueId) {
-        const teamScores = await computeTeamScores(leagueId);
-        console.log("Computed team scores:", teamScores);
-        await displayTeamRankings(teamScores);
-        const projections = await computeFutureProjections(leagueId, teamScores);
-        console.log("Computed future projections:", projections);
-        renderProjectionChart(projections);
-      }
-  
-      /********** Event Handler for "Load League" **********/
-      document.getElementById("loadLeagueBtn").addEventListener("click", async function() {
-        const leagueId = document.getElementById("leagueId").value.trim();
-        console.log("League ID:", leagueId);
-        if (!leagueId) {
-          alert("Please enter a Sleeper League ID.");
-          return;
+      });
+
+      traded.filter(p=>+p.season>last).forEach(p=>{
+        const prev = rosterMap[p.previous_owner_id];
+        if(prev){
+          prev.picks = prev.picks.filter(x=>!(x.season===p.season && x.round===p.round));
         }
-        try {
-          await renderAll(leagueId);
-        } catch (error) {
-          console.error("Error computing team scores:", error);
-          alert("There was an error loading the league data. Please check the console for details.");
+        rosterMap[p.owner_id].picks.push(p);
+      });
+
+      rosters.forEach(r => {
+  r.picks.sort((a,b) => {
+    const sa = Number(a.season), sb = Number(b.season);
+    if (sa !== sb) return sa - sb;
+    // guard in case round is missing
+    return (Number(a.round) || 0) - (Number(b.round) || 0);
+  });
+});
+
+      return rosters.map(r => {
+        let allScores = [];
+        const breakdown = { QB:[], RB:[], WR:[], TE:[], PICK:[] };
+
+        r.players.forEach(pid=>{
+          const p = sleeperPlayers[pid];
+          if(!p) return;
+          const nm = normalizeName(p.full_name);
+          const sc = nflRankings[nm]||0;
+          allScores.push(sc);
+          const pos = p.position.toUpperCase();
+          if(breakdown[pos]) breakdown[pos].push({ name: p.full_name, score: sc });
+        });
+
+  r.picks.forEach(pk => {
+  // 1) build the exact display label & score lookup
+  const displayLabel = `${pk.season} ${ordinalSuffix(pk.round)} Round`;
+  const sc           = nflRankings[ normalizeName(displayLabel) ] || 0;
+  allScores.push(sc);
+
+  // 2) find the roster, then its owner_id, then the user name
+  const fromRoster       = rosterMap[pk.previous_owner_id];
+  const originalUserId   = fromRoster?.owner_id;
+  const originalUserName = userMap[originalUserId] || "Unknown";
+
+  // 3) push into your breakdown with the real owner name
+  breakdown.PICK.push({
+    name:  displayLabel,
+    score: sc,
+    owner: originalUserName
+  });
+});
+
+        allScores.sort((a,b)=>b-a);
+        const top15 = allScores.slice(0,15);
+        const overallAvg = top15.length
+          ? top15.reduce((s,x)=>s+x,0)/top15.length
+          : 0;
+
+        const limits = { QB:3, RB:5, WR:5, TE:2, PICK:10 };
+        const positionAverages = {};
+        Object.keys(breakdown).forEach(pos=>{
+          const arr = breakdown[pos].map(x=>x.score).sort((a,b)=>b-a);
+          const sel = arr.slice(0, limits[pos]||arr.length);
+          positionAverages[pos] = sel.length
+            ? sel.reduce((s,x)=>s+x,0)/sel.length
+            : 0;
+        });
+
+        return {
+          team: userMap[r.owner_id]||"Unknown",
+          overallScore: overallAvg,
+          breakdown,
+          positionAverages,
+          draftPicks: breakdown.PICK
+        };
+      });
+    }
+
+    function computeRankings(teamScores) {
+      // initialize
+      teamScores.forEach(t=> t.positionRanks = {});
+      // overall
+      teamScores.sort((a,b)=>b.overallScore - a.overallScore)
+                .forEach((t,i)=> t.overallRank = i+1 );
+      // per-position + PICK
+      ["QB","RB","WR","TE","PICK"].forEach(pos=>{
+        const arr = teamScores
+          .map(t=>({ team:t.team, avg:t.positionAverages[pos] }))
+          .filter(x=>x.avg>0)
+          .sort((a,b)=>b.avg - a.avg);
+        arr.forEach((x,i)=> x.rank = i+1);
+        arr.forEach(x=>{
+          const tm = teamScores.find(t=>t.team===x.team);
+          tm.positionRanks[pos] = x.rank;
+        });
+      });
+    }
+
+    async function displayTeamRankings(teamScores) {
+      computeRankings(teamScores);
+
+      let html = `<h3>Summary Rankings</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Rank</th><th>Team</th>
+              <th>QB</th><th>RB</th><th>WR</th><th>TE</th><th>PICK</th>
+            </tr>
+          </thead>
+          <tbody>`;
+      teamScores.forEach(t=>{
+        html += `<tr>
+          <td>${ordinalSuffix(t.overallRank)}</td>
+          <td>${t.team}</td>`;
+        ["QB","RB","WR","TE","PICK"].forEach(pos=>{
+          const r = t.positionRanks[pos]||"N/A";
+          html += `<td>${r==="N/A"?r:ordinalSuffix(r)}</td>`;
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody></table>`;
+      document.getElementById("summaryRankings").innerHTML = html;
+
+      const container = document.getElementById("teamCards");
+      container.innerHTML = "";
+      teamScores.forEach(t=>{
+        const card = document.createElement("div");
+        card.classList.add("team-card");
+
+        let c = `<h3>${t.team}</h3>
+          <p class="overall-score">Overall: ${ordinalSuffix(t.overallRank)}</p>
+          <div class="position-breakdown">`;
+        ["QB","RB","WR","TE"].forEach(pos=>{
+          c += `<div class="position-group position-${pos}">
+                  <h4>${pos} (Rank: ${
+                    t.positionRanks[pos]
+                      ? ordinalSuffix(t.positionRanks[pos])
+                      : "N/A"
+                  })</h4>`;
+          const list = t.breakdown[pos]||[];
+          if(list.length){
+            c += `<ul>`;
+            list.sort((a,b)=>b.score-a.score)
+                .forEach(p=>
+                  c += `<li>${p.name} (${p.score.toFixed(2)})</li>`
+                );
+            c += `</ul>`;
+          }
+          c += `</div>`;
+        });
+        c += `</div>`;
+
+        if (t.draftPicks.length) {
+  c += `<div class="draft-picks">
+          <h4>Draft Picks</h4>
+          <ul>`;
+  t.draftPicks.forEach(pk => {
+    // pk.name is now “2026 1st Round”
+    c += `<li>
+            ${pk.name}
+            <small>(${pk.owner}: ${pk.score.toFixed(0)})</small>
+          </li>`;
+  });
+  c += `  </ul>
+        </div>`;
+}
+
+        card.innerHTML = c;
+        container.appendChild(card);
+      });
+    }
+
+    async function loadProjectionRankings(url) {
+      try {
+        const data = parseCSV(await (await fetch(url)).text());
+        const lookup = {};
+        data.forEach(r=>{
+          lookup[ normalizeName(r["Player"]) ] = parseFloat(r["Score"])||0;
+        });
+        return lookup;
+      } catch {
+        return {};
+      }
+    }
+    async function computeFutureProjections(lid, teamScores) {
+      const [p1,p2,p3] = await Promise.all([
+        loadProjectionRankings(projectionUrls.proj1),
+        loadProjectionRankings(projectionUrls.proj2),
+        loadProjectionRankings(projectionUrls.proj3)
+      ]);
+      await fetchSleeperPlayers();
+      const rosters = await fetchLeagueRosters(lid);
+      const users   = await fetchLeagueUsers(lid);
+      const userMap = {};
+      users.forEach(u=> userMap[u.user_id]=u.display_name);
+      const currentMap = {};
+      teamScores.forEach(t=> currentMap[t.team]=t.overallScore);
+
+      const out = rosters.map(r=>{
+        let s1=[],s2=[],s3=[];
+        r.players.forEach(pid=>{
+          const nm = normalizeName(sleeperPlayers[pid]?.full_name||"");
+          s1.push(p1[nm]||0);
+          s2.push(p2[nm]||0);
+          s3.push(p3[nm]||0);
+        });
+        [s1,s2,s3].forEach(a=>a.sort((a,b)=>b-a));
+        const avg = arr => arr.slice(0,15).reduce((s,x)=>s+x,0)/Math.max(arr.slice(0,15).length,1);
+        const team = userMap[r.owner_id]||"Unknown";
+        return {
+          team,
+          current: currentMap[team]||0,
+          proj1: avg(s1),
+          proj2: avg(s2),
+          proj3: avg(s3)
+        };
+      });
+
+      return computeAdjustedProjections(out, teamScores);
+    }
+    function computeAdjustedProjections(projData, teamScores) {
+      const rankMap = {};
+      teamScores.forEach(t=> rankMap[t.team]=t.overallRank);
+
+      projData.forEach(t=>{
+        t.r0 = rankMap[t.team]||0;
+        t.proj1_adjusted = t.proj1 + 150*t.r0;
+      });
+      [...projData].sort((a,b)=>b.proj1_adjusted-a.proj1_adjusted)
+        .forEach((t,i)=> t.r1 = i+1);
+
+      projData.forEach(t=>{
+        t.proj2_adjusted = t.proj2 + 150*t.r0*0.9 + 150*t.r1;
+      });
+      [...projData].sort((a,b)=>b.proj2_adjusted-a.proj2_adjusted)
+        .forEach((t,i)=> t.r2 = i+1);
+
+      projData.forEach(t=>{
+        t.proj3_adjusted = t.proj3
+          +150*t.r0*0.8
+          +150*t.r1*0.9
+          +150*t.r2;
+      });
+      [...projData].sort((a,b)=>b.proj3_adjusted-a.proj3_adjusted)
+        .forEach((t,i)=> t.r3 = i+1);
+
+      return projData;
+    }
+
+    function renderProjectionChart(data) {
+      const ctx = document.getElementById("projectionChart").getContext("2d");
+      const labels = ["Current","+1 Year","+2 Years","+3 Years"];
+      const datasets = data.map(t=>{
+        const color = `rgb(${Math.random()*200|0},${Math.random()*200|0},${Math.random()*200|0})`;
+        return {
+          label: t.team,
+          data: [
+            t.current,
+            t.proj1_adjusted,
+            t.proj2_adjusted,
+            t.proj3_adjusted
+          ].map(x=>+x.toFixed(2)),
+          borderColor: color,
+          backgroundColor: color,
+          fill:false,
+          tension:0.1,
+          borderWidth:3
+        };
+      });
+      let all = datasets.flatMap(d=>d.data),
+          min = Math.min(...all),
+          max = Math.max(...all);
+      if(projectionChartInstance) projectionChartInstance.destroy();
+      projectionChartInstance = new Chart(ctx, {
+        type:'line',
+        data:{labels,datasets},
+        options:{
+          responsive:true,
+          scales:{ y:{ beginAtZero:false, min:min-500, max:max+500 } }
         }
       });
-  
-      async function loadProjectionRankings(projUrl) {
-        try {
-          const res = await fetch(projUrl);
-          const text = await res.text();
-          const data = parseCSV(text);
-          let lookup = {};
-          data.forEach(row => {
-            const name = row["Player"] ? normalizeName(row["Player"]) : "";
-            const score = parseFloat(row["Score"]) || 0;
-            lookup[name] = score;
-          });
-          return lookup;
-        } catch (error) {
-          console.error("Error loading projection rankings from", projUrl, error);
-          return {};
-        }
-      }
+    }
+
+    async function renderAll(lid) {
+      const teams = await computeTeamScores(lid);
+      await displayTeamRankings(teams);
+      const proj  = await computeFutureProjections(lid, teams);
+      renderProjectionChart(proj);
+    }
+    document.getElementById("loadLeagueBtn").addEventListener("click",async()=>{
+      const lid = document.getElementById("leagueId").value.trim();
+      if(!lid) return alert("Enter a Sleeper League ID");
+      try { await renderAll(lid); }
+      catch(e){ console.error(e); alert("Error loading league."); }
     });
+  });
   </script>
-  
+
+  <script>
+    fetch('/nav.html')
+      .then(r=>r.text())
+      .then(html=>document.getElementById('nav-placeholder').innerHTML=html)
+      .catch(()=>console.error('Nav load failed'));
+  </script>
 </body>
 </html>

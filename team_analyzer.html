@@ -210,31 +210,9 @@
     <h1>Team Analyzer</h1>
     <p>Enter your Sleeper League ID and choose your team to get an in-depth breakdown.</p>
   </header>
-  <nav>
-    <div class="dropdown">
-      <a href="#" class="dropbtn">Rankings</a>
-      <div class="dropdown-content">
-        <a href="college_rankings.html">Devy Rankings</a>
-        <a href="nfl_rankings.html">NFL Player Rankings</a>
-      </div>
-    </div>
-    <div class="dropdown">
-      <a href="#" class="dropbtn">Draft</a>
-      <div class="dropdown-content">
-        <a href="dynasty_mock_drafts.html">Dynasty</a>
-        <a href="nfl_mock_drafts.html">NFL</a>
-      </div>
-    </div>
-    <div class="dropdown">
-      <a href="#" class="dropbtn">Tools</a>
-      <div class="dropdown-content">
-        <a href="trade_calculator.html">Trade Calculator</a>
-        <a href="devy_mock_simulator.html">Devy Mock Simulator</a>
-        <a href="league_rankings.html">League Rankings</a>
-        <a href="team_analyzer.html">Team Analyzer</a>
-      </div>
-    </div>
-  </nav>
+  
+ <!-- Nav placeholder; loads /nav.html -->
+  <div id="nav-placeholder"></div>
 
   <div id="teamInputContainer">
     <input type="text" id="analyzerLeagueId" placeholder="Enter Sleeper League ID" />
@@ -276,7 +254,26 @@
     </div>
   </div>
 
+  <div class="explanation-note">
+  <p>
+    We use <strong>three</strong> ranking systems on this page:
+    <em>Overall</em> is our best reflection of true dynasty value,
+    while <em>Competing</em> and <em>Tanking</em> are more “value-to-you” systems—
+    Competing if you’re chasing a title today, Tanking if you’re rebuilding for the future.
+  </p>
+</div>
+
   <!-- Your analysis logic -->
   <script src="team_analyzer.js"></script>
+
+  <!-- === Nav‐loader script === -->
+  <script>
+    fetch('/nav.html')
+      .then(r => r.text())
+      .then(html => {
+        document.getElementById('nav-placeholder').innerHTML = html;
+      })
+      .catch(err => console.error('Nav load failed:', err));
+  </script>
 </body>
 </html>

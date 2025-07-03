@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Strength of Schedule – Dynasty Toolbox</title>
+  <meta name="description" content="Dynasty Fantasy Football: Upcoming NFL Strength of Schedule heatmap by division.">
+  <meta name="keywords" content="dynasty fantasy football, nfl sos, strength of schedule, dynasty toolbox">
+
+  <!-- Social / SEO -->
+  <meta property="og:title"       content="Strength of Schedule – Dynasty Toolbox">
+  <meta property="og:description" content="See which NFL teams have the easiest (green) or hardest (red) upcoming slate.">
+  <meta property="og:url"         content="https://www.dynasty-toolbox.com/sos.html">
+  <meta property="og:image"       content="https://www.dynasty-toolbox.com/assets/sos-preview.png">
+  <meta name="twitter:card"       content="summary_large_image">
+  <meta name="twitter:title"      content="Strength of Schedule – Dynasty Toolbox">
+  <meta name="twitter:description"content="Interactive NFL SOS heatmap for dynasty managers.">
+  <meta name="twitter:image"      content="https://www.dynasty-toolbox.com/assets/sos-preview.png">
+
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+    /* hide the division filter for now */
+    #controls { display: none; }
+
+    /* make headers look clickable */
+    th.sortable { cursor: pointer; }
+    th.sortable:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <header><h1>Strength of Schedule</h1></header>
+
+  <div id="nav-placeholder"></div>
+
+
+  <main>
+    <article>
+      <!-- Division Filter (hidden) -->
+      <section id="controls">
+        <div class="dropdown">
+          <label for="divisionSelect">Division:</label>
+          <select id="divisionSelect">
+            <option value="">All</option>
+            <option value="AFC South">AFC South</option>
+            <option value="AFC West">AFC West</option>
+            <option value="AFC North">AFC North</option>
+            <option value="AFC East">AFC East</option>
+            <option value="NFC South">NFC South</option>
+            <option value="NFC West">NFC West</option>
+            <option value="NFC North">NFC North</option>
+            <option value="NFC East">NFC East</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- Legend -->
+      <aside id="legend">
+        <h3>SOS Heatmap Key</h3>
+        <ul>
+          <li><span class="legend-box sos-easy"></span> Easiest</li>
+          <li><span class="legend-box sos-medium"></span> Medium</li>
+          <li><span class="legend-box sos-hard"></span> Hardest</li>
+        </ul>
+      </aside>
+
+      <!-- SOS Table -->
+      <section id="table-container">
+        <table id="sosTable" class="heatmap-table">
+          <thead>
+            <tr>
+              <th data-col="Team"         class="sortable">Team</th>
+              <th data-col="Overall"      class="sortable">Overall</th>
+              <th data-col="Playoff"      class="sortable">Playoff</th>
+              <th data-col="Season Pass"  class="sortable">Season Pass</th>
+              <th data-col="Season Run"   class="sortable">Season Run</th>
+              <th data-col="Playoff Pass" class="sortable">Playoff Pass</th>
+              <th data-col="Playoff Run"  class="sortable">Playoff Run</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- rows injected here -->
+          </tbody>
+        </table>
+      </section>
+    </article>
+  </main>
+
+  <footer><p>&copy; 2024 Dynasty Fantasy Football</p></footer>
+
+  <script>
+    const csvUrl = 
+      'https://docs.google.com/spreadsheets/d/e/2PACX-1vSWEeAb82B0V6LbOmL35bvwQiVDRjTT7c_YZdcQm_8MJA-ILdCViSJCjWIwC-L2zidQ-cjFA1juV1kA/pub?gid=112962471&single=true&output=csv';
+    const divisionSelect = document.getElementById('divisionSelect');
+    const tableBody      = document.querySelector('#sosTable tbody');
+    const headers        = Array.from(document.querySelectorAll('#sosTable thead th.sortable'));
+    const numericCols    = ['Overall','Playoff','Season Pass','Season Run','Playoff Pass','Playoff Run'];
+
+    // sort state
+    let sortCol = 'Overall';
+    let sortAsc = true;
+
+    // header click → resort
+    headers.forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.dataset.col;
+        if (sortCol === col) sortAsc = !sortAsc;
+        else { sortCol = col; sortAsc = true; }
+        drawTable();
+      });
+    });
+
+    // fetch & normalize CSV
+    async function fetchCsv() {
+      const text = await fetch(csvUrl).then(r => r.text());
+      const rows = text.trim().split('\n').map(r => r.split(','));
+      const rawHeader = rows.shift().map(h => h.trim().toLowerCase());
+      const idx = {};
+      ['team','division','overall','playoff','season pass','season run','playoff pass','playoff run']
+        .forEach(col => idx[col] = rawHeader.findIndex(h => h === col));
+      return rows.map(r => ({
+        Team         : r[idx['team']]?.trim()      || '',
+        Division     : r[idx['division']]?.trim()  || '',
+        Overall      : r[idx['overall']]?.trim()   || '',
+        Playoff      : r[idx['playoff']]?.trim()   || '',
+        'Season Pass': r[idx['season pass']]?.trim()|| '',
+        'Season Run' : r[idx['season run']]?.trim() || '',
+        'Playoff Pass':r[idx['playoff pass']]?.trim()|| '',
+        'Playoff Run': r[idx['playoff run']]?.trim() || ''
+      }));
+    }
+
+    // draw / filter / sort
+    async function drawTable() {
+      let data = await fetchCsv();
+      // always treat as "All" since control is hidden
+      data = data.filter(d => d.Team && !isNaN(+d.Overall));
+
+      data.sort((a,b) => {
+        let va = a[sortCol], vb = b[sortCol];
+        let cmp = numericCols.includes(sortCol)
+          ? (+va - +vb)
+          : va.localeCompare(vb);
+        return sortAsc ? cmp : -cmp;
+      });
+
+      tableBody.innerHTML = '';
+      data.forEach(row => {
+        const tr = document.createElement('tr');
+        if (row.Division) tr.dataset.division = row.Division;
+        let html = `<td>${row.Team}</td>`;
+        ['Overall','Playoff','Season Pass','Season Run','Playoff Pass','Playoff Run']
+          .forEach(col => {
+            const v = parseFloat(row[col]);
+            const cls = isNaN(v) ? '' : (v <=10 ? 'sos-easy' : v<=20 ? 'sos-medium' : 'sos-hard');
+            html += `<td data-value="${isNaN(v)?'':v.toFixed(0)}" class="${cls}">${isNaN(v)?'':v.toFixed(0)}</td>`;
+          });
+        tr.innerHTML = html;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    headers.forEach(h => {}); // keep headers wired up
+    drawTable();
+  </script>
+
+  <script>
+    fetch('/nav.html')
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById('nav-placeholder').innerHTML = html;
+      })
+      .catch(err => console.error('Nav load failed:', err));
+  </script>
+</body>
+</html>

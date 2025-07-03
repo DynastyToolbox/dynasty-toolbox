@@ -38,44 +38,64 @@
   <script defer src="script.js"></script>
   <style>
     /* ---------- Header & Nav Styles ---------- */
-    body {
-      font-family: 'Bree Serif', serif;
-      background-color: #f4f4f4;
-      margin: 0;
-      padding: 0;
-      text-align: center;
-    }
+     body {
+    font-family: 'Bree Serif', serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+  }
 
-    nav a {
-      margin: 0 10px;
-      text-decoration: none;
-      color: #004d40;
-      font-weight: bold;
-    }
+  nav a {
+    margin: 0 10px;
+    text-decoration: none;
+    color: #004d40;
+    font-weight: bold;
+  }
 
     /* ---------- Trade Calculator Styles ---------- */
-    .trade-container {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 20px;
-      padding: 20px;
-    }
+ .trade-container {
+    display: flex;
+    justify-content: center;  /* center the cards as a group */
+    flex-wrap: wrap;          /* wrap to next row when needed */
+    gap: 20px;
+    padding: 20px;
+  }
     .trade-box {
-      background: #ffffff;
-      border-radius: 12px;
-      padding: 20px;
-      width: 400px;
-      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-      border: 2px solid #004d40;
-      text-align: left;
-      margin-bottom: 20px;
-      position: relative;
-    }
+    /* never grow or shrink, always exactly 400px wide (up to 90% on tiny phones) */
+    flex: 0 0 400px;
+    width: 100%;
+    max-width: 400px;
+
+    background: #ffffff;
+    border: 2px solid #004d40;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    padding: 20px;
+    text-align: left;
+  }
+@media (max-width: 700px) {
+  .trade-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  /* full-width select so it doesn’t overflow */
+  .trade-header select {
+    width: 100%;
+    max-width: none;
+  }
+  /* shrink the remove-team button */
+  .remove-team-btn {
+    padding: 6px 12px;
+    font-size: 0.9em;
+  }
+}
     .trade-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+       gap: 10px;
       font-size: 1.3em;
       font-weight: bold;
       color: #004d40;
@@ -128,17 +148,20 @@
       padding: 0;
       margin: 10px 0;
     }
-    .trade-item {
-      background: #e0f2f1;
-      padding: 10px;
-      border-radius: 6px;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 5px;
-      font-size: 1em;
-    }
+   .trade-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: nowrap;
+    background: #e0f2f1;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 5px;
+  }
+    .trade-item .player-score {
+    flex-shrink: 0;
+    margin-left: 10px;
+  }
     /* Styled destination dropdown */
     .dest-select {
       padding: 4px;
@@ -212,31 +235,20 @@
   <header>
     <h1>Trade Calculator</h1>
   </header>
-  <nav>
-    <div class="dropdown">
-      <a href="#" class="dropbtn">Rankings</a>
-      <div class="dropdown-content">
-        <a href="college_rankings.html">Devy Rankings</a>
-        <a href="nfl_rankings.html">NFL Player Rankings</a>
-      </div>
-    </div>
-    <div class="dropdown">
-      <a href="#" class="dropbtn">Draft</a>
-      <div class="dropdown-content">
-        <a href="dynasty_mock_drafts.html">Dynasty</a>
-        <a href="nfl_mock_drafts.html">NFL</a>
-      </div>
-    </div>
-    <div class="dropdown">
-      <a href="#" class="dropbtn">Tools</a>
-      <div class="dropdown-content">
-        <a href="trade_calculator.html">Trade Calculator</a>
-        <a href="devy_mock_simulator.html">Devy Mock Simulator</a>
-        <a href="league_rankings.html">League Rankings</a>
-        <a href="team_analyzer.html">Team Analyzer</a>
-      </div>
-    </div>
-  </nav>
+  
+ <!-- Nav placeholder; loads /nav.html -->
+  <div id="nav-placeholder"></div>
+
+  <div class="explanation-note">
+  <p>
+    We use <strong>three</strong> ranking systems on this page:
+    <em>Overall</em> is our best reflection of true dynasty value,
+    while <em>Competing</em> and <em>Tanking</em> are more “value-to-you” systems—
+    Competing if you’re chasing a title today, Tanking if you’re rebuilding for the future.
+    For the Trade Calculator, you can set each team's ranking system individually. Which allows team situation to be a factor in trade creation. 
+    The <em>Overall</em> status is objective, and will reflect true trade value.
+  </p>
+</div>
   
   <!-- ---------- Main Trade Calculator ---------- -->
   <main>
@@ -544,6 +556,7 @@
       attachTeamListeners(teamNumber);
       updateReceives();
       updateRemoveButtons();
+      updateLayoutMode(); 
       if (teams.length === maxTeams) {
         document.getElementById("addTeamButton").disabled = true;
       }
@@ -561,11 +574,21 @@
       }
       updateReceives();
       updateRemoveButtons();
+      updateLayoutMode(); 
       // Re-enable the add button if below max.
       if (teams.length < maxTeams) {
         document.getElementById("addTeamButton").disabled = false;
       }
     }
+
+    function updateLayoutMode() {
+  const container = document.getElementById("tradeContainer");
+  if (teams.length >= 3) {
+    container.classList.add("grid");
+  } else {
+    container.classList.remove("grid");
+  }
+}
 
     /********** Initialization **********/
     async function initialize() {
@@ -573,8 +596,18 @@
       teams.forEach(team => attachTeamListeners(team));
       document.getElementById("addTeamButton").addEventListener("click", addTeam);
       updateRemoveButtons();
+      updateLayoutMode();
     }
     initialize();
+  </script>
+   <!-- === Nav‐loader script === -->
+  <script>
+    fetch('/nav.html')
+      .then(r => r.text())
+      .then(html => {
+        document.getElementById('nav-placeholder').innerHTML = html;
+      })
+      .catch(err => console.error('Nav load failed:', err));
   </script>
 </body>
 </html>

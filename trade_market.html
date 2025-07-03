@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Trade Market – Dynasty Toolbox</title>
+  <meta name="description" content="Dynasty Fantasy Football: Trade‐for and Trade‐away candidates, split by Competing vs. Tanking.">
+  <meta name="keywords" content="dynasty fantasy football, trade market, trade candidates, dynasty toolbox">
+
+  <!-- Social / SEO -->
+  <meta property="og:title"       content="Trade Market – Dynasty Toolbox">
+  <meta property="og:description" content="Browse Competing vs. Tanking trade‐for and trade‐away candidates with analysis and images.">
+  <meta property="og:url"         content="https://www.dynasty-toolbox.com/trade_market.html">
+  <meta property="og:image"       content="https://www.dynasty-toolbox.com/assets/trade-market-preview.png">
+  <meta name="twitter:card"       content="summary_large_image">
+  <meta name="twitter:title"      content="Trade Market – Dynasty Toolbox">
+  <meta name="twitter:description"content="Browse Competing vs. Tanking trade‐for and trade‐away candidates with analysis and images.">
+  <meta name="twitter:image"      content="https://www.dynasty-toolbox.com/assets/trade-market-preview.png">
+
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+
+
+</head>
+
+<body>
+  <header>
+    <h1>Trade Market</h1>
+  </header>
+
+  <!-- Nav placeholder; loads /nav.html -->
+  <div id="nav-placeholder"></div>
+
+  <div class="explanation-note">
+  <p>
+    We use <strong>three</strong> ranking systems on this page:
+    <em>Overall</em> is our best reflection of true dynasty value,
+    while <em>Competing</em> and <em>Tanking</em> are more “value-to-you” systems—
+    Competing if you’re chasing a title today, Tanking if you’re rebuilding for the future.
+  </p>
+</div>
+
+  <main>
+  <div class="market-container">
+    <!-- Trade‐For -->
+    <section>
+      <h2 class="section-title">Trade-For Candidates</h2>
+      <h3 class="subsection-title">Competing</h3>
+      <div id="forCompeting"></div>
+      <h3 class="subsection-title">Tanking</h3>
+      <div id="forTanking"></div>
+      <h3 class="subsection-title">Overall</h3>
+      <div id="forOverall"></div>
+    </section>
+
+    <!-- Trade-Away -->
+    <section>
+      <h2 class="section-title">Trade-Away Candidates</h2>
+      <h3 class="subsection-title">Competing</h3>
+      <div id="awayCompeting"></div>
+      <h3 class="subsection-title">Tanking</h3>
+      <div id="awayTanking"></div>
+      <h3 class="subsection-title">Overall</h3>
+      <div id="awayOverall"></div>
+    </section>
+  </div>
+</main>
+
+  <footer>
+    <p>&copy; 2024 Dynasty Fantasy Football</p>
+  </footer>
+
+  <!-- === SOS-script is not needed here; instead, Trade‐Market script below === -->
+  <script>
+    async function fetchCandidates(url) {
+  const csvText = await fetch(url).then(r => r.text());
+  // parse, preserving quoted fields (so commas in descriptions stay intact)
+  const parsed = Papa.parse(csvText, {
+    header: true,
+    skipEmptyLines: true,
+    transformHeader: h => h.trim()  // trim any stray spaces in headers
+  });
+
+  return parsed.data.map(r => ({
+    Status     : r["STATUS"].trim(),
+    Name       : r["NAME"].trim(),
+    Position   : r["POSITION"].trim(),
+    Team       : r["TEAM"].trim(),
+    Slug       : r["SLUG"].trim(),
+    ImageURL   : r["IMAGEURL"].trim(),
+    Tag        : r["TAG"].trim(),
+    Price      : r["PRICE"].trim(),
+    Description: r["DESCRIPTION"].trim(),
+    SortOrder  : parseInt(r["SORTORDER"], 10) || 0
+  }));
+}
+
+function renderCards(containerId, playersArray) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+      playersArray.forEach(p => {
+    // skip any rows with no name (blank from the sheet)
+    if (!p.Name) return;
+        // outer card
+        const card = document.createElement('div');
+        card.className = 'market-card';
+        card.classList.add('market-card', `team-${p.Team.toLowerCase()}`);
+
+        // 1) Left panel: status + pic
+        const left = document.createElement('div');
+left.className = 'card-left';
+const status = document.createElement('span');
+status.className = `status ${p.Status.toLowerCase()}`;
+status.textContent = p.Status;
+// append status *before* the image
+left.appendChild(status);
+const img = document.createElement('img');
+        img.className = 'player-pic';
+        img.src = p.ImageURL;
+        img.alt = p.Name;
+        left.appendChild(img);
+        card.appendChild(left);
+
+        // 2) Main panel: name, tag+price, desc
+        const main = document.createElement('div');
+        main.className = 'card-main';
+        // name
+        const nameH3 = document.createElement('h3');
+        nameH3.className = 'player-name';
+        nameH3.textContent = p.Name;
+        main.appendChild(nameH3);
+        // tag + price
+        const tp = document.createElement('div');
+        tp.className = 'tag-price';
+        tp.innerHTML = `
+          <span class="player-tag">${p.Tag}</span>
+          <span class="player-price">${p.Price}</span>
+        `;
+        main.appendChild(tp);
+        // description
+        const desc = document.createElement('p');
+        desc.className = 'player-desc';
+        desc.textContent = p.Description;
+        main.appendChild(desc);
+
+        card.appendChild(main);
+
+        // 3) Right panel: vertical tabs for Team & Position
+        const tabs = document.createElement('div');
+        tabs.className = 'card-tabs';
+        const teamTab = document.createElement('div');
+        teamTab.className = 'tab team';
+        teamTab.textContent = p.Team;
+        const posTab = document.createElement('div');
+        posTab.className = 'tab position';
+        posTab.textContent = p.Position;
+        tabs.appendChild(teamTab);
+        tabs.appendChild(posTab);
+        card.appendChild(tabs);
+
+        // append to container
+        container.appendChild(card);
+        const bg = getComputedStyle(card).backgroundColor;
+      });
+    }
+
+    async function loadTradeMarket() {
+      const tradeForUrl  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQEJIPKn5TdU5ml8ANz4L6OsLk-HH6rnjXYb6GjI4sUZ7wWUEzjc-uOpseLEAbu6YopYUPR3ApDHoML/pub?gid=0&single=true&output=csv';
+      const tradeAwayUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQEJIPKn5TdU5ml8ANz4L6OsLk-HH6rnjXYb6GjI4sUZ7wWUEzjc-uOpseLEAbu6YopYUPR3ApDHoML/pub?gid=532692401&single=true&output=csv';
+
+      const [tradeForList, tradeAwayList] = await Promise.all([
+        fetchCandidates(tradeForUrl),
+        fetchCandidates(tradeAwayUrl)
+      ]);
+
+      // Sort each list by SortOrder ascending
+      tradeForList.sort((a, b) => a.SortOrder - b.SortOrder);
+      tradeAwayList.sort((a, b) => a.SortOrder - b.SortOrder);
+
+      // Partition by Status
+      const forComp  = tradeForList.filter(p => p.Status.toLowerCase() === 'competing');
+      const forTank  = tradeForList.filter(p => p.Status.toLowerCase() === 'tanking');
+      const forOver  = tradeForList.filter(p => p.Status.toLowerCase() === 'overall');
+      const awayComp = tradeAwayList.filter(p => p.Status.toLowerCase() === 'competing');
+      const awayTank = tradeAwayList.filter(p => p.Status.toLowerCase() === 'tanking');
+      const awayOver = tradeAwayList.filter(p => p.Status.toLowerCase() === 'overall');
+
+      // Render into containers
+      renderCards('forCompeting',  forComp);
+      renderCards('forTanking',    forTank);
+      renderCards('forOverall',    forOver);
+      renderCards('awayCompeting', awayComp);
+      renderCards('awayTanking',   awayTank);
+      renderCards('awayOverall',   awayOver);
+    }
+
+    document.addEventListener('DOMContentLoaded', loadTradeMarket);
+  </script>
+
+  <!-- === Nav‐loader script === -->
+  <script>
+    fetch('/nav.html')
+      .then(r => r.text())
+      .then(html => {
+        document.getElementById('nav-placeholder').innerHTML = html;
+      })
+      .catch(err => console.error('Nav load failed:', err));
+  </script>
+</body>
+</html>

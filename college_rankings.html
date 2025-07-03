@@ -85,31 +85,8 @@
     <header>
         <h1>Devy Rankings</h1>
     </header>
-    <nav>
-        <div class="dropdown">
-          <a href="#" class="dropbtn">Rankings</a>
-          <div class="dropdown-content">
-            <a href="college_rankings.html">Devy Rankings</a>
-            <a href="nfl_rankings.html">NFL Player Rankings</a>
-          </div>
-        </div>
-        <div class="dropdown">
-          <a href="#" class="dropbtn">Draft</a>
-          <div class="dropdown-content">
-            <a href="dynasty_mock_drafts.html">Dynasty</a>
-            <a href="nfl_mock_drafts.html">NFL</a>
-          </div>
-        </div>
-        <div class="dropdown">
-          <a href="#" class="dropbtn">Tools</a>
-          <div class="dropdown-content">
-            <a href="trade_calculator.html">Trade Calculator</a>
-        <a href="devy_mock_simulator.html">Devy Mock Simulator</a>
-        <a href="league_rankings.html">League Rankings</a>
-        <a href="team_analyzer.html">Team Analyzer</a>
-          </div>
-        </div>
-      </nav>
+   <!-- Nav placeholder; loads /nav.html -->
+  <div id="nav-placeholder"></div>
 
     <main>
         <section>
@@ -219,6 +196,15 @@
         // Initial table population
         fetchRankings();
     </script>
+     <!-- === Nav‐loader script === -->
+  <script>
+    fetch('/nav.html')
+      .then(r => r.text())
+      .then(html => {
+        document.getElementById('nav-placeholder').innerHTML = html;
+      })
+      .catch(err => console.error('Nav load failed:', err));
+  </script>
 </body>
 </html>
 
