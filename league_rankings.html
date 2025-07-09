@@ -521,22 +521,22 @@
 
       projData.forEach(t=>{
         t.r0 = rankMap[t.team]||0;
-        t.proj1_adjusted = t.proj1 + 150*t.r0;
+        t.proj1_adjusted = t.proj1 + 100*t.r0;
       });
       [...projData].sort((a,b)=>b.proj1_adjusted-a.proj1_adjusted)
         .forEach((t,i)=> t.r1 = i+1);
 
       projData.forEach(t=>{
-        t.proj2_adjusted = t.proj2 + 150*t.r0*0.9 + 150*t.r1;
+        t.proj2_adjusted = t.proj2 + 100*t.r0*0.8 + 100*t.r1;
       });
       [...projData].sort((a,b)=>b.proj2_adjusted-a.proj2_adjusted)
         .forEach((t,i)=> t.r2 = i+1);
 
       projData.forEach(t=>{
         t.proj3_adjusted = t.proj3
-          +150*t.r0*0.8
-          +150*t.r1*0.9
-          +150*t.r2;
+          +100*t.r0*0.5
+          +100*t.r1*0.8
+          +100*t.r2;
       });
       [...projData].sort((a,b)=>b.proj3_adjusted-a.proj3_adjusted)
         .forEach((t,i)=> t.r3 = i+1);
