@@ -80,34 +80,58 @@ td, th {
     text-align: left;
 }
 
-/* Draft Row Bubble Style */
-/* Mock Draft Row Styles */
+/* 1) Draft-row container */
 .draft-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background-color: #ffffff; /* Default fallback color */
-    color: #000000; /* Default text color */
-    border-radius: 30px; /* Rounded bubble effect */
-    margin: 10px 20px; /* Spacing from edges and between rows */
-    padding: 15px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;      /* never wrap */
+  overflow-x: auto;       /* scroll if it really can’t shrink more */
+  padding: clamp(10px, 2vw, 15px);
+  margin: 10px 1rem;
+  background: #fff;
+  border-radius: 30px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-/* Team Logo Style */
 .draft-row img.team-logo {
-    width: 50px;
-    height: 50px;
-    border-radius: 25px; /* Circular logos */
-    margin-right: 15px;
+  flex-shrink: 0;                  /* don’t let flexbox shrink it away */
+  height: clamp(30px, 6vw, 50px);  /* fluid height between 30px ↔ 50px */
+  width: auto;                     /* width scales to match height */
+  margin-right: 1rem;
+  object-fit: contain;             /* just in case, preserve ratio */
 }
 
-/* Text in Draft Row */
-.draft-row div {
-    flex: 1;
-    text-align: center; /* Center-aligns each column of text */
-    font-size: 1.1em;
-    font-weight: bold;
+/* 3) Text cells: NO truncation, but aggressive fluid sizing */
+.draft-row > div {
+  flex: 1 1 0;         /* allow shrinking */
+  min-width: 0;        /* for flex-shrink to work */
+  white-space: nowrap; /* single line */
+  text-align: center;
+  padding: 0 0.5rem;
+  /* fluid base size: min .8rem up to 1.1em, scaling @ 1vw */
+  font-size: clamp(0.8rem, 1vw, 1.1em);
+  font-weight: bold;
+}
+
+/* 4) Extra shrink steps at real breakpoints */
+@media (max-width: 1400px) {
+  .draft-row > div { font-size: 1em;        }
+}
+@media (max-width: 1200px) {
+  .draft-row > div { font-size: 0.9em;      }
+}
+@media (max-width: 1000px) {
+  .draft-row > div { font-size: 0.8em;      }
+}
+@media (max-width:  800px) {
+  .draft-row > div { font-size: 0.7em;      }
+}
+@media (max-width:  600px) {
+  .draft-row > div { font-size: 0.6em;      }
+}
+@media (max-width:  400px) {
+  .draft-row > div { font-size: 0.55em;     }
 }
 
 /* Table container to center content */
@@ -857,4 +881,73 @@ footer p {
 #scoring-filters label {
   margin-right: 1rem;
   cursor: pointer;
+}
+
+/* === Strength of Schedule: force the table to overflow-inside its wrapper === */
+#table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* smooth on iOS */
+  padding-bottom: 0.5rem;
+}
+
+/* override the global `table { width:100% }` and let it size itself */
+#table-container table {
+  display: inline-table;  /* allow it to grow wider than its parent */
+  width: auto !important; /* override the width:100% on the table rule */
+  min-width: 100%;        /* but never shrink below its container */
+  white-space: nowrap;    /* keep each cell on one line */
+}
+/* At the bottom of style.css—won’t affect SOS (which uses #table-container) */
+.devy-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 1rem;
+}
+.devy-responsive table {
+  display: inline-table;
+  width: auto !important;
+  min-width: 100%;
+  white-space: nowrap;
+}
+/* horizontal-scroll wrapper for any table */
+.table-responsive {
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* smooth on iOS */
+  margin-bottom: 1rem;              /* a little breathing room */
+}
+
+.table-responsive table {
+  display: inline-table;   /* allow it to overflow inside the wrapper */
+  min-width: 100%;         /* fill the wrapper when possible */
+  width: auto;             /* otherwise size to content */
+  white-space: nowrap;     /* keep each cell on one line */
+  box-sizing: border-box;
+}
+
+/* optional smaller font on very narrow screens */
+@media (max-width: 600px) {
+  .table-responsive table {
+    font-size: 0.9em;
+  }
+}
+.projection-lists {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.9em;
+  max-width: 1200px;
+  margin: 0 auto 1rem;
+  padding: 0 1rem;
+}
+.projection-lists .year-list {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 6px 10px;
+  white-space: nowrap;   /* keep each on one line */
+  overflow-x: auto;
 }

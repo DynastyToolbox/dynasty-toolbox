@@ -84,32 +84,46 @@
       max-height: 50px;
       margin-bottom: 5px;
     }
-    /* Existing dynasty bubble styles for full view */
-    .dynasty-bubble {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #f9f9f9;
-      border: 2px solid #ccc;
-      border-radius: 30px;
-      padding: 35px;
-      margin: 20px auto;
-      width: 85%;
-      max-width: 900px;
-      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
-      text-align: center;
-    }
-    .dynasty-bubble img {
-      width: 150px;
-      height: 120px;
-      border-radius: 20%;
-      margin-right: 20px;
-    }
-    .dynasty-bubble div {
-      font-size: 1.8em;
-      flex: 1;
-      text-align: center;
-    }
+/*---------------------------------------------------
+   Fluid dynasty-bubble (if you’re still using it)
+---------------------------------------------------*/
+.dynasty-bubble {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  width: 85vw;
+  padding: clamp(10px, 3vw, 35px);
+  margin: 20px auto;
+  background: #f9f9f9;
+  border: 2px solid #ccc;
+  border-radius: 30px;
+  box-shadow: 0 6px 10px rgba(0,0,0,0.1);
+  box-sizing: border-box;
+}
+
+.dynasty-bubble > img {
+  flex-shrink: 0;
+  width: clamp(50px, 10vw, 150px);
+  height: auto;
+  border-radius: 20%;
+  margin-right: 1rem;
+}
+
+.dynasty-bubble > div {
+  flex: 1 1 0;
+  min-width: 0;
+  white-space: nowrap;
+  font-size: clamp(0.75rem, 2.5vw, 1.8em);
+}
+
+@media (max-width: 480px) {
+  .dynasty-bubble {
+    flex-direction: column;
+    padding: 0.5rem;
+  }
+  .dynasty-bubble > div { font-size: 0.9rem; }
+  .dynasty-bubble > img { width: 80px; margin: 0 auto 0.5rem; }
+}
   </style>
 </head>
 <body>

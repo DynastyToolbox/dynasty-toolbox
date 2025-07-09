@@ -63,10 +63,24 @@
       font-size: 1em;
     }
 
-    /* Projection chart container */
-    #projectionContainer { max-width: 1200px; margin: 20px auto; }
-    #projectionChart { width: 100% !important; height: 600px; }
+/* Projection chart container: use explicit height that can be overridden in media queries */
+#projectionContainer {
+  max-width: 1200px;
+  margin: 20px auto;
+  height: 600px;             /* desktop height */
+  position: relative;
+}
+#projectionContainer canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
 
+/* Mobile: taller, thinner lines will kick in via JS, but container needs more room */
+@media (max-width: 600px) {
+  #projectionContainer {
+    height: 400px;
+  }
+}
     /* Team cards grid */
     #teamCards {
       display: flex;
@@ -162,7 +176,7 @@
     <button id="loadLeagueBtn">Load League</button>
   </div>
 
-  <div id="summaryRankings"></div>
+  <div id="summaryRankings" class="table-responsive"></div>
 
   <div id="projectionContainer">
     <canvas id="projectionChart"></canvas>
@@ -530,39 +544,57 @@
       return projData;
     }
 
-    function renderProjectionChart(data) {
-      const ctx = document.getElementById("projectionChart").getContext("2d");
-      const labels = ["Current","+1 Year","+2 Years","+3 Years"];
-      const datasets = data.map(t=>{
-        const color = `rgb(${Math.random()*200|0},${Math.random()*200|0},${Math.random()*200|0})`;
-        return {
-          label: t.team,
-          data: [
-            t.current,
-            t.proj1_adjusted,
-            t.proj2_adjusted,
-            t.proj3_adjusted
-          ].map(x=>+x.toFixed(2)),
-          borderColor: color,
-          backgroundColor: color,
-          fill:false,
-          tension:0.1,
-          borderWidth:3
-        };
-      });
-      let all = datasets.flatMap(d=>d.data),
-          min = Math.min(...all),
-          max = Math.max(...all);
-      if(projectionChartInstance) projectionChartInstance.destroy();
-      projectionChartInstance = new Chart(ctx, {
-        type:'line',
-        data:{labels,datasets},
-        options:{
-          responsive:true,
-          scales:{ y:{ beginAtZero:false, min:min-500, max:max+500 } }
+function renderProjectionChart(data) {
+  const ctx = document.getElementById("projectionChart").getContext("2d");
+  const labels = ["Current","+1 Year","+2 Years","+3 Years"];
+  const datasets = data.map(t => {
+    const color = `rgb(${Math.random()*200|0},${Math.random()*200|0},${Math.random()*200|0})`;
+    return {
+      label: t.team,
+      data: [t.current, t.proj1_adjusted, t.proj2_adjusted, t.proj3_adjusted].map(x => +x.toFixed(2)),
+      borderColor: color,
+      backgroundColor: color,
+      fill: false,
+      tension: 0.1,
+      borderWidth: 3          // default for desktop
+    };
+  });
+
+  let all = datasets.flatMap(d => d.data),
+      min = Math.min(...all),
+      max = Math.max(...all);
+
+  if (projectionChartInstance) projectionChartInstance.destroy();
+  projectionChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,   // ← let the CSS container height win
+      scales: {
+        y: { beginAtZero: false, min: min - 500, max: max + 500 }
+      },
+      elements: {
+        line: {
+          // on small screens, thin the lines
+          borderWidth: window.innerWidth < 600 ? 1 : 3
+        },
+        point: {
+          // hide the points on mobile for clarity
+          radius: window.innerWidth < 600 ? 0 : 3
         }
-      });
+      },
+      plugins: {
+        legend: {
+          labels: {
+            // shrink legend swatches on mobile
+            boxWidth: window.innerWidth < 600 ? 8 : 20
+          }
+        }
+      }
     }
+  });
+}
 
     async function renderAll(lid) {
       const teams = await computeTeamScores(lid);
