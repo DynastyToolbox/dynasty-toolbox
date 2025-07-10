@@ -28,53 +28,7 @@
     gtag('config', 'G-1C5TVEGFXT');
   </script>
   <style>
-    body {
-      font-family: 'Bree Serif', serif;
-      background-color: #f4f4f4;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      text-align: center;
-      padding: 20px 0 0 0;
-    }
-    h1 {
-      margin-bottom: 5px;
-    }
-    nav {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    nav .dropdown {
-      display: inline-block;
-      position: relative;
-      margin: 0 10px;
-    }
-    nav .dropbtn {
-      text-decoration: none;
-      color: #fff;
-      background: #004d40;
-      padding: 10px 15px;
-      border-radius: 4px;
-      font-weight: bold;
-    }
-    nav .dropdown-content {
-      display: none;
-      position: absolute;
-      background: #004d40;
-      min-width: 160px;
-      z-index: 1;
-    }
-    nav .dropdown:hover .dropdown-content {
-      display: block;
-    }
-    nav .dropdown-content a {
-      color: #fff;
-      text-decoration: none;
-      display: block;
-      padding: 8px 10px;
-    }
-
+  
     #mainContainer {
       display: flex;
       justify-content: center;
@@ -207,12 +161,42 @@
 </head>
 <body>
   <header>
+    <div class="top-bar">
+    <div class="social-links">
+      <a href="https://instagram.com/dynastytoolbox" target="_blank" aria-label="Instagram">
+        <img src="/assets/icons/instagram.svg" alt="">
+      </a>
+      <a href="https://x.com/dynastytoolbox" target="_blank" aria-label="X">
+        <img src="/assets/icons/x.png" alt="">
+      </a>
+      <a href="https://tiktok.com/@dynastytoolbox" target="_blank" aria-label="TikTok">
+        <img src="/assets/icons/tiktok.svg" alt="">
+      </a>
+    </div>
+    </div>
     <h1>Team Analyzer</h1>
-    <p>Enter your Sleeper League ID and choose your team to get an in-depth breakdown.</p>
   </header>
   
  <!-- Nav placeholder; loads /nav.html -->
   <div id="nav-placeholder"></div>
+
+    <div class="explanation-note">
+    <p>
+      We use <strong>three</strong> ranking systems on this page:
+      <em>Overall</em> is our best reflection of true dynasty value,
+      while <em>Competing</em> and <em>Tanking</em> are more “value-to-you” systems—
+      Competing if you’re chasing a title today, Tanking if you’re rebuilding for the future.
+    </p>
+    <p>
+      Where to find you Sleeper league ID:
+    </p>
+    </p>  
+      Mobile: Located at the bottom of "General Settings" for your league
+    </p>
+    </p>
+    Web Browser: Located in your league url (sleeper.com/leagues/1000000000000000001/)
+    </p>
+  </div>
 
   <div id="teamInputContainer">
     <input type="text" id="analyzerLeagueId" placeholder="Enter Sleeper League ID" />
@@ -253,15 +237,6 @@
       </div>
     </div>
   </div>
-
-  <div class="explanation-note">
-  <p>
-    We use <strong>three</strong> ranking systems on this page:
-    <em>Overall</em> is our best reflection of true dynasty value,
-    while <em>Competing</em> and <em>Tanking</em> are more “value-to-you” systems—
-    Competing if you’re chasing a title today, Tanking if you’re rebuilding for the future.
-  </p>
-</div>
 
   <!-- Your analysis logic -->
   <script src="team_analyzer.js"></script>

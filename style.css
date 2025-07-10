@@ -34,6 +34,8 @@ nav {
     text-align: center;
     font-size: 1.2em;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    position: relative;
+z-index: 1000;
 }
 
 nav a {
@@ -45,6 +47,45 @@ nav a {
 
 nav a:hover {
     color: #80cbc4;
+}
+/* 1) Make sure the nav/container doesn’t clip its children */
+nav,
+nav ul,
+nav li {
+  overflow: visible;    /* so that absolutely‐positioned children can “break out” */
+}
+
+/* 2) Position every dropdown normally (no longer tied to right‐edge of button) */
+.dropdown {
+  position: relative;
+}
+.dropdown-content {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 100%;
+  max-width: 90vw;
+  box-sizing: border-box;
+  padding: 0.5rem 1rem;
+  white-space: normal;
+  background: #004d40;
+  z-index: 2000;
+}
+
+/* 3) On mobile, center the dropdown (so it never overflows right) */
+@media (max-width: 600px) {
+  .dropdown-content {
+    left: 50%;               /* align its center with the button’s center */
+    transform: translateX(-50%);
+    width: 90vw;             /* almost full‐width, with a little margin */
+    max-width: 90vw;
+  }
+}
+@media (max-width: 400px) {
+  .dropdown-content {
+    width: 95vw;
+  }
 }
 
 
@@ -950,4 +991,58 @@ footer p {
   padding: 6px 10px;
   white-space: nowrap;   /* keep each on one line */
   overflow-x: auto;
+}
+.top-bar {
+  position: relative;       /* or absolute if you want it overlayed */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.9em;
+}
+
+.top-bar .social-links {
+  /* wrap your icons in a translucent pill */
+  background: #ffffff;
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Social icons container */
+.top-bar .social-links a {
+  display: inline-block;
+  margin-right: 0.75rem;
+  margin: 0 0.4rem;
+}
+.top-bar .social-links a:last-child {
+  margin-right: 0;
+}
+.top-bar .social-links img {
+  width: 24px;
+  height: auto;
+  vertical-align: middle;
+}
+
+/* Contact link styling */
+.top-bar .contact-link a {
+  color: #fff;              /* or your accent color */
+  background: #004d40;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  text-decoration: none;
+}
+.top-bar .contact-link a:hover {
+  background: #00796b;
+}
+@media (max-width: 600px) {
+  .top-bar {
+    justify-content: center !important;
+  }
+  /* if you kept the contact link, you could stack it below the icons: */
+  .top-bar {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 }
