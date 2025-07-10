@@ -238,6 +238,13 @@
     teamTypeDropdown.addEventListener("change", () => populateTable(teamTypeDropdown.value));
     searchBar.addEventListener("input", () => populateTable(teamTypeDropdown.value));
 
+    // **NEW**: re-populate on position filter changes
+document
+  .querySelectorAll('#filters input[type="checkbox"]')
+  .forEach(cb =>
+    cb.addEventListener('change', () => populateTable(teamTypeDropdown.value))
+  );
+
     // initial load
     populateTable(teamTypeDropdown.value);
   </script>
