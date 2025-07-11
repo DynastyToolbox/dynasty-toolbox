@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>NFL Player Rankings – Dynasty Toolbox</title>
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet">
@@ -39,15 +39,9 @@
   <header>
     <div class="top-bar">
       <div class="social-links">
-        <a href="https://instagram.com/dynastytoolbox" target="_blank" aria-label="Instagram">
-          <img src="/assets/icons/instagram.svg" alt="">
-        </a>
-        <a href="https://x.com/dynastytoolbox" target="_blank" aria-label="X">
-          <img src="/assets/icons/x.png" alt="">
-        </a>
-        <a href="https://tiktok.com/@dynastytoolbox" target="_blank" aria-label="TikTok">
-          <img src="/assets/icons/tiktok.svg" alt="">
-        </a>
+        <a href="https://instagram.com/dynastytoolbox" target="_blank" aria-label="Instagram"><img src="/assets/icons/instagram.svg" alt="Instagram"></a>
+        <a href="https://x.com/dynastytoolbox"       target="_blank" aria-label="X"><img src="/assets/icons/x.png"         alt="X"></a>
+        <a href="https://tiktok.com/@dynastytoolbox" target="_blank" aria-label="TikTok"><img src="/assets/icons/tiktok.svg"    alt="TikTok"></a>
       </div>
     </div>
     <h1>NFL Player Rankings</h1>
@@ -60,7 +54,7 @@
     <p>
       We use <strong>three</strong> ranking systems on this page:
       <em>Overall</em> is our best reflection of true dynasty value,
-      while <em>Competing</em> and <em>Tanking</em> are more “value-to-you” systems— 
+      while <em>Competing</em> and <em>Tanking</em> are more “value-to-you” systems—
       Competing if you’re chasing a title today, Tanking if you’re rebuilding for the future.
     </p>
   </div>
@@ -69,9 +63,9 @@
     <section>
       <h2>NFL Player Rankings</h2>
 
-      <!-- Dropdown for team type -->
+      <!-- Team type dropdown -->
       <div class="dropdown">
-        <label for="teamType">Select Team Type: </label>
+        <label for="teamType">Select Team Type:</label>
         <select id="teamType">
           <option value="overall">Overall</option>
           <option value="competing">Competing</option>
@@ -79,7 +73,7 @@
         </select>
       </div>
 
-      <!-- Filters for positions and search bar -->
+      <!-- Position filters + search -->
       <div id="filters">
         <label><input type="checkbox" value="QB" checked> QB</label>
         <label><input type="checkbox" value="RB" checked> RB</label>
@@ -88,7 +82,7 @@
         <input type="text" id="searchBar" placeholder="Search Players">
       </div>
 
-      <!-- Scoring‐filter toggles -->
+      <!-- Scoring-format toggles -->
       <div id="scoring-filters">
         <label><input type="checkbox" id="nonPpr"> Non-PPR</label>
         <label><input type="checkbox" id="halfPpr" checked> Half-PPR</label>
@@ -97,7 +91,7 @@
         <label><input type="checkbox" id="tePremium"> TE Premium</label>
       </div>
 
-      <!-- Table -->
+      <!-- Rankings table -->
       <div class="table-responsive">
         <table id="nflRankingsTable">
           <thead>
@@ -109,9 +103,7 @@
               <th>Score</th>
             </tr>
           </thead>
-          <tbody>
-            <!-- Populated by JS -->
-          </tbody>
+          <tbody><!-- Populated by JS --></tbody>
         </table>
       </div>
     </section>
@@ -121,46 +113,25 @@
     <p>&copy; 2024 Dynasty Fantasy Football</p>
   </footer>
 
-
   <script>
-    // grab all the filter controls
-    const nonPprCheckbox   = document.getElementById("nonPpr");
-    const halfPprCheckbox  = document.getElementById("halfPpr");
-    const fullPprCheckbox  = document.getElementById("fullPpr");
-    const superflexCheckbox= document.getElementById("superflex");
-    const tePremiumCheckbox= document.getElementById("tePremium");
+    // Controls
+    const nonPpr    = document.getElementById("nonPpr");
+    const halfPpr   = document.getElementById("halfPpr");
+    const fullPpr   = document.getElementById("fullPpr");
+    const superflex = document.getElementById("superflex");
+    const tePremium = document.getElementById("tePremium");
+    const teamType  = document.getElementById("teamType");
+    const searchBar = document.getElementById("searchBar");
+    const tbody     = document.querySelector("#nflRankingsTable tbody");
 
-    // ensure only one PPR option is ever checked
-    [nonPprCheckbox, halfPprCheckbox, fullPprCheckbox].forEach(cb => {
-      cb.addEventListener("change", () => {
-        if (cb.checked) {
-          [nonPprCheckbox, halfPprCheckbox, fullPprCheckbox]
-            .filter(o => o !== cb)
-            .forEach(o => o.checked = false);
-        }
-        // always keep at least one
-        if (![nonPprCheckbox, halfPprCheckbox, fullPprCheckbox].some(x=>x.checked)) {
-          halfPprCheckbox.checked = true;
-        }
-        populateTable(teamTypeDropdown.value);
-      });
-    });
-    [superflexCheckbox, tePremiumCheckbox].forEach(cb => {
-      cb.addEventListener("change", () => populateTable(teamTypeDropdown.value));
-    });
-
-    const teamTypeDropdown       = document.getElementById("teamType");
-    const nflRankingsTableBody   = document.querySelector("#nflRankingsTable tbody");
-    const searchBar              = document.getElementById("searchBar");
-
-    // CSV sources
+    // CSV URLs
     const csvUrls = {
       competing: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=0&single=true&output=csv",
       overall:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=116299513&single=true&output=csv",
       tanking:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=1543093851&single=true&output=csv"
     };
 
-    // helper: fetch & parse CSV
+    // Helper: fetch & parse CSV
     async function fetchCsvData(url) {
       const res = await fetch(url);
       const text = await res.text();
@@ -168,8 +139,8 @@
         .trim()
         .split("\n")
         .map(line => line.split(","))
-        .reduce((acc, row, i, arr) => {
-          if (i === 0) {
+        .reduce((acc, row, idx) => {
+          if (idx === 0) {
             acc.headers = row.map(h => h.trim());
           } else {
             let obj = {};
@@ -181,72 +152,84 @@
         .rows;
     }
 
-    // main: compute static ranks then filter+render
-    async function populateTable(teamType) {
-      const data = await fetchCsvData(csvUrls[teamType]);
+    // Populate table: filters → ranking
+    async function populateTable() {
+      // 1) load + compute scores
+      const raw = await fetchCsvData(csvUrls[teamType.value]);
+      // apply format multipliers
+      const pprMult = nonPpr.checked ? 0.95 : fullPpr.checked ? 1.05 : 1.0;
+      const teMult  = tePremium.checked ? 1.05 : 1.0;
+      const sfMult  = superflex.checked ? 1.0 : 0.65;
 
-      // scoring multipliers
-      const pprMult = nonPprCheckbox.checked
-        ? 0.95
-        : fullPprCheckbox.checked
-          ? 1.05
-          : 1.0; // halfPPR default
-      const teMult = tePremiumCheckbox.checked ? 1.05 : 1.0;
-      const sfMult = superflexCheckbox.checked ? 1.0 : 0.65;
+      // map+score → sort desc
+      let scored = raw.map(r => {
+        let s = parseFloat(r.Score) || 0;
+        if (["WR","TE"].includes(r.Position)) s *= pprMult;
+        if (r.Position === "TE")            s *= teMult;
+        if (r.Position === "QB")            s *= sfMult;
+        return { ...r, computedScore: s };
+      }).sort((a,b) => b.computedScore - a.computedScore);
 
-      // 1) map → computedScore, sort desc
-      const scored = data
-        .map(row => {
-          let s = parseFloat(row.Score) || 0;
-          if (["WR","TE"].includes(row.Position)) s *= pprMult;
-          if (row.Position === "TE")           s *= teMult;
-          if (row.Position === "QB")           s *= sfMult;
-          return { ...row, computedScore: s };
-        })
-        .sort((a,b) => b.computedScore - a.computedScore);
-
-      // 2) stamp on a one‐time static rank
-      scored.forEach((row,i) => row.staticRank = i+1);
-
-      // 3) now filter by your checkboxes & search
-      const selectedPositions = Array.from(
+      // 2) apply position checkboxes
+      const positions = Array.from(
         document.querySelectorAll('#filters input[type="checkbox"]:checked')
       ).map(cb => cb.value);
-      const term = searchBar.value.toLowerCase();
+      scored = scored.filter(r => positions.includes(r.Position));
 
-      const filtered = scored.filter(row => 
-        selectedPositions.includes(row.Position) &&
-        (`${row.Player}${row.Team||""}`).toLowerCase().includes(term)
-      );
+      // 3) assign filtered‐list ranks
+      scored.forEach((r,i) => r.filteredRank = i+1);
 
-      // 4) render
-      nflRankingsTableBody.innerHTML = "";
-      filtered.forEach(row => {
+      // 4) apply search—keep same filteredRank
+      const term = searchBar.value.trim().toLowerCase();
+      const toShow = term
+        ? scored.filter(r =>
+            (`${r.Player}${r.Team||""}`).toLowerCase().includes(term)
+          )
+        : scored;
+
+      // 5) render
+      tbody.innerHTML = "";
+      toShow.forEach(r => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${row.staticRank}</td>
-          <td>${row.Player}</td>
-          <td>${row.Position}</td>
-          <td>${row.Age}</td>
-          <td>${row.computedScore.toFixed(2)}</td>
+          <td>${r.filteredRank}</td>
+          <td>${r.Player}</td>
+          <td>${r.Position}</td>
+          <td>${r.Age}</td>
+          <td>${r.computedScore.toFixed(2)}</td>
         `;
-        nflRankingsTableBody.appendChild(tr);
+        tbody.appendChild(tr);
       });
     }
 
-    // wire‐up controls
-    teamTypeDropdown.addEventListener("change", () => populateTable(teamTypeDropdown.value));
-    searchBar.addEventListener("input", () => populateTable(teamTypeDropdown.value));
+    // Enforce only one PPR option & re-populate
+    [nonPpr, halfPpr, fullPpr].forEach(cb => {
+      cb.addEventListener("change", () => {
+        if (cb.checked) {
+          [nonPpr, halfPpr, fullPpr]
+            .filter(o => o !== cb)
+            .forEach(o => o.checked = false);
+        }
+        if (![nonPpr, halfPpr, fullPpr].some(x=>x.checked)) {
+          halfPpr.checked = true;
+        }
+        populateTable();
+      });
+    });
 
-    // **NEW**: re-populate on position filter changes
-document
-  .querySelectorAll('#filters input[type="checkbox"]')
-  .forEach(cb =>
-    cb.addEventListener('change', () => populateTable(teamTypeDropdown.value))
-  );
+    // Other toggles → re-populate
+    [superflex, tePremium].forEach(cb =>
+      cb.addEventListener("change", populateTable)
+    );
 
-    // initial load
-    populateTable(teamTypeDropdown.value);
+    // Position filters, teamType, and search → re-populate
+    document.querySelectorAll('#filters input[type="checkbox"]')
+      .forEach(cb => cb.addEventListener("change", populateTable));
+    teamType.addEventListener("change", populateTable);
+    searchBar.addEventListener("input", populateTable);
+
+    // Initial draw
+    populateTable();
   </script>
 
   <!-- Nav‐loader script -->
@@ -254,7 +237,7 @@ document
     fetch('/nav.html')
       .then(r => r.text())
       .then(html => document.getElementById('nav-placeholder').innerHTML = html)
-      .catch(err => console.error('Nav load failed:', err));
+      .catch(e => console.error('Nav load failed:', e));
   </script>
 </body>
 </html>
