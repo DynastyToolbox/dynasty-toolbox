@@ -26,76 +26,69 @@
   <meta name="twitter:image" content="https://www.dynasty-toolbox.com/path/to/your-logo.png">
 
   <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-1C5TVEGFXT"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-1C5TVEGFXT"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-1C5TVEGFXT');
+  </script>
 
-  gtag('config', 'G-1C5TVEGFXT');
-</script>
-
-  <script defer src="script.js"></script>
   <style>
     /* ---------- Header & Nav Styles ---------- */
-     body {
-    font-family: 'Bree Serif', serif;
-    background-color: #f4f4f4;
-    margin: 0;
-    padding: 0;
-    text-align: center;
-  }
-
-  nav a {
-    margin: 0 10px;
-    text-decoration: none;
-    color: #004d40;
-    font-weight: bold;
-  }
+    body {
+      font-family: 'Bree Serif', serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+    nav a {
+      margin: 0 10px;
+      text-decoration: none;
+      color: #004d40;
+      font-weight: bold;
+    }
 
     /* ---------- Trade Calculator Styles ---------- */
- .trade-container {
-    display: flex;
-    justify-content: center;  /* center the cards as a group */
-    flex-wrap: wrap;          /* wrap to next row when needed */
-    gap: 20px;
-    padding: 20px;
-  }
+    .trade-container {
+      display: flex;
+      justify-content: center;  /* center the cards as a group */
+      flex-wrap: wrap;          /* wrap to next row when needed */
+      gap: 20px;
+      padding: 20px;
+    }
     .trade-box {
-    /* never grow or shrink, always exactly 400px wide (up to 90% on tiny phones) */
-    flex: 0 0 400px;
-    width: 100%;
-    max-width: 400px;
-
-    background: #ffffff;
-    border: 2px solid #004d40;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    padding: 20px;
-    text-align: left;
-  }
-@media (max-width: 700px) {
-  .trade-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  /* full-width select so it doesn’t overflow */
-  .trade-header select {
-    width: 100%;
-    max-width: none;
-  }
-  /* shrink the remove-team button */
-  .remove-team-btn {
-    padding: 6px 12px;
-    font-size: 0.9em;
-  }
-}
+      flex: 0 0 400px;
+      width: 100%;
+      max-width: 400px;
+      background: #ffffff;
+      border: 2px solid #004d40;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      padding: 20px;
+      text-align: left;
+    }
+    @media (max-width: 700px) {
+      .trade-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .trade-header select {
+        width: 100%;
+        max-width: none;
+      }
+      .remove-team-btn {
+        padding: 6px 12px;
+        font-size: 0.9em;
+      }
+    }
     .trade-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-       gap: 10px;
+      gap: 10px;
       font-size: 1.3em;
       font-weight: bold;
       color: #004d40;
@@ -117,7 +110,6 @@
       font-size: 1em;
       margin-bottom: 10px;
     }
-    /* Suggestions */
     .trade-sends {
       position: relative;
     }
@@ -148,21 +140,19 @@
       padding: 0;
       margin: 10px 0;
     }
-   .trade-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: nowrap;
-    background: #e0f2f1;
-    padding: 10px;
-    border-radius: 6px;
-    margin-bottom: 5px;
-  }
+    .trade-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #e0f2f1;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 5px;
+    }
     .trade-item .player-score {
-    flex-shrink: 0;
-    margin-left: 10px;
-  }
-    /* Styled destination dropdown */
+      flex-shrink: 0;
+      margin-left: 10px;
+    }
     .dest-select {
       padding: 4px;
       border-radius: 4px;
@@ -186,7 +176,6 @@
     .remove-btn:hover {
       background: #ff5252;
     }
-    /* Remove team button styling */
     .remove-team-btn {
       background: #d32f2f;
       color: white;
@@ -200,7 +189,6 @@
     .remove-team-btn:hover {
       background: #ff5252;
     }
-    /* Totals styling */
     .trade-totals p {
       margin: 5px 0;
       font-weight: bold;
@@ -211,6 +199,15 @@
     .trade-total.negative {
       color: red;
     }
+
+    /* bonus row in the receives list */
+    .bonus-item {
+      background: #fff3e0;            /* light orange highlight */
+      border-left: 4px solid #ff9800; /* bold accent */
+      font-style: italic;
+      margin-bottom: 5px;
+    }
+
     /* Add Team button styling */
     #addTeamContainer {
       margin-bottom: 20px;
@@ -234,39 +231,36 @@
   <!-- ---------- Header & Nav ---------- -->
   <header>
     <div class="top-bar">
-    <div class="social-links">
-      <a href="https://instagram.com/dynastytoolbox" target="_blank" aria-label="Instagram">
-        <img src="/assets/icons/instagram.svg" alt="">
-      </a>
-      <a href="https://x.com/dynastytoolbox" target="_blank" aria-label="X">
-        <img src="/assets/icons/x.png" alt="">
-      </a>
-      <a href="https://tiktok.com/@dynastytoolbox" target="_blank" aria-label="TikTok">
-        <img src="/assets/icons/tiktok.svg" alt="">
-      </a>
+      <div class="social-links">
+        <a href="https://instagram.com/dynastytoolbox" target="_blank" aria-label="Instagram">
+          <img src="/assets/icons/instagram.svg" alt="">
+        </a>
+        <a href="https://x.com/dynastytoolbox" target="_blank" aria-label="X">
+          <img src="/assets/icons/x.png" alt="">
+        </a>
+        <a href="https://tiktok.com/@dynastytoolbox" target="_blank" aria-label="TikTok">
+          <img src="/assets/icons/tiktok.svg" alt="">
+        </a>
+      </div>
     </div>
-  </div>
     <h1>Trade Calculator</h1>
   </header>
-  
- <!-- Nav placeholder; loads /nav.html -->
+
   <div id="nav-placeholder"></div>
 
   <div class="explanation-note">
-  <p>
-    We use <strong>three</strong> ranking systems on this page:
-    <em>Overall</em> is our best reflection of true dynasty value,
-    while <em>Competing</em> and <em>Tanking</em> are more “value-to-you” systems—
-    Competing if you’re chasing a title today, Tanking if you’re rebuilding for the future.
-    For the Trade Calculator, you can set each team's ranking system individually. Which allows team situation to be a factor in trade creation. 
-    The <em>Overall</em> status is objective, and will reflect true trade value.
-  </p>
-</div>
-  
-  <!-- ---------- Main Trade Calculator ---------- -->
+    <p>
+      We use <strong>three</strong> ranking systems on this page:
+      <em>Overall</em> is our best reflection of true dynasty value,
+      while <em>Competing</em> and <em>Tanking</em> are more “value‑to‑you” systems—
+      Competing if you’re chasing a title today, Tanking if you’re rebuilding for the future.
+      For the Trade Calculator, you can set each team's ranking system individually.
+    </p>
+  </div>
+
   <main>
     <div class="trade-container" id="tradeContainer">
-      <!-- Initial 2 teams are defined here -->
+      <!-- Team 1 -->
       <div class="trade-box" id="team1Box">
         <div class="trade-header">
           <span>Team 1</span>
@@ -275,7 +269,6 @@
             <option value="competing">Competing</option>
             <option value="tanking">Tanking</option>
           </select>
-          <!-- Remove button will be hidden when only 2 teams remain -->
           <button class="remove-team-btn" onclick="removeTeam(1)">Remove Team</button>
         </div>
         <div class="trade-sends">
@@ -294,13 +287,14 @@
           <p>Trade Total: <span id="team1TradeTotal" class="trade-total">0</span></p>
         </div>
       </div>
+      <!-- Team 2 -->
       <div class="trade-box" id="team2Box">
         <div class="trade-header">
           <span>Team 2</span>
           <select id="team2Status">
             <option value="overall">Overall</option>
-            <option value="tanking">Tanking</option>
             <option value="competing">Competing</option>
+            <option value="tanking">Tanking</option>
           </select>
           <button class="remove-team-btn" onclick="removeTeam(2)">Remove Team</button>
         </div>
@@ -321,18 +315,16 @@
         </div>
       </div>
     </div>
-    <!-- Add Team Button -->
     <div id="addTeamContainer">
       <button id="addTeamButton">Add Team</button>
     </div>
   </main>
+
   <script>
-    /********** Global Data & Variables **********/
-    // Start with 2 teams; allow up to 12.
+    /********** Globals **********/
     let teams = [1, 2];
     let nextTeamNumber = 3;
     const maxTeams = 12;
-    // CSV URLs for statuses (adjust if needed)
     const csvUrls = {
       competing:
         "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=0&single=true&output=csv",
@@ -341,59 +333,61 @@
       tanking:
         "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=1543093851&single=true&output=csv"
     };
-    let playerData = {}; // Loaded player info keyed by status
-    // Track selected players per team
+    let playerData = {};
     let selectedPlayers = { 1: [], 2: [] };
 
-    /********** Data Loading **********/
-    async function loadAllPlayers() {
-      for (const [status, url] of Object.entries(csvUrls)) {
-        try {
-          const response = await fetch(url);
-          const text = await response.text();
-          const rows = text.split("\n").map(row => row.split(","));
-          // Assuming row[1] is name and row[4] is score.
-          playerData[status] = rows.slice(1).map(row => ({
-            name: row[1],
-            score: row[4]
-          }));
-        } catch (error) {
-          console.error(`Error loading ${status} data:`, error);
+ async function loadAllPlayers(){
+      for(const [status,url] of Object.entries(csvUrls)){
+        try{
+          const res = await fetch(url);
+          const rows = (await res.text()).split("\n").map(r=>r.split(","));
+          playerData[status] = rows.slice(1).map(r=>({name:r[1],score:r[4]}));
+        }catch(e){
+          console.error(`Error loading ${status}:`,e);
         }
       }
     }
 
-    /********** Utility Functions **********/
-    // Update send item scores (based on sending team's status)
-    function updateSendScores(team) {
+    /********** Utility **********/
+    function rebuildDestOptions(){
+      document.querySelectorAll(".trade-item").forEach(li=>{
+        const from = li.dataset.from;
+        const sel = li.querySelector(".dest-select");
+        if(!sel) return;
+        const old = sel.value;
+        sel.innerHTML = teams
+          .filter(t=>String(t)!==from)
+          .map(t=>`<option value="${t}"${t==old?" selected":""}>Team ${t}</option>`)
+          .join("");
+      });
+    }
+
+    /********** Update send scores **********/
+    function updateSendScores(team){
       const status = document.getElementById(`team${team}Status`).value;
-      const sendsList = document.getElementById(`team${team}Sends`);
-      sendsList.querySelectorAll(".trade-item").forEach(item => {
-        const playerName = item.getAttribute("data-name");
-        const newScore = playerData[status].find(p => p.name === playerName)?.score || "0";
-        item.querySelector(".player-score").textContent = newScore;
+      document.querySelectorAll(`#team${team}Sends .trade-item`).forEach(item=>{
+        const name = item.dataset.name;
+        item.querySelector(".player-score").textContent = playerData[status].find(p=>p.name===name)?.score||"0";
       });
       updateReceives();
     }
 
-    // Rebuild each team’s Receives list from other teams’ sends.
-    function updateReceives() {
-      teams.forEach(destTeam => {
-        const receiveList = document.getElementById(`team${destTeam}Receives`);
-        receiveList.innerHTML = "";
-        teams.forEach(sendTeam => {
-          if (sendTeam === destTeam) return;
-          const sendList = document.getElementById(`team${sendTeam}Sends`);
-          sendList.querySelectorAll(".trade-item").forEach(item => {
-            const chosenDest = item.getAttribute("data-dest");
-            if (String(chosenDest) === String(destTeam)) {
-              const playerName = item.getAttribute("data-name");
-              const status = document.getElementById(`team${destTeam}Status`).value;
-              const score = playerData[status].find(p => p.name === playerName)?.score || "0";
-              const li = document.createElement("li");
-              li.className = "trade-item";
-              li.innerHTML = `${playerName} <span class="player-score">${score}</span>`;
-              receiveList.appendChild(li);
+    /********** Update receives **********/
+    function updateReceives(){
+      teams.forEach(dest=>{
+        const list = document.getElementById(`team${dest}Receives`);
+        list.innerHTML = "";
+        teams.forEach(src=>{
+          if(src===dest) return;
+          document.querySelectorAll(`#team${src}Sends .trade-item`).forEach(li=>{
+            if(li.dataset.dest===String(dest)){
+              const name = li.dataset.name;
+              const sc = playerData[document.getElementById(`team${dest}Status`).value]
+                          .find(p=>p.name===name)?.score||"0";
+              const el = document.createElement("li");
+              el.className="trade-item";
+              el.innerHTML = `${name} <span class="player-score">${sc}</span>`;
+              list.appendChild(el);
             }
           });
         });
@@ -401,226 +395,201 @@
       updateTotals();
     }
 
-    // Sum up totals for sends and receives for each team and update trade total.
-    function updateTotals() {
-      teams.forEach(team => {
-        let sendsTotal = 0;
-        let receivesTotal = 0;
-        document.querySelectorAll(`#team${team}Sends .player-score`).forEach(span => {
-          let val = parseFloat(span.textContent);
-          if (isNaN(val)) val = 0;
-          sendsTotal += val;
-        });
-        document.querySelectorAll(`#team${team}Receives .player-score`).forEach(span => {
-          let val = parseFloat(span.textContent);
-          if (isNaN(val)) val = 0;
-          receivesTotal += val;
-        });
-        document.getElementById(`team${team}SendsTotal`).textContent = sendsTotal.toFixed(2);
-        document.getElementById(`team${team}ReceivesTotal`).textContent = receivesTotal.toFixed(2);
-        const tradeTotal = receivesTotal - sendsTotal;
-        const tradeTotalEl = document.getElementById(`team${team}TradeTotal`);
-        tradeTotalEl.textContent = tradeTotal.toFixed(2);
-        tradeTotalEl.classList.remove("positive", "negative");
-        if (tradeTotal > 0) {
-          tradeTotalEl.classList.add("positive");
-        } else if (tradeTotal < 0) {
-          tradeTotalEl.classList.add("negative");
+    /********** Stud bonus helper **********/
+    function studBonus(valsA, valsB, γ=1){
+      const sumA = valsA.reduce((a,b)=>a+b,0),
+            sumB = valsB.reduce((a,b)=>a+b,0),
+            maxA = valsA.length?Math.max(...valsA):0,
+            maxB = valsB.length?Math.max(...valsB):0;
+      if(maxA<=maxB) return {studTotal:sumA,bonus:0};
+      const avgB = sumB/valsB.length,
+            bonus = γ*(Math.sqrt(valsB.length)-1)*avgB;
+      return {studTotal: sumA+bonus, bonus};
+    }
+
+    /********** UPDATE TOTALS (sends‑only bonus) **********/
+    function updateTotals(){
+      teams.forEach(team=>{
+        const sEls = document.querySelectorAll(`#team${team}Sends .player-score`),
+              rEls = document.querySelectorAll(`#team${team}Receives .player-score`);
+        const sVals = Array.from(sEls).map(e=>parseFloat(e.textContent)||0),
+              rVals = Array.from(rEls).map(e=>parseFloat(e.textContent)||0);
+        const rawS = sVals.reduce((a,b)=>a+b,0),
+              rawR = rVals.reduce((a,b)=>a+b,0);
+        let finalS = rawS, bonus = 0;
+
+        // if team is RECEIVING more assets and its STUD send > all receives
+        if(rVals.length > sVals.length){
+          const maxS = Math.max(...sVals), maxR = rVals.length?Math.max(...rVals):0;
+          if(maxS > maxR){
+            bonus = studBonus(sVals, rVals).bonus;
+            finalS += bonus;
+          }
         }
+
+        // inject/remove bonus under Sends
+        const sList = document.getElementById(`team${team}Sends`);
+        sList.querySelectorAll(".bonus-item").forEach(e=>e.remove());
+        if(bonus>0){
+          const li = document.createElement("li");
+          li.className="trade-item bonus-item";
+          li.innerHTML=`Bonus <span class="player-score">${bonus.toFixed(2)}</span>`;
+          sList.insertBefore(li, sList.children[1]);
+        }
+
+        // write totals
+        document.getElementById(`team${team}SendsTotal`).textContent    = finalS.toFixed(2);
+        document.getElementById(`team${team}ReceivesTotal`).textContent = rawR.toFixed(2);
+        const diff = rawR - finalS,
+              el   = document.getElementById(`team${team}TradeTotal`);
+        el.textContent = diff.toFixed(2);
+        el.classList.remove("positive","negative");
+        if(diff>0) el.classList.add("positive");
+        else if(diff<0) el.classList.add("negative");
       });
     }
 
-    /********** Adding & Removing Players **********/
-    function addPlayerToTeam(team, playerName) {
-      const teamStatus = document.getElementById(`team${team}Status`).value;
-      const selectedPlayer = playerData[teamStatus].find(p => p.name === playerName);
-      if (!selectedPlayer) return;
-      if (selectedPlayers[team].includes(playerName)) return;
-      selectedPlayers[team].push(playerName);
+    /********** Add / Remove Players **********/
+    function addPlayerToTeam(team, name){
+      const status = document.getElementById(`team${team}Status`).value;
+      const player = playerData[status].find(p=>p.name===name);
+      if(!player||selectedPlayers[team].includes(name)) return;
+      selectedPlayers[team].push(name);
 
-      const sendsList = document.getElementById(`team${team}Sends`);
-      const defaultDest = teams.find(t => t !== team);
-      let destOptions = "";
-      teams.forEach(t => {
-        if (t !== team) {
-          destOptions += `<option value="${t}">Team ${t}</option>`;
-        }
-      });
       const li = document.createElement("li");
-      li.className = "trade-item";
-      li.setAttribute("data-name", playerName);
-      li.setAttribute("data-dest", defaultDest);
-      li.innerHTML = `
-        ${selectedPlayer.name} <span class="player-score">${selectedPlayer.score}</span>
-        <select class="dest-select" onchange="destinationChanged(${team}, '${playerName}', this)">
-          ${destOptions}
-        </select>
-        <button class="remove-btn" onclick="removePlayerFromTeam(${team}, '${playerName}')">✖</button>
+      li.className="trade-item";
+      li.dataset.name = name;
+      li.dataset.from = team;
+      li.dataset.dest = teams.find(t=>t!==team);
+      li.innerHTML=`
+        ${name} <span class="player-score">${player.score}</span>
+        <select class="dest-select" onchange="destinationChanged(${team},'${name}',this)"></select>
+        <button class="remove-btn" onclick="removePlayerFromTeam(${team},'${name}')">✖</button>
       `;
-      sendsList.appendChild(li);
+      document.getElementById(`team${team}Sends`).appendChild(li);
+      rebuildDestOptions();
 
-      document.getElementById(`team${team}PlayerInput`).value = "";
-      document.getElementById(`team${team}Suggestions`).style.display = "none";
+      // clear input & hide suggestions
+      document.getElementById(`team${team}PlayerInput`).value="";
+      document.getElementById(`team${team}Suggestions`).style.display="none";
 
       updateReceives();
     }
 
-    function destinationChanged(fromTeam, playerName, selectEl) {
-      const sendsList = document.getElementById(`team${fromTeam}Sends`);
-      const li = sendsList.querySelector(`[data-name="${playerName}"]`);
-      if (li) {
-        li.setAttribute("data-dest", selectEl.value);
-        updateReceives();
-      }
-    }
-
-    function removePlayerFromTeam(team, playerName) {
-      selectedPlayers[team] = selectedPlayers[team].filter(p => p !== playerName);
-      const sendsList = document.getElementById(`team${team}Sends`);
-      const li = sendsList.querySelector(`[data-name="${playerName}"]`);
-      if (li) sendsList.removeChild(li);
+    function destinationChanged(from,name,sel){
+      document.querySelector(`#team${from}Sends [data-name='${name}']`)
+        .dataset.dest = sel.value;
       updateReceives();
     }
 
-    /********** Search & Autocomplete **********/
-    function handleSearchInput(team) {
-      const inputEl = document.getElementById(`team${team}PlayerInput`);
-      const suggestionsBox = document.getElementById(`team${team}Suggestions`);
-      const query = inputEl.value.trim().toLowerCase();
-      suggestionsBox.innerHTML = "";
-      suggestionsBox.style.display = query ? "block" : "none";
-      if (!query) return;
-      const teamStatus = document.getElementById(`team${team}Status`).value;
-      const suggestions = playerData[teamStatus]
-        .filter(p => p.name.toLowerCase().includes(query))
-        .slice(0, 5);
-      suggestions.forEach(p => {
-        const div = document.createElement("div");
-        div.classList.add("suggestion-item");
-        div.innerText = p.name;
-        div.onclick = () => addPlayerToTeam(team, p.name);
-        suggestionsBox.appendChild(div);
-      });
+    function removePlayerFromTeam(team,name){
+      selectedPlayers[team] = selectedPlayers[team].filter(p=>p!==name);
+      document.querySelector(`#team${team}Sends [data-name='${name}']`).remove();
+      updateReceives();
     }
 
-    /********** Dynamic Team Creation **********/
-    // Returns the HTML for a team box.
-    function createTeamBox(teamNumber) {
+    /********** Autocomplete **********/
+    function handleSearchInput(team){
+      const q = document.getElementById(`team${team}PlayerInput`).value.trim().toLowerCase();
+      const box = document.getElementById(`team${team}Suggestions`);
+      box.innerHTML = ""; box.style.display = q?"block":"none";
+      if(!q) return;
+      const status = document.getElementById(`team${team}Status`).value;
+      playerData[status]
+        .filter(p=>p.name.toLowerCase().includes(q))
+        .slice(0,5)
+        .forEach(p=>{
+          const d = document.createElement("div");
+          d.className="suggestion-item"; d.innerText=p.name;
+          d.onclick=()=>addPlayerToTeam(team,p.name);
+          box.appendChild(d);
+        });
+    }
+
+    /********** Dynamic Teams **********/
+    function createTeamBox(num){
       return `
-      <div class="trade-box" id="team${teamNumber}Box">
+      <div class="trade-box" id="team${num}Box">
         <div class="trade-header">
-          <span>Team ${teamNumber}</span>
-          <select id="team${teamNumber}Status">
+          <span>Team ${num}</span>
+          <select id="team${num}Status">
             <option value="overall">Overall</option>
-            <option value="tanking">Tanking</option>
             <option value="competing">Competing</option>
+            <option value="tanking">Tanking</option>
           </select>
-          <button class="remove-team-btn" onclick="removeTeam(${teamNumber})">Remove Team</button>
+          <button class="remove-team-btn" onclick="removeTeam(${num})">Remove Team</button>
         </div>
         <div class="trade-sends">
           <h3>Sends:</h3>
-          <input type="text" id="team${teamNumber}PlayerInput" class="player-search" placeholder="Search for a player" />
-          <div id="team${teamNumber}Suggestions" class="suggestions-box"></div>
-          <ul id="team${teamNumber}Sends" class="trade-list"></ul>
+          <input type="text" id="team${num}PlayerInput" class="player-search" placeholder="Search for a player"/>
+          <div id="team${num}Suggestions" class="suggestions-box"></div>
+          <ul id="team${num}Sends" class="trade-list"></ul>
         </div>
         <div class="trade-receives">
           <h3>Receives:</h3>
-          <ul id="team${teamNumber}Receives" class="trade-list"></ul>
+          <ul id="team${num}Receives" class="trade-list"></ul>
         </div>
         <div class="trade-totals">
-          <p>Sends Total: <span id="team${teamNumber}SendsTotal">0</span></p>
-          <p>Receives Total: <span id="team${teamNumber}ReceivesTotal">0</span></p>
-          <p>Trade Total: <span id="team${teamNumber}TradeTotal" class="trade-total">0</span></p>
+          <p>Sends Total: <span id="team${num}SendsTotal">0</span></p>
+          <p>Receives Total: <span id="team${num}ReceivesTotal">0</span></p>
+          <p>Trade Total: <span id="team${num}TradeTotal" class="trade-total">0</span></p>
         </div>
-      </div>
-      `;
-    }
-    // Attaches event listeners for a team box.
-    function attachTeamListeners(team) {
-      document.getElementById(`team${team}Status`).addEventListener("change", () => {
-        updateSendScores(team);
-        updateReceives();
-      });
-      document.getElementById(`team${team}PlayerInput`).addEventListener("input", () => handleSearchInput(team));
-      if (!selectedPlayers[team]) {
-        selectedPlayers[team] = [];
-      }
-    }
-    // Updates the display of all remove buttons—only show if more than 2 teams exist.
-    function updateRemoveButtons() {
-      teams.forEach(team => {
-        const teamBox = document.getElementById(`team${team}Box`);
-        const btn = teamBox.querySelector(".remove-team-btn");
-        if (teams.length > 2) {
-          btn.style.display = "inline-block";
-        } else {
-          btn.style.display = "none";
-        }
-      });
-    }
-    // Adds a new team box dynamically.
-    function addTeam() {
-      if (teams.length >= maxTeams) return;
-      const teamNumber = nextTeamNumber++;
-      teams.push(teamNumber);
-      selectedPlayers[teamNumber] = [];
-      const container = document.getElementById("tradeContainer");
-      container.insertAdjacentHTML("beforeend", createTeamBox(teamNumber));
-      attachTeamListeners(teamNumber);
-      updateReceives();
-      updateRemoveButtons();
-      updateLayoutMode(); 
-      if (teams.length === maxTeams) {
-        document.getElementById("addTeamButton").disabled = true;
-      }
-    }
-    // Removes a team box. Never allows fewer than 2 teams.
-    function removeTeam(teamNumber) {
-      if (teams.length <= 2) return;
-      // Remove from global arrays.
-      teams = teams.filter(t => t !== teamNumber);
-      delete selectedPlayers[teamNumber];
-      // Remove DOM element.
-      const teamBox = document.getElementById(`team${teamNumber}Box`);
-      if (teamBox) {
-        teamBox.parentNode.removeChild(teamBox);
-      }
-      updateReceives();
-      updateRemoveButtons();
-      updateLayoutMode(); 
-      // Re-enable the add button if below max.
-      if (teams.length < maxTeams) {
-        document.getElementById("addTeamButton").disabled = false;
-      }
+      </div>`;
     }
 
-    function updateLayoutMode() {
-  const container = document.getElementById("tradeContainer");
-  if (teams.length >= 3) {
-    container.classList.add("grid");
-  } else {
-    container.classList.remove("grid");
-  }
-}
+    function attachTeamListeners(team){
+      document.getElementById(`team${team}Status`)
+        .addEventListener("change",()=>{updateSendScores(team);updateReceives()});
+      document.getElementById(`team${team}PlayerInput`)
+        .addEventListener("input",()=>handleSearchInput(team));
+      if(!selectedPlayers[team]) selectedPlayers[team]=[];
+    }
+
+    function updateRemoveButtons(){
+      teams.forEach(t=>{
+        const btn = document.querySelector(`#team${t}Box .remove-team-btn`);
+        btn.style.display = teams.length>2?"inline-block":"none";
+      });
+    }
+
+    function addTeam(){
+      if(teams.length>=maxTeams) return;
+      const n = nextTeamNumber++;
+      teams.push(n); selectedPlayers[n]=[];
+      document.getElementById("tradeContainer").insertAdjacentHTML("beforeend",createTeamBox(n));
+      attachTeamListeners(n); rebuildDestOptions(); updateReceives(); updateRemoveButtons(); updateLayoutMode();
+      if(teams.length===maxTeams) document.getElementById("addTeamButton").disabled=true;
+    }
+
+    function removeTeam(num){
+      if(teams.length<=2) return;
+      teams = teams.filter(t=>t!==num); delete selectedPlayers[num];
+      document.getElementById(`team${num}Box`).remove();
+      rebuildDestOptions(); updateReceives(); updateRemoveButtons(); updateLayoutMode();
+      if(teams.length<maxTeams) document.getElementById("addTeamButton").disabled=false;
+    }
+
+    function updateLayoutMode(){
+      document.getElementById("tradeContainer")
+        .classList.toggle("grid",teams.length>=3);
+    }
 
     /********** Initialization **********/
-    async function initialize() {
+    async function initialize(){
       await loadAllPlayers();
-      teams.forEach(team => attachTeamListeners(team));
-      document.getElementById("addTeamButton").addEventListener("click", addTeam);
-      updateRemoveButtons();
-      updateLayoutMode();
+      teams.forEach(t=>attachTeamListeners(t));
+      document.getElementById("addTeamButton").addEventListener("click",addTeam);
+      updateRemoveButtons(); updateLayoutMode();
     }
     initialize();
   </script>
-   <!-- === Nav‐loader script === -->
+
+  <!-- Nav‑loader -->
   <script>
     fetch('/nav.html')
-      .then(r => r.text())
-      .then(html => {
-        document.getElementById('nav-placeholder').innerHTML = html;
-      })
-      .catch(err => console.error('Nav load failed:', err));
+      .then(r=>r.text())
+      .then(html=>document.getElementById('nav-placeholder').innerHTML=html)
+      .catch(e=>console.error('Nav load failed:',e));
   </script>
 </body>
 </html>
