@@ -91,11 +91,20 @@
         <label><input type="checkbox" id="tePremium"> TE Premium</label>
       </div>
 
+      <!-- Draft Companion controls -->
+      <div id="draftControls" style="margin: 15px 0;">
+        <label><input type="checkbox" id="draftMode"> Draft Companion</label>
+        <label id="hideDraftedLabel" style="display:none; margin-left:20px;">
+          <input type="checkbox" id="hideDrafted"> Hide drafted players
+        </label>
+      </div>
+
       <!-- Rankings table -->
       <div class="table-responsive">
         <table id="nflRankingsTable">
           <thead>
             <tr>
+              <th class="draft-col" style="display:none;">Drafted</th>
               <th>Rank</th>
               <th>Player</th>
               <th>Position</th>
@@ -110,7 +119,7 @@
   </main>
 
   <footer>
-    <p>&copy; 2024 Dynasty Fantasy Football</p>
+    <p>&copy; 2024 Dynasty Fantasy Football</p>
   </footer>
 
   <script>
@@ -123,6 +132,11 @@
     const teamType  = document.getElementById("teamType");
     const searchBar = document.getElementById("searchBar");
     const tbody     = document.querySelector("#nflRankingsTable tbody");
+
+    // Draft companion controls
+    const draftMode   = document.getElementById("draftMode");
+    const hideDrafted = document.getElementById("hideDrafted");
+    let drafted = {};
 
     // CSV URLs
     const csvUrls = {
@@ -157,11 +171,12 @@
       // 1) load + compute scores
       const raw = await fetchCsvData(csvUrls[teamType.value]);
       // apply format multipliers
-      const pprMult = nonPpr.checked ? 0.95 : fullPpr.checked ? 1.05 : 1.0;
+      const pprMult = nonPpr.checked  ? 0.95
+                    : fullPpr.checked ? 1.05
+                    : 1.0;
       const teMult  = tePremium.checked ? 1.05 : 1.0;
       const sfMult  = superflex.checked ? 1.0 : 0.65;
 
-      // map+score → sort desc
       let scored = raw.map(r => {
         let s = parseFloat(r.Score) || 0;
         if (["WR","TE"].includes(r.Position)) s *= pprMult;
@@ -170,7 +185,7 @@
         return { ...r, computedScore: s };
       }).sort((a,b) => b.computedScore - a.computedScore);
 
-      // 2) apply position checkboxes
+      // 2) position filters
       const positions = Array.from(
         document.querySelectorAll('#filters input[type="checkbox"]:checked')
       ).map(cb => cb.value);
@@ -179,7 +194,7 @@
       // 3) assign filtered‐list ranks
       scored.forEach((r,i) => r.filteredRank = i+1);
 
-      // 4) apply search—keep same filteredRank
+      // 4) search filter
       const term = searchBar.value.trim().toLowerCase();
       const toShow = term
         ? scored.filter(r =>
@@ -187,11 +202,15 @@
           )
         : scored;
 
-      // 5) render
+      // 5) render rows
       tbody.innerHTML = "";
       toShow.forEach(r => {
         const tr = document.createElement("tr");
+        tr.dataset.player = r.Player;
         tr.innerHTML = `
+          <td class="draft-col" style="display:none;">
+            <input type="checkbox" class="draft-checkbox" data-player="${r.Player}">
+          </td>
           <td>${r.filteredRank}</td>
           <td>${r.Player}</td>
           <td>${r.Position}</td>
@@ -200,15 +219,46 @@
         `;
         tbody.appendChild(tr);
       });
+
+      // 6) toggle draft‐column visibility
+      document.querySelectorAll(".draft-col").forEach(el =>
+        el.style.display = draftMode.checked ? "" : "none"
+      );
+
+      // 7) wire up each checkbox
+      document.querySelectorAll(".draft-checkbox").forEach(cb => {
+        const player = cb.dataset.player;
+        cb.checked = !!drafted[player];
+        cb.addEventListener("change", () => {
+          drafted[player] = cb.checked;
+          applyDraftVisibility();
+        });
+      });
+
+      // 8) enforce hide/show
+      applyDraftVisibility();
     }
 
-    // Enforce only one PPR option & re-populate
+    // show/hide drafted rows
+    function applyDraftVisibility() {
+      const hide = draftMode.checked && hideDrafted.checked;
+      document.querySelectorAll("#nflRankingsTable tbody tr").forEach(tr => {
+        if (!hide) {
+          tr.style.display = "";
+        } else {
+          const p = tr.dataset.player;
+          tr.style.display = drafted[p] ? "none" : "";
+        }
+      });
+    }
+
+    // single‐select PPR toggles → re‑populate
     [nonPpr, halfPpr, fullPpr].forEach(cb => {
       cb.addEventListener("change", () => {
         if (cb.checked) {
           [nonPpr, halfPpr, fullPpr]
-            .filter(o => o !== cb)
-            .forEach(o => o.checked = false);
+            .filter(x => x!==cb)
+            .forEach(x => x.checked = false);
         }
         if (![nonPpr, halfPpr, fullPpr].some(x=>x.checked)) {
           halfPpr.checked = true;
@@ -217,22 +267,30 @@
       });
     });
 
-    // Other toggles → re-populate
+    // other toggles → re‑populate
     [superflex, tePremium].forEach(cb =>
       cb.addEventListener("change", populateTable)
     );
-
-    // Position filters, teamType, and search → re-populate
     document.querySelectorAll('#filters input[type="checkbox"]')
       .forEach(cb => cb.addEventListener("change", populateTable));
     teamType.addEventListener("change", populateTable);
     searchBar.addEventListener("input", populateTable);
 
-    // Initial draw
+    // draft controls → show/hide columns & rows
+    draftMode.addEventListener("change", () => {
+      document.getElementById("hideDraftedLabel").style.display = draftMode.checked ? "" : "none";
+      document.querySelectorAll(".draft-col").forEach(el =>
+        el.style.display = draftMode.checked ? "" : "none"
+      );
+      applyDraftVisibility();
+    });
+    hideDrafted.addEventListener("change", applyDraftVisibility);
+
+    // initial render
     populateTable();
   </script>
 
-  <!-- Nav‐loader script -->
+  <!-- Nav‐loader -->
   <script>
     fetch('/nav.html')
       .then(r => r.text())
