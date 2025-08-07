@@ -555,9 +555,9 @@
 
       projData.forEach(t=>{
         t.proj3_adjusted = t.proj3
-          +2000*t.r0*0.5
-          +2000*t.r1*0.8
-          +2000*t.r2;
+          +100*t.r0*0.5
+          +100*t.r1*0.8
+          +100*t.r2;
       });
       [...projData].sort((a,b)=>b.proj3_adjusted-a.proj3_adjusted)
         .forEach((t,i)=> t.r3 = i+1);
@@ -640,4 +640,5 @@ function renderProjectionChart(data) {
   </script>
 </body>
 </html>
+
 
