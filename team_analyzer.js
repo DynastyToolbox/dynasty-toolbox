@@ -248,7 +248,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     else if (compRank > Math.ceil(N * 0.8) && tankRank > Math.ceil(N * 0.8)) {
       title = "Ground-Up Rebuild";
-      desc  = "You’re in the trenches—bottom of the standings today and without much future upside, so it’s time for a full reset. Open up those bench spots and turn any veteran fringe-starter into draft capital via our trade calculator. Target lottery-ticket rookies or unproven youngsters who can blossom next year, even if they carry risk. Scan the waiver wire aggressively for high-ceiling sleepers and stash them before anyone else sees the upside. In every transaction, prioritize picks and upside over immediate production: package aging vets for mid-to-late-round draft assets, and parlay those into rookie-season flyers. This rebuild isn’t about quick fixes, it’s about stocking your farm system with the kinds of lottery tickets that become difference-makers when your window finally arrives. Give yourself time, play the long game, and let the rebuild begin.";
+      desc  = "You’re in the trenches, bottom of the standings today and without much future upside, so it’s time for a full reset. Open up those bench spots and turn any veteran fringe-starter into draft capital via our trade calculator. Target lottery-ticket rookies or unproven youngsters who can blossom next year, even if they carry risk. Scan the waiver wire aggressively for high-ceiling sleepers and stash them before anyone else sees the upside. In every transaction, prioritize picks and upside over immediate production: package aging vets for mid-to-late-round draft assets, and parlay those into rookie-season flyers. This rebuild isn’t about quick fixes, it’s about stocking your farm system with the kinds of lottery tickets that become difference-makers when your window finally arrives. Give yourself time, play the long game, and let the rebuild begin.";
     }
     else if (tankRank <= 3 && compRank > Math.ceil(N * 0.7)) {
       title = "Capital Architect";
@@ -510,4 +510,5 @@ tradeIdeasDiv.innerHTML = tHTML;
   }
 
 });
+
 
