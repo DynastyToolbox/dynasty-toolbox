@@ -146,6 +146,14 @@
       border: none;
       border-radius: 4px;
     }
+    /* Default: desktop/tablet show team name text, hide logo */
+.team-name {
+  display: inline;
+}
+
+.team-logo {
+  display: none;
+}
     /* Remove assignment button */
     .remove-assignment-btn {
       margin-left: 5px;
@@ -160,7 +168,12 @@
     /* TEAM cell styling for team colors */
     .team-cell { font-weight: bold; padding: 5px; }
 
-    /* Mobile bottom-sheet behavior for Available Players */
+/* Hide the mobile toggle button on larger screens by default */
+.mobile-players-toggle {
+  display: none;
+}
+
+/* Mobile bottom-sheet behavior for Available Players */
 @media (max-width: 768px) {
   .main-container {
     flex-direction: column;
@@ -186,7 +199,6 @@
     transition: transform 0.25s ease-out;
     z-index: 1000;
 
-    /* keep internal layout vertical */
     display: flex;
     flex-direction: column;
   }
@@ -195,17 +207,15 @@
     transform: translateY(0);
   }
 
-  /* Adjust the internal scroll area height for mobile */
   .players-table-wrapper {
-    max-height: calc(65vh - 80px); /* adjust if needed */
+    max-height: calc(65vh - 80px);
   }
 
-  /* Floating button to open/close the drawer */
   .mobile-players-toggle {
     display: inline-block;
     position: fixed;
     right: 16px;
-    bottom: 16px;
+    bottom: 72px; /* a bit higher so it's above Safari's bottom bar */
     background: #004d40;
     color: #fff;
     padding: 8px 14px;
@@ -215,11 +225,22 @@
     box-shadow: 0px 4px 10px rgba(0,0,0,0.35);
     cursor: pointer;
   }
-}
+   /* On small screens: show logo instead of long text */
+  .team-name {
+    display: none;
+  }
 
-/* Hide the mobile toggle button on larger screens */
-.mobile-players-toggle {
-  display: none;
+  .team-logo {
+    display: block;
+    max-width: 32px;
+    max-height: 32px;
+    margin: 0 auto;
+  }
+
+  /* Slightly narrow the Team column */
+  .draft-board th:nth-child(3) {
+    width: 60px;
+  }
 }
   </style>
 </head>
@@ -357,6 +378,7 @@ Enable <strong>Include Devy Rankings</strong> to use unique base scores for each
     // Devy Rankings CSV URL
     const devyRankingsUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR0eVwcIonMiKp6tUIlFhzAsraddB0qKGgWNNEwI4wyO0DbU9G8NHWqKuQG5C8WeNNzFSgBJjGSDEAc/pub?gid=1999697071&single=true&output=csv";
 
+    const logosPath = "./assets/Logos/";
     /********** Hit Chances by Position and Round **********/
     const hitChances = {
       "RB": { 1: 0.85, 2: 0.475, 3: 0.375, 4: 0.175, 5: 0.16, 6: 0.12, 7: 0.04 },
@@ -567,7 +589,16 @@ let playerPositionFilter = "ALL";
             tr.style.display = "none";
           }
           const teamName = pick.TEAM || pick.Team || "";
-          const teamCell = `<td class="team-cell team-${teamName.toLowerCase()}">${teamName}</td>`;
+const teamClass = teamName.toLowerCase();
+const logoKey = teamClass.replace(/\s+/g, "-"); // "New York Giants" -> "new-york-giants"
+const logoPath = `${logosPath}${logoKey}.png`;
+
+const teamCell = `
+  <td class="team-cell team-${teamClass}">
+    <span class="team-name">${teamName}</span>
+    <img class="team-logo" src="${logoPath}" alt="${teamName} logo" onerror="this.style.display='none'">
+  </td>
+`;
           let assignedHTML = "";
           if (pick.assignedPlayer) {
             assignedHTML = `${pick.assignedPlayer.Name || pick.assignedPlayer.name} <button class="remove-assignment-btn" onclick="removeAssignment(event, ${index})">X</button>`;
@@ -768,5 +799,3 @@ if (mobileToggle && availablePanel) {
   </script>
 </body>
 </html>
-
-
