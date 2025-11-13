@@ -157,11 +157,32 @@
   
  <!-- Nav placeholder; loads /nav.html -->
   <div id="nav-placeholder"></div>
+
+   <div class="explanation-note">
+    <p>
+      This tool generates a dynasty mock draft based on where players are selected.
+<strong>Tap</strong> the plus icon next to any available player, then <strong>click</strong> an 
+empty cell in the draft board to assign them. When you’re finished, click <em>Finish Draft</em> to create your mock.</p>
+<p>
+Players receive position specific scores based on draft round, hit rates, and team opportunity. 
+All players at the same position share the same base score, so any WR taken in the same round and 
+landing spot will receive the same value.<p>
+</p>
+Enable <strong>Include Devy Rankings</strong> to use unique base scores for each player, derived from Dynasty Toolbox’s devy rankings.
+    </p>
+  </div>
   
   <!-- Devy Rankings Toggle Checkbox -->
   <div id="devyBonusToggle" style="text-align:center;">
     <label>
       <input type="checkbox" id="includeDevyCheckbox" checked> Include Devy Rankings Score
+    </label>
+  </div>
+
+   <!-- Superflex Toggle Checkbox -->
+  <div id="superflexToggle" style="text-align:center; margin-top:5px;">
+    <label>
+      <input type="checkbox" id="superflexCheckbox" checked> Superflex Mock
     </label>
   </div>
   
@@ -200,6 +221,23 @@
     <!-- Available Players -->
     <div class="available-players">
       <h2>Available Players</h2>
+
+      <div class="players-controls">
+  <input
+    type="text"
+    id="playerSearch"
+    placeholder="Search by name..."
+    style="width: 60%; padding: 4px; margin-bottom: 8px;"
+  />
+  <select id="playerSort" style="padding: 4px; margin-left: 8px; margin-bottom: 8px;">
+    <option value="rank">All positions (by Rank)</option>
+    <option value="QB">QB only</option>
+    <option value="RB">RB only</option>
+    <option value="WR">WR only</option>
+    <option value="TE">TE only</option>
+  </select>
+</div>
+
       <table id="playersTable">
         <thead>
           <tr>
@@ -244,6 +282,11 @@
 
     // Global object to store the collapse state for each round.
     let collapsedRounds = {};
+
+    // Search & sort state for available players
+let playerSearchTerm = "";
+let playerSortMode = "rank";
+let playerPositionFilter = "ALL";
 
     /********** CSV Parsing Utility **********/
     function parseCSV(text) {
@@ -345,33 +388,43 @@
     }
 
     /********** Scoring Helper Function **********/
-    function calculateScore(pick, player) {
-      const round = parseInt(pick.ROUND || pick.Round || "1");
-      const pos = (player.Position || player.Pos).toUpperCase();
-      const hitChance = (hitChances[pos] && hitChances[pos][round]) ? hitChances[pos][round] : 0;
-      const teamName = (pick.TEAM || pick.Team || "").toLowerCase();
-      let teamPosNum = 0;
-      if (teamName && teamPositionValues[teamName] && teamPositionValues[teamName][pos] !== undefined) {
-        teamPosNum = teamPositionValues[teamName][pos];
-      }
-      // Base scoring formula.
-      let score = 5000 * hitChance + 300 * teamPosNum;
-      // Additional multipliers.
-      let posMultiplier = 1.0;
-      if (pos === "QB") posMultiplier = 0.9;
-      else if (pos === "TE") posMultiplier = 0.8;
-      score = score * posMultiplier;
-  
-      // Check if Devy Rankings Score is enabled.
-      const includeDevy = document.getElementById("includeDevyCheckbox").checked;
-      if (includeDevy) {
-        let pName = player.Name || player.name || "";
-        const normName = normalizeName(pName);
-        const devyScore = (devyRankings.hasOwnProperty(normName) && !isNaN(devyRankings[normName])) ? devyRankings[normName] : 1;
-        score += 300 * devyScore;
-      }
-      return score;
-    }
+   function calculateScore(pick, player) {
+  const round = parseInt(pick.ROUND || pick.Round || "1");
+  const pos = (player.Position || player.Pos).toUpperCase();
+  const hitChance = (hitChances[pos] && hitChances[pos][round]) ? hitChances[pos][round] : 0;
+  const teamName = (pick.TEAM || pick.Team || "").toLowerCase();
+  let teamPosNum = 0;
+  if (teamName && teamPositionValues[teamName] && teamPositionValues[teamName][pos] !== undefined) {
+    teamPosNum = teamPositionValues[teamName][pos];
+  }
+
+  // Base scoring formula.
+  let score = 5000 * hitChance + 300 * teamPosNum;
+
+  // Superflex toggle: default checked
+  const superflexCheckbox = document.getElementById("superflexCheckbox");
+  const isSuperflex = superflexCheckbox ? superflexCheckbox.checked : true;
+
+  // Additional multipliers.
+  let posMultiplier = 1.0;
+  if (pos === "QB") {
+    // Superflex: 0.9, Non-superflex: 0.7
+    posMultiplier = isSuperflex ? 0.9 : 0.7;
+  } else if (pos === "TE") {
+    posMultiplier = 0.8;
+  }
+  score = score * posMultiplier;
+
+  // Check if Devy Rankings Score is enabled.
+  const includeDevy = document.getElementById("includeDevyCheckbox").checked;
+  if (includeDevy) {
+    let pName = player.Name || player.name || "";
+    const normName = normalizeName(pName);
+    const devyScore = (devyRankings.hasOwnProperty(normName) && !isNaN(devyRankings[normName])) ? devyRankings[normName] : 1;
+    score += 300 * devyScore;
+  }
+  return score;
+}
 
     /********** UI Display Functions **********/
     // Toggle collapse/expand for a given round.
@@ -444,20 +497,35 @@
       });
     }
 
-    // Build the Available Players table.
     function displayAvailablePlayers() {
-      const tbody = document.getElementById("playersTable").querySelector("tbody");
-      tbody.innerHTML = "";
-      availablePlayers.forEach((player, index) => {
-        const tr = document.createElement("tr");
-        tr.setAttribute("data-index", index);
-        tr.innerHTML = `<td>${player.Rank}</td>
-                        <td>${player.Name || player.name}</td>
-                        <td>${player.Position || player.Pos}</td>
-                        <td><button class="plus-btn" onclick="selectPlayer(event, ${index})">+</button></td>`;
-        tbody.appendChild(tr);
-      });
+  const tbody = document.getElementById("playersTable").querySelector("tbody");
+  tbody.innerHTML = "";
+
+  const search = playerSearchTerm.trim();
+
+  availablePlayers.forEach((player, index) => {
+    const name = (player.Name || player.name || "").toLowerCase();
+    const pos = (player.Position || player.Pos || "").toUpperCase();
+
+    // Search filter by name
+    if (search && !name.includes(search)) {
+      return;
     }
+
+    // Position filter (ALL = show everything)
+    if (playerPositionFilter !== "ALL" && pos !== playerPositionFilter) {
+      return;
+    }
+
+    const tr = document.createElement("tr");
+    tr.setAttribute("data-index", index);
+    tr.innerHTML = `<td>${player.Rank}</td>
+                    <td>${player.Name || player.name}</td>
+                    <td>${player.Position || player.Pos}</td>
+                    <td><button class="plus-btn" onclick="selectPlayer(event, ${index})">+</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
 
     // When a plus button is clicked, select an available player.
     function selectPlayer(event, index) {
@@ -536,6 +604,50 @@
 
     document.getElementById("finishDraftButton").addEventListener("click", finishDraft);
 
+    // Recalculate assigned scores whenever Superflex or Devy toggle changes.
+const superflexCheckbox = document.getElementById("superflexCheckbox");
+if (superflexCheckbox) {
+  superflexCheckbox.addEventListener("change", () => {
+    recalcAssignedScores();
+  });
+}
+
+const devyCheckbox = document.getElementById("includeDevyCheckbox");
+if (devyCheckbox) {
+  devyCheckbox.addEventListener("change", () => {
+    recalcAssignedScores();
+  });
+}
+
+// Player search & sort controls
+const searchInput = document.getElementById("playerSearch");
+if (searchInput) {
+  searchInput.addEventListener("input", (e) => {
+    playerSearchTerm = e.target.value.toLowerCase();
+    displayAvailablePlayers();
+  });
+}
+
+const sortSelect = document.getElementById("playerSort");
+if (sortSelect) {
+  sortSelect.addEventListener("change", (e) => {
+    playerSortMode = e.target.value;
+
+    // Keep base array sorted by rank
+    availablePlayers.sort((a, b) => (parseInt(a.Rank) || 0) - (parseInt(b.Rank) || 0));
+
+    if (["QB", "RB", "WR", "TE"].includes(playerSortMode)) {
+      // Filter to a specific position
+      playerPositionFilter = playerSortMode;
+    } else {
+      // "rank" option -> show all positions
+      playerPositionFilter = "ALL";
+    }
+
+    displayAvailablePlayers();
+  });
+}
+
     // Helper: Normalize a name string.
     function normalizeName(name) {
       return name.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -554,3 +666,4 @@
   </script>
 </body>
 </html>
+
