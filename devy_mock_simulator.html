@@ -80,6 +80,24 @@
       margin-top: 0;
       text-align: center;
     }
+    .available-players {
+  background: #fff;
+  border: 2px solid #004d40;
+  border-radius: 8px;
+  padding: 10px;
+  flex: 1;
+  min-width: 400px;
+  box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
+
+  /* NEW: make the whole box stick while scrolling */
+  position: sticky;
+  top: 50px;           /* adjust if it overlaps your header/nav */
+  align-self: flex-start;
+
+  /* So internal content can layout vertically */
+  display: flex;
+  flex-direction: column;
+}
     table {
       width: 100%;
       border-collapse: collapse;
@@ -96,6 +114,12 @@
       background-color: #ddd;
       cursor: pointer;
     }
+    .players-table-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 60vh;   /* how tall the scrollable area should be */
+  margin-top: 10px;
+}
     .round-header td { font-weight: bold; }
     /* Collapsed rows */
     .collapsed { display: none; }
@@ -135,6 +159,68 @@
     }
     /* TEAM cell styling for team colors */
     .team-cell { font-weight: bold; padding: 5px; }
+
+    /* Mobile bottom-sheet behavior for Available Players */
+@media (max-width: 768px) {
+  .main-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .draft-board,
+  .available-players {
+    min-width: auto;
+  }
+
+  /* Turn Available Players panel into a slide-up drawer */
+  .available-players {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    max-height: 65vh;
+    margin: 0;
+    border-radius: 12px 12px 0 0;
+    transform: translateY(100%);
+    transition: transform 0.25s ease-out;
+    z-index: 1000;
+
+    /* keep internal layout vertical */
+    display: flex;
+    flex-direction: column;
+  }
+
+  .available-players.open {
+    transform: translateY(0);
+  }
+
+  /* Adjust the internal scroll area height for mobile */
+  .players-table-wrapper {
+    max-height: calc(65vh - 80px); /* adjust if needed */
+  }
+
+  /* Floating button to open/close the drawer */
+  .mobile-players-toggle {
+    display: inline-block;
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    background: #004d40;
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    z-index: 1100;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.35);
+    cursor: pointer;
+  }
+}
+
+/* Hide the mobile toggle button on larger screens */
+.mobile-players-toggle {
+  display: none;
+}
   </style>
 </head>
 <body>
@@ -238,23 +324,29 @@ Enable <strong>Include Devy Rankings</strong> to use unique base scores for each
   </select>
 </div>
 
-      <table id="playersTable">
-        <thead>
-          <tr>
-            <th>Rank</th>
-            <th>Name</th>
-            <th>Position</th>
-            <th>Select</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Available players rows will be inserted here -->
-        </tbody>
-      </table>
+      <div class="players-table-wrapper">
+        <table id="playersTable">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Name</th>
+              <th>Position</th>
+              <th>Select</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Available players rows will be inserted here -->
+          </tbody>
+        </table>
+      </div>
       <p>(Click the plus button to select a player.)</p>
     </div>
   </div>
-  
+    <!-- Mobile toggle button for the Available Players drawer -->
+  <div id="mobilePlayersToggle" class="mobile-players-toggle">
+    Available Players
+  </div>
+
   <script>
     /********** CSV URLs **********/
     const draftPicksUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS0-gweBPf_H1hdmwWNUnFoVMhKyCaFw1HiflQmHmtiaOaLCGsywBNW0SFxVTD5WAPCzjWDUagpc_Qe/pub?gid=1913028468&single=true&output=csv";
@@ -653,6 +745,16 @@ if (sortSelect) {
       return name.toLowerCase().replace(/[^a-z0-9]/g, "");
     }
 
+    // Mobile: toggle Available Players bottom-sheet
+const mobileToggle = document.getElementById("mobilePlayersToggle");
+const availablePanel = document.querySelector(".available-players");
+
+if (mobileToggle && availablePanel) {
+  mobileToggle.addEventListener("click", () => {
+    availablePanel.classList.toggle("open");
+  });
+}
+
     loadData();
   </script>
    <!-- === Nav‐loader script === -->
@@ -666,4 +768,5 @@ if (sortSelect) {
   </script>
 </body>
 </html>
+
 
