@@ -240,11 +240,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     else if (compRank <= 3 && tankRank > 3 && tankRank <= 7) {
       title = "Win-Now Contender";
-      desc  = "You’ve built a lineup that’s firing on all cylinders—top three in competing, but your future stock sits squarely in the middle of the pack. To lean into this window, consider using the trade tool to move a couple of your younger stashes or mid-round picks for a proven veteran who can deliver right now. Keep an eye on the waiver wire for a high-floor streamer to cover any week-to-week gaps, but don’t be afraid to convert some long-term upside into immediate production. This is the season to cash in your future chips for present firepower. Make your moves, set your lineup, and go get that title.";
+      desc  = "You’ve built a lineup that’s firing on all cylinders, a top three contender, but your future stock sits squarely in the middle of the pack. To lean into this window, consider using the trade tool to move a couple of your younger stashes or mid-round picks for a proven veteran who can deliver right now. Keep an eye on the waiver wire for a high-floor streamer to cover any week-to-week gaps, but don’t be afraid to convert some long-term upside into immediate production. This is the season to cash in your future chips for present firepower. Make your moves, set your lineup, and go get that title.";
     }
     else if (compRank > 3 && compRank <= 7 && tankRank <= 3) {
       title = "Future Builder";
-      desc  = "You’re sitting in the middle of the pack right now (4th–7th in competing), but your real advantage is your future assets, top three in tanking. Harness that strength by using our trade calculator to turn a veteran fringe‐starter or a mid‐round pick into high-upside talent or additional draft capital. Look for second-year players or breakout sleepers on the waiver wire who can develop into your core pieces. Don’t be afraid to package an aging starter for a late-round pick, then reinvest that pick in a lottery ticket with league-winning potential. Your goal is simple: convert today’s depth into tomorrow’s stars so that when your window fully opens, you’ll have the firepower to seize it.";
+      desc  = "You’re sitting in the middle of the pack right now (4th–7th ranked in contending), but your real advantage is your future assets, top three in rebuilding. Harness that strength by using our trade calculator to turn a veteran fringe‐starter or a mid‐round pick into high-upside talent or additional draft capital. Look for second-year players or breakout sleepers on the waiver wire who can develop into your core pieces. Don’t be afraid to package an aging starter for a late-round pick, then reinvest that pick in a lottery ticket with league-winning potential. Your goal is simple: convert today’s depth into tomorrow’s stars so that when your window fully opens, you’ll have the firepower to seize it.";
     }
     else if (compRank > Math.ceil(N * 0.8) && tankRank > Math.ceil(N * 0.8)) {
       title = "Ground-Up Rebuild";
@@ -252,11 +252,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     else if (tankRank <= 3 && compRank > Math.ceil(N * 0.7)) {
       title = "Capital Architect";
-      desc  = "You’re sitting near the bottom in competing but have built a premium war chest for the future, top three in tanking, so your focus is pure asset growth. Leading up to the trade deadline, when contending teams pay top dollar for proven players, consider moving a veteran on your roster to maximize returns. Likewise, picks carry peak value just before and during the rookie draft, so time your pick swaps to when demand is highest. Over the next year, scour the waiver wire for high-upside sleepers and stash them for development, and don’t shy away from packaging aging role-players into additional mid-to-late round selections. Your mission is simple: accumulate as much draft capital and breakout upside as possible now, so when your window finally opens, you’ll have every tool you need to strike";
+      desc  = "You’re sitting near the bottom as a contender but have built a premium war chest for the future, top three in rebuilding value, so your focus is pure asset growth. Leading up to the trade deadline, when contending teams pay top dollar for proven players, consider moving a veteran on your roster to maximize returns. Likewise, picks carry peak value just before and during the rookie draft, so time your pick swaps to when demand is highest. Over the next year, scour the waiver wire for high-upside sleepers and stash them for development, and don’t shy away from packaging aging role-players into additional mid-to-late round selections. Your mission is simple: accumulate as much draft capital and breakout upside as possible now, so when your window finally opens, you’ll have every tool you need to strike";
     }
     else if (compRank <= Math.ceil(N * 0.3) && tankRank > Math.ceil(N * 0.7)) {
       title = "Contender with Capital Concerns";
-      desc  = "You’ve assembled a championship-caliber lineup—your competing rank is in the top tier, but your future war chest is running on fumes. Now’s the moment to lean into your win-now edge without mortgaging what little draft capital you have left. As the trade deadline looms, use our Trade Calculator to pinpoint which depth pieces you can flip for a late-round pick, then bank those selections until they’re hottest just before the rookie draft. After the season, dive into our Rankings pages to spot under-the-radar sleepers and stash them on your roster, adding youth without giving up picks. This isn’t just about today’s glory, it’s about engineering a balance of firepower now and sustainable upside tomorrow. Get ready to make the moves that turn your contender status into a legacy.";
+      desc  = "You’ve assembled a championship-caliber lineup you're in the top tier contenders, but your future war chest is running on fumes. Now’s the moment to lean into your win-now edge without mortgaging what little draft capital you have left. As the trade deadline looms, use our Trade Calculator to pinpoint which depth pieces you can flip for a late-round pick, then bank those selections until they’re hottest just before the rookie draft. After the season, dive into our Rankings pages to spot under-the-radar sleepers and stash them on your roster, adding youth without giving up picks. This isn’t just about today’s glory, it’s about engineering a balance of firepower now and sustainable upside tomorrow. Get ready to make the moves that turn your contender status into a legacy.";
     }
     else {
       title = "Middle-of-the-Pack";
@@ -267,7 +267,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="title-card">
         <h1>${title}</h1>
         <div>${owner}</div>
-        <div>Competing Rank: ${compRank} / ${N}<br>Tanking Rank: ${tankRank} / ${N}</div>
+        <div>Contending Rank: ${compRank} / ${N}<br>Rebuilding Rank: ${tankRank} / ${N}</div>
         <p>${desc}</p>
       </div>`;
 
@@ -429,9 +429,9 @@ gapSlots.forEach(slot => {
   const posKey = pickSlot.match(/^[A-Z]+/)[0];
 
   [
-    ["Competing", "competing", myComp],
+    ["Contending", "competing", myComp],
     ["Overall",   "overall",   myOverall],
-    ["Tanking",   "tanking",   myTank]
+    ["Rebuilding",   "tanking",   myTank]
   ].forEach(([label, key, myMap]) => {
     let pool = (bucketsMap[key][pickSlot] || [])
       .filter(p => p.score > (myMap[slot]?.score||0))

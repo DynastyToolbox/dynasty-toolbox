@@ -199,7 +199,7 @@
     .trade-total.negative {
       color: red;
     }
-    /* bonus row in the sends list */
+    /* bonus row in the sends/receives list */
     .bonus-item {
       background: #fff3e0;
       border-left: 4px solid #ff9800;
@@ -244,22 +244,22 @@
     <p>
       We use <strong>three</strong> ranking systems on this page:
       <em>Overall</em> is our best reflection of true dynasty value,
-      while <em>Competing</em> and <em>Tanking</em> are more “value‑to‑you” systems
-      Competing if you’re chasing a title today, Tanking if you’re rebuilding for the future.
+      while <em>Contending</em> and <em>Rebuilding</em> are more “value-to-you” systems
+      Contending if you’re chasing a title today, Rebuilding if you’re building for the future.
       For the Trade Calculator, you can set each team's ranking system individually.
     </p>
   </div>
 
   <main>
     <div class="trade-container" id="tradeContainer">
-      <!-- Team 1 -->
+      <!-- Team 1 -->
       <div class="trade-box" id="team1Box">
         <div class="trade-header">
-          <span>Team 1</span>
+          <span>Team 1</span>
           <select id="team1Status">
             <option value="overall">Overall</option>
-            <option value="competing">Competing</option>
-            <option value="tanking">Tanking</option>
+            <option value="competing">Contending</option>
+            <option value="tanking">Rebuilding</option>
           </select>
           <button class="remove-team-btn" onclick="removeTeam(1)">Remove Team</button>
         </div>
@@ -274,19 +274,19 @@
           <ul id="team1Receives" class="trade-list"></ul>
         </div>
         <div class="trade-totals">
-          <p>Sends Total: <span id="team1SendsTotal">0</span></p>
-          <p>Receives Total: <span id="team1ReceivesTotal">0</span></p>
-          <p>Trade Total: <span id="team1TradeTotal" class="trade-total">0</span></p>
+          <p>Sends Total: <span id="team1SendsTotal">0</span></p>
+          <p>Receives Total: <span id="team1ReceivesTotal">0</span></p>
+          <p>Trade Total: <span id="team1TradeTotal" class="trade-total">0</span></p>
         </div>
       </div>
-      <!-- Team 2 -->
+      <!-- Team 2 -->
       <div class="trade-box" id="team2Box">
         <div class="trade-header">
-          <span>Team 2</span>
+          <span>Team 2</span>
           <select id="team2Status">
             <option value="overall">Overall</option>
-            <option value="competing">Competing</option>
-            <option value="tanking">Tanking</option>
+            <option value="competing">Contending</option>
+            <option value="tanking">Rebuilding</option>
           </select>
           <button class="remove-team-btn" onclick="removeTeam(2)">Remove Team</button>
         </div>
@@ -301,14 +301,14 @@
           <ul id="team2Receives" class="trade-list"></ul>
         </div>
         <div class="trade-totals">
-          <p>Sends Total: <span id="team2SendsTotal">0</span></p>
-          <p>Receives Total: <span id="team2ReceivesTotal">0</span></p>
-          <p>Trade Total: <span id="team2TradeTotal" class="trade-total">0</span></p>
+          <p>Sends Total: <span id="team2SendsTotal">0</span></p>
+          <p>Receives Total: <span id="team2ReceivesTotal">0</span></p>
+          <p>Trade Total: <span id="team2TradeTotal" class="trade-total">0</span></p>
         </div>
       </div>
     </div>
     <div id="addTeamContainer">
-      <button id="addTeamButton">Add Team</button>
+      <button id="addTeamButton">Add Team</button>
     </div>
   </main>
 
@@ -357,11 +357,15 @@
     /********** Update send scores **********/
     function updateSendScores(team) {
       const status = document.getElementById(`team${team}Status`).value;
-      document.querySelectorAll(`#team${team}Sends .trade-item`).forEach(item => {
-        const name = item.dataset.name;
-        const score = playerData[status].find(p => p.name === name)?.score || "0";
-        item.querySelector(".player-score").textContent = score;
-      });
+      // Only rescore real player rows, not bonus rows
+      document
+        .querySelectorAll(`#team${team}Sends .trade-item`)
+        .forEach(item => {
+          if (item.classList.contains("bonus-item")) return;
+          const name = item.dataset.name;
+          const score = playerData[status].find(p => p.name === name)?.score || "0";
+          item.querySelector(".player-score").textContent = score;
+        });
       updateReceives();
     }
 
@@ -373,9 +377,10 @@
         teams.forEach(src => {
           if (src === dest) return;
           document.querySelectorAll(`#team${src}Sends .trade-item`).forEach(li => {
-            if (li.dataset.dest === String(dest)) {
+            if (li.dataset.dest === String(dest) && !li.classList.contains("bonus-item")) {
               const name = li.dataset.name;
-              const score = playerData[document.getElementById(`team${dest}Status`).value]
+              const status = document.getElementById(`team${dest}Status`).value;
+              const score = playerData[status]
                 .find(p => p.name === name)?.score || "0";
               const el = document.createElement("li");
               el.className = "trade-item";
@@ -388,55 +393,70 @@
       updateTotals();
     }
 
-    /********** Replacement‑based bonus (sends only) **********/
-    function computeBonus(sVals, rVals) {
-      // no bonus if nothing sent or <=1 received
-      if (!sVals.length || rVals.length <= 1) return 0;
-      const sMax = Math.max(...sVals),
-            rMax = Math.max(...rVals),
-            threshold = 750;
-      // only bonus when your top‐send exceeds every received asset by threshold
-      if (sMax > rMax + threshold) {
-        const packageCount = rVals.length;
-        const scale = 1 - 1/Math.sqrt(packageCount + 1);
-        return rMax * scale;
-      }
-      return 0;
+/********** Replacement-based stud bonus (sending only) **********/
+function computeBonus(sVals, rVals) {
+  // Need assets on both sides
+  if (!sVals.length || !rVals.length) return 0;
+
+  // No stud bonus in pure 1-for-1 trades
+  if (sVals.length === 1 && rVals.length === 1) return 0;
+
+  const sMax = Math.max(...sVals);
+  const rMax = Math.max(...rVals);
+
+  // Only apply if this team is sending the clear best asset
+  if (sMax <= rMax) return 0;
+
+  // Stud bonus = 75% of the gap between best send and best receive
+  return (sMax - rMax) * 0.75;
+}
+
+/********** Update totals with stud bonus (sending only) **********/
+function updateTotals() {
+  teams.forEach(team => {
+    const sList = document.getElementById(`team${team}Sends`);
+    const rList = document.getElementById(`team${team}Receives`);
+
+    // 1) Strip old bonus rows first so they never affect the math
+    sList.querySelectorAll(".bonus-item").forEach(e => e.remove());
+    rList.querySelectorAll(".bonus-item").forEach(e => e.remove());
+
+    // 2) Now grab just the real player scores
+    const sEls = sList.querySelectorAll(".player-score");
+    const rEls = rList.querySelectorAll(".player-score");
+
+    const sVals = Array.from(sEls).map(e => parseFloat(e.textContent) || 0);
+    const rVals = Array.from(rEls).map(e => parseFloat(e.textContent) || 0);
+
+    const rawS = sVals.reduce((a, b) => a + b, 0);
+    const rawR = rVals.reduce((a, b) => a + b, 0);
+
+    // 3) Compute stud bonus for this team (sending side only)
+    const bonus = computeBonus(sVals, rVals);
+    const finalS = rawS + bonus;
+    const finalR = rawR; // receives stays unchanged
+
+    // 4) Re-inject bonus row under Sends, if any
+    if (bonus > 0) {
+      const li = document.createElement("li");
+      li.className = "trade-item bonus-item";
+      li.innerHTML = `Stud Bonus <span class="player-score">${bonus.toFixed(2)}</span>`;
+      // insert after first real player, or at top if only one
+      sList.insertBefore(li, sList.children[1] || null);
     }
 
-    /********** Update totals with bonus **********/
-    function updateTotals() {
-      teams.forEach(team => {
-        const sEls = document.querySelectorAll(`#team${team}Sends .player-score`);
-        const rEls = document.querySelectorAll(`#team${team}Receives .player-score`);
-        const sVals = Array.from(sEls).map(e => parseFloat(e.textContent) || 0);
-        const rVals = Array.from(rEls).map(e => parseFloat(e.textContent) || 0);
-        const rawS = sVals.reduce((a,b)=>a+b,0);
-        const rawR = rVals.reduce((a,b)=>a+b,0);
+    // 5) Update totals / coloring
+    document.getElementById(`team${team}SendsTotal`).textContent    = finalS.toFixed(2);
+    document.getElementById(`team${team}ReceivesTotal`).textContent = finalR.toFixed(2);
 
-        const bonus = computeBonus(sVals, rVals);
-        const finalS = rawS + bonus;
-
-        // inject/remove bonus under Sends
-        const sList = document.getElementById(`team${team}Sends`);
-        sList.querySelectorAll(".bonus-item").forEach(e=>e.remove());
-        if (bonus > 0) {
-          const li = document.createElement("li");
-          li.className = "trade-item bonus-item";
-          li.innerHTML = `Bonus <span class="player-score">${bonus.toFixed(2)}</span>`;
-          sList.insertBefore(li, sList.children[1]);
-        }
-
-        document.getElementById(`team${team}SendsTotal`).textContent    = finalS.toFixed(2);
-        document.getElementById(`team${team}ReceivesTotal`).textContent = rawR.toFixed(2);
-        const diffTotal = rawR - finalS;
-        const el = document.getElementById(`team${team}TradeTotal`);
-        el.textContent = diffTotal.toFixed(2);
-        el.classList.remove("positive","negative");
-        if (diffTotal>0) el.classList.add("positive");
-        if (diffTotal<0) el.classList.add("negative");
-      });
-    }
+    const diffTotal = finalR - finalS;
+    const el = document.getElementById(`team${team}TradeTotal`);
+    el.textContent = diffTotal.toFixed(2);
+    el.classList.remove("positive","negative");
+    if (diffTotal > 0) el.classList.add("positive");
+    if (diffTotal < 0) el.classList.add("negative");
+  });
+}
 
     /********** Add / Remove Players **********/
     function addPlayerToTeam(team, name) {
@@ -470,7 +490,8 @@
 
     function removePlayerFromTeam(team, name) {
       selectedPlayers[team] = selectedPlayers[team].filter(p=>p!==name);
-      document.querySelector(`#team${team}Sends [data-name='${name}']`).remove();
+      const el = document.querySelector(`#team${team}Sends [data-name='${name}']`);
+      if (el) el.remove();
       updateReceives();
     }
 
@@ -501,8 +522,8 @@
           <span>Team ${num}</span>
           <select id="team${num}Status">
             <option value="overall">Overall</option>
-            <option value="competing">Competing</option>
-            <option value="tanking">Tanking</option>
+            <option value="competing">Contending</option>
+            <option value="tanking">Rebuilding</option>
           </select>
           <button class="remove-team-btn" onclick="removeTeam(${num})">Remove Team</button>
         </div>
@@ -517,16 +538,16 @@
           <ul id="team${num}Receives" class="trade-list"></ul>
         </div>
         <div class="trade-totals">
-          <p>Sends Total: <span id="team${num}SendsTotal">0</span></p>
-          <p>Receives Total: <span id="team${num}ReceivesTotal">0</span></p>
-          <p>Trade Total: <span id="team${num}TradeTotal" class="trade-total">0</span></p>
+          <p>Sends Total: <span id="team${num}SendsTotal">0</span></p>
+          <p>Receives Total: <span id="team${num}ReceivesTotal">0</span></p>
+          <p>Trade Total: <span id="team${num}TradeTotal" class="trade-total">0</span></p>
         </div>
       </div>`;
     }
 
     function attachTeamListeners(team) {
       document.getElementById(`team${team}Status`)
-        .addEventListener("change", ()=>{ updateSendScores(team); updateReceives(); });
+        .addEventListener("change", ()=>{ updateSendScores(team); });
       document.getElementById(`team${team}PlayerInput`)
         .addEventListener("input", ()=>handleSearchInput(team));
       if (!selectedPlayers[team]) selectedPlayers[team] = [];
@@ -584,7 +605,7 @@
     initialize();
   </script>
 
-  <!-- Nav‑loader -->
+  <!-- Nav-loader -->
   <script>
     fetch('/nav.html')
       .then(r => r.text())
