@@ -13,6 +13,76 @@ document.addEventListener("DOMContentLoaded", () => {
   const lineupDiv          = document.getElementById("startingLineup");
   const needsSurplusDiv    = document.getElementById("needsSurplus");
   const tradeIdeasDiv      = document.getElementById("tradeIdeas");
+  const recentLeaguesDiv   = document.getElementById("recentLeagues");
+
+  // ─── Recent leagues (localStorage) ─────────────────────
+  const STORAGE_KEY_LAST    = "dt_lastLeagueId";
+  const STORAGE_KEY_RECENTS = "dt_recentLeagues";
+
+  // Load array of { id, name }  (handles old string-only format too)
+  function getRecentLeagues() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_RECENTS);
+      if (!raw) return [];
+
+      let parsed = JSON.parse(raw);
+
+      // If older format was just ["123","456"], convert it
+      if (Array.isArray(parsed)) {
+        if (parsed.length && (typeof parsed[0] === "string" || typeof parsed[0] === "number")) {
+          parsed = parsed.map(id => ({ id: String(id), name: String(id) }));
+        } else {
+          parsed = parsed.filter(l => l && l.id); // drop any bad entries
+        }
+      } else {
+        parsed = [];
+      }
+
+      return parsed;
+    } catch (e) {
+      console.error("Error parsing recent leagues:", e);
+      return [];
+    }
+  }
+
+  // Save one league (newest first, max 10)
+  function saveRecentLeague(leagueId, leagueName) {
+    let list = getRecentLeagues().filter(l => l.id !== leagueId);
+    list.unshift({ id: leagueId, name: leagueName });
+    if (list.length > 10) list = list.slice(0, 10);
+
+    localStorage.setItem(STORAGE_KEY_RECENTS, JSON.stringify(list));
+    localStorage.setItem(STORAGE_KEY_LAST, leagueId);
+  }
+
+  // Render buttons under the input
+  function renderRecentLeagues() {
+    const container = recentLeaguesDiv;
+    if (!container) return;
+
+     const list = getRecentLeagues().filter(l => l && l.id);
+    container.innerHTML = "";
+
+    if (!list.length) return;
+
+    const title = document.createElement("div");
+    title.textContent = "Recent leagues:";
+    title.style.marginTop = "12px";
+    container.appendChild(title);
+
+    list.forEach(lg => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "recent-league-btn";
+      btn.textContent = lg.name || lg.id;
+      btn.onclick = () => {
+  leagueInput.value = lg.id;
+  loadBtn.click();   // ✅ automatically loads teams
+};
+      container.appendChild(btn);
+    });
+  }
+   
 
   // hide until data loaded
   [teamDropdown, resultsDiv, sideDepthPanel].forEach(el => el.style.display = "none");
@@ -186,13 +256,26 @@ document.addEventListener("DOMContentLoaded", () => {
       rosterMap[p.owner_id].picks.push(p);
     });
 
-    teamDropdown.innerHTML="";
-    rosters.forEach(r=>{
-      const o=new Option(userMap[r.owner_id]||r.owner_id, r.roster_id);
+        teamDropdown.innerHTML = "";
+
+    // Add "Select a team" placeholder (disabled & selected)
+    const placeholder = new Option("Select a team", "", true, true);
+    placeholder.disabled = true;
+    teamDropdown.add(placeholder);
+
+    rosters.forEach(r => {
+      const o = new Option(userMap[r.owner_id] || r.owner_id, r.roster_id);
       teamDropdown.add(o);
     });
-    teamDropdown.style.display="inline-block";
-    loadBtn.disabled=false; loadBtn.textContent="Load Teams";
+
+    teamDropdown.style.display = "inline-block";
+    loadBtn.disabled = false;
+    loadBtn.textContent = "Load Teams";
+
+    // Save & render recent leagues (using Sleeper league name if available)
+    const leagueName = meta.name || `League ${lid}`;
+    saveRecentLeague(lid, leagueName);
+    renderRecentLeagues();
   });
 
   // ─── Main render ───────────────────────────────
@@ -462,10 +545,10 @@ tradeIdeasDiv.innerHTML = tHTML;
     renderDepthPanel(depthChartType.value, roster, cMap, tMap, oMap, owner);
   }
 
-    // wire controls
+ // wire controls
   teamDropdown.addEventListener("change", renderAnalysis);
   depthChartType.addEventListener("change", renderAnalysis);
-  if (teamDropdown.options.length) renderAnalysis();
+  // No auto-render here – user must pick "Select a team" → actual team
 
   function renderDepthPanel(type, roster, cMap, tMap, oMap, owner){
     const map = type==="competing"?cMap:type==="tanking"?tMap:oMap;
@@ -508,6 +591,10 @@ tradeIdeasDiv.innerHTML = tHTML;
     html+=`</div></div>`;
     depthChartTeamCard.innerHTML=html;
   }
+
+   // ─── On initial load: show recent leagues (but don’t auto-fill ID) ───
+  renderRecentLeagues();
+  // we still keep STORAGE_KEY_LAST for future use, but we don't pre-populate the input
 
 });
 

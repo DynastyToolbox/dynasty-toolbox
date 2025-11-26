@@ -166,6 +166,25 @@
         padding: 18px 6px;
       }
     }
+      #recentLeagues {
+    margin-top: 8px;
+  }
+
+  .recent-league-btn {
+    margin: 4px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid #004d40;
+    background: #e0f2f1;
+    color: #004d40;
+    font-size: 0.85em;
+    cursor: pointer;
+  }
+
+  .recent-league-btn:hover {
+    background: #004d40;
+    color: #ffffff;
+  }
   </style>
 </head>
 <body>
@@ -212,6 +231,9 @@
     <button id="analyzeBtn">Load Teams</button>
     <br />
     <select id="teamDropdown" style="display: none;"></select>
+
+    <!-- New: recent leagues buttons get rendered here -->
+    <div id="recentLeagues"></div>
   </div>
 
   <div id="mainContainer">

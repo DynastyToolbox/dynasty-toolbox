@@ -47,19 +47,85 @@
     /* Basic styling similar to your other pages */
     nav { text-align: center; margin-bottom: 20px; }
 
-    /* Controls at the top */
-    #leagueInputContainer { text-align: center; margin-bottom: 20px; }
-    #leagueId { padding: 5px; font-size: 1em; width: 250px; }
-    #rankingSelect, #loadLeagueBtn {
-      padding: 6px 12px;
-      font-size: 1em;
-      margin-left: 10px;
-      background: #004d40;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
+ #leagueInputContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+#leagueId {
+  padding: 8px;
+  font-size: 1rem;
+  width: 260px;
+  max-width: 90%;
+}
+
+#loadLeagueBtn {
+  padding: 8px 12px;
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 4px;
+  border: none;
+  background-color: #004d40;
+  color: white;
+}
+
+/* ranking system dropdown lives in its own row */
+#rankingContainer {
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+#rankingContainer label {
+  margin-right: 6px;
+  font-weight: bold;
+}
+
+#rankingSelect {
+  padding: 6px 10px;
+  font-size: 0.95rem;
+  border-radius: 4px;
+  border: 1px solid #004d40;
+  background-color: #e0f7fa;
+}
+
+/* recent leagues row, similar to Team Analyzer */
+#recentLeaguesContainer {
+  margin-top: 6px;
+  text-align: center;
+  display: none; /* shown only when we actually have recents */
+}
+
+#recentLeaguesContainer .recent-label {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+#recentLeagues {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.recent-league-btn {
+  border-radius: 999px;
+  padding: 4px 10px;
+  border: 2px solid #004d40;
+  background: #f5fffb;
+  font-size: 0.85rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.recent-league-btn:hover {
+  background: #c8f7f0;
+}
+
 
     /* Results area */
     #rankings {
@@ -209,14 +275,23 @@
   </div>
 
   <div id="leagueInputContainer">
-    <input type="text" id="leagueId" placeholder="Enter Sleeper League ID" />
-    <select id="rankingSelect">
-      <option value="competing">Contending</option>
-      <option value="overall" selected>Overall</option>
-      <option value="tanking">Rebuilding</option>
-    </select>
-    <button id="loadLeagueBtn">Load League</button>
-  </div>
+  <input type="text" id="leagueId" placeholder="Enter Sleeper League ID" />
+  <button id="loadLeagueBtn">Load League</button>
+</div>
+
+<div id="recentLeaguesContainer">
+  <div class="recent-label">Recent leagues:</div>
+  <div id="recentLeagues"></div>
+</div>
+
+<div id="rankingContainer">
+  <label for="rankingSelect">Ranking system:</label>
+  <select id="rankingSelect">
+    <option value="overall" selected>Overall</option>
+    <option value="competing">Contending</option>
+    <option value="tanking">Rebuilding</option>
+  </select>
+</div>
 
   <div id="summaryRankings" class="table-responsive"></div>
 
@@ -229,8 +304,45 @@
   </div>
 
   <script>
+
+      // === Recent leagues helpers (shared with Team Analyzer style) ===
+  const RECENT_LEAGUES_KEY = "dt_recent_leagues";
+
+  function getRecentLeagues() {
+    try {
+      const raw = localStorage.getItem(RECENT_LEAGUES_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      console.error("Error reading recent leagues:", e);
+      return [];
+    }
+  }
+
+  function saveRecentLeague(id, name) {
+    if (!id) return;
+    const trimmed = String(id).trim();
+    if (!trimmed) return;
+
+    const existing = getRecentLeagues().filter(lg => lg.id !== trimmed);
+
+    const updated = [
+      { id: trimmed, name: name || trimmed },
+      ...existing
+    ].slice(0, 8); // keep up to 8, tweak if you want
+
+    try {
+      localStorage.setItem(RECENT_LEAGUES_KEY, JSON.stringify(updated));
+    } catch (e) {
+      console.error("Error saving recent leagues:", e);
+    }
+  }
+
   document.addEventListener("DOMContentLoaded", function() {
     let projectionChartInstance = null;
+
+    renderRecentLeagues();
 
     function normalizeName(name) {
   if (typeof name !== "string") return "";
@@ -646,11 +758,48 @@ function renderProjectionChart(data) {
     }
     document.getElementById("loadLeagueBtn").addEventListener("click",async()=>{
       const lid = document.getElementById("leagueId").value.trim();
+      saveRecentLeague(lid, ""); // name gets filled later
       if(!lid) return alert("Enter a Sleeper League ID");
-      try { await renderAll(lid); }
+      try { await renderAll(lid); 
+      const meta = await fetchLeagueMeta(lid);
+saveRecentLeague(lid, meta.name || "Unnamed League");
+renderRecentLeagues();}
       catch(e){ console.error(e); alert("Error loading league."); }
     });
+      // Auto-regenerate rankings when system dropdown changes
+    document.getElementById("rankingSelect").addEventListener("change", () => {
+      const lid = document.getElementById("leagueId").value.trim();
+      if (lid) {
+        document.getElementById("loadLeagueBtn").click();
+      }
+    });
   });
+
+  function renderRecentLeagues() {
+  const recents = getRecentLeagues();
+  const container = document.getElementById("recentLeagues");
+  const wrapper = document.getElementById("recentLeaguesContainer");
+
+  container.innerHTML = "";
+
+  if (recents.length === 0) {
+    wrapper.style.display = "none";
+    return;
+  }
+
+  wrapper.style.display = "block";
+
+  recents.forEach(lg => {
+    const btn = document.createElement("button");
+    btn.classList.add("recent-league-btn");
+    btn.textContent = lg.name;
+    btn.addEventListener("click", () => {
+      document.getElementById("leagueId").value = lg.id;
+      document.getElementById("loadLeagueBtn").click();
+    });
+    container.appendChild(btn);
+  });
+}
   </script>
 
   <script>
