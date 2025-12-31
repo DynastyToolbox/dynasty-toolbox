@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow">
+  <title>Median Rankings | Dynasty Toolbox</title>
+
+  <!-- Match site typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    /* Page-specific layout tweaks (keep surgical) */
+    body { font-family: 'Bree Serif', serif; }
+
+    header {
+      background: linear-gradient(to bottom, #000000, #2a2a2a);
+      padding: 30px 10px 0;
+      text-align: center;
+      color: #fff;
+    }
+
+    header h1 {
+      margin: 0 0 20px;
+      font-size: 48px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .info-wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px 10px 0;
+    }
+
+    .info-box {
+      margin: 0 auto 28px;
+      background: #f7f7f7;
+      border-left: 4px solid #007bff;
+      padding: 14px 18px;
+      text-align: left;
+      font-family: inherit;
+      font-size: 13px;
+      line-height: 1.55;
+      color: #111;
+      max-width: 760px;
+    }
+
+    .section-title {
+      text-align: center;
+      font-size: 32px;
+      margin: 12px 0 14px;
+      color: #111;
+    }
+
+    .subtle {
+      font-family: inherit;
+      font-size: 13px;
+      color: #444;
+      text-align: center;
+      margin-top: -4px;
+      margin-bottom: 14px;
+    }
+
+    .compare {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 10px 10px;
+    }
+
+    .compare-inputs {
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin: 10px 0 16px;
+    }
+
+    .compare-col {
+      min-width: 220px;
+      flex: 0 1 240px;
+    }
+
+    .compare-col label {
+      display: block;
+      font-family: inherit;
+      font-size: 12px;
+      color: #333;
+      margin: 0 0 6px 4px;
+    }
+
+.compare-col input {
+  width: 100%;
+  height: 36px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  background: #fff;
+}
+
+    .filters {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 6px 10px 18px;
+    }
+
+    .filters-row {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .filter-item {
+      min-width: 180px;
+      flex: 0 1 200px;
+    }
+
+    .filter-item label {
+      display: block;
+      font-family: inherit;
+      font-size: 12px;
+      color: #333;
+      margin: 0 0 6px 4px;
+    }
+
+.filter-item input,
+.filter-item select {
+  width: 100%;
+  height: 36px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  background: #fff;
+}
+
+    .tables {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 10px 50px;
+    }
+
+    table.rankings-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      overflow: hidden;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      background: #fff;
+      margin-bottom: 36px;
+    }
+
+    table.rankings-table th {
+      background: #00796b;
+      color: #fff;
+      padding: 12px 10px;
+      text-align: left;
+      font-size: 16px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    table.rankings-table td {
+      padding: 12px 10px;
+      border-bottom: 1px solid #e6e6e6;
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    table.rankings-table tr:nth-child(even) td {
+      background: #e9f7f6;
+    }
+
+    .right { text-align: right; }
+    .muted { color: #888; }
+
+    @media (max-width: 700px) {
+      header h1 { font-size: 40px; }
+      .filter-item { min-width: 160px; }
+      .compare-col { min-width: 180px; }
+      table.rankings-table th { font-size: 14px; }
+    }
+  
+    .filters { gap: 18px; justify-content: center; flex-wrap: wrap; }
+    .compare-inputs { gap: 18px; justify-content: center; flex-wrap: wrap; }
+    .table-wrap { margin-top: 14px; }
+    .subtle { font-size: 15px; }
+    /* Keep table body readable like other pages (Bree Serif globally) */
+
+    
+
+</style>
+</head>
+
+<body>
+  <header>
+  <div class="top-bar">
+    <div class="social-links">
+      <a href="https://instagram.com/dynastytoolbox" target="_blank" aria-label="Instagram">
+        <img src="/assets/icons/instagram.svg" alt="">
+      </a>
+      <a href="https://x.com/dynastytoolbox" target="_blank" aria-label="X">
+        <img src="/assets/icons/x.png" alt="">
+      </a>
+      <a href="https://tiktok.com/@dynastytoolbox" target="_blank" aria-label="TikTok">
+        <img src="/assets/icons/tiktok.svg" alt="">
+      </a>
+    </div>
+  </div>
+    <h1>Median Rankings</h1>
+  </header>
+
+  <div id="nav-placeholder"></div>
+
+   <!-- Password Gate -->
+  <div id="gate" class="gate">
+    <h2>Restricted Tool</h2>
+    <p>Enter the admin password to view this page.</p>
+    <input type="password" id="adminPassword" placeholder="Password" />
+    <button id="unlockBtn">Unlock</button>
+    <p id="gateError" class="gate-error"></p>
+  </div>
+<div id="protected" style="display:none;">
+<div class="container">
+
+    <!-- Internal dev nav (only visible once unlocked) -->
+  <div class="dev-nav">
+    <span>Dev Tools:</span>
+    <a href="median_rankings.html">Median Rankings</a>
+    <a href="best_available.html">Best Available</a>
+    <!-- add more as needed -->
+  </div>
+
+  <main class="info-wrap">
+    <div class="info-box">
+<b>Median Scores</b> remove the issue of overweighted averages by filtering out spike and dud weeks.
+<br> 
+Allowing for more accurate expectations of weekly scores.
+<br>
+<br>
+      <b>Avg–Median</b> measures the reliability of an average score.
+      <br>
+      <b>Large Positive Values</b>: hint at one or more boom weeks propping up an average.  
+      <br>
+      <b>Large Negative Values</b>: hint at one or more bust weeks dragging down an average. 
+      <br>
+      
+    </div>
+  </main>
+
+  <!-- Start/Sit -->
+  <section class="compare">
+    <div class="section-title">Start/Sit</div>
+    <div class="subtle">Compare up to 3 players</div>
+
+    <div class="compare-inputs">
+      <div class="compare-col">
+        <label for="compare1">Player 1</label>
+        <input id="compare1" type="search" placeholder="Search..." autocomplete="off" />
+
+      </div>
+      <div class="compare-col">
+        <label for="compare2">Player 2</label>
+       <input id="compare2" type="search" placeholder="Search..." autocomplete="off" />
+
+      </div>
+      <div class="compare-col">
+        <label for="compare3">Player 3</label>
+        <input id="compare3" type="search" placeholder="Search..." autocomplete="off" />
+      </div>
+    </div>
+
+    <table class="rankings-table" id="compareTable">
+      <thead>
+        <tr>
+          <th data-sort="name">Player</th>
+          <th data-sort="pos">Pos</th>
+          <th data-sort="team">Team</th>
+          <th class="right" data-sort="games">Games</th>
+          <th class="right" data-sort="median">Median</th>
+          <th class="right" data-sort="avg">Average</th>
+          <th class="right" data-sort="diff">Avg–Median</th>
+        </tr>
+      </thead>
+      <tbody id="compareTbody">
+        <tr><td colspan="7" class="muted">Add players above to compare.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Filters moved BELOW Start/Sit -->
+  <section class="filters">
+    <div class="filters-row">
+      <div class="filter-item">
+        <label for="searchInput">Search player</label>
+        <input id="searchInput" type="search" placeholder="Type a name..." autocomplete="off" />
+
+      </div>
+
+      <div class="filter-item">
+        <label for="posFilter">Position</label>
+        <select id="posFilter">
+          <option value="ALL">All (QB/RB/WR/TE)</option>
+          <option value="QB">QB</option>
+          <option value="RB">RB</option>
+          <option value="WR">WR</option>
+          <option value="TE">TE</option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label for="scoringFilter">Scoring</label>
+        <select id="scoringFilter">
+          <option value="hppr" selected>Half PPR</option>
+          <option value="ppr">PPR</option>
+          <option value="std">Standard</option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <label for="windowFilter">Window</label>
+        <select id="windowFilter">
+          <option value="season" selected>Season to date</option>
+          <option value="last5">Last 5 weeks</option>
+          <option value="last7">Last 7 weeks</option>
+          <option value="last10">Last 10 weeks</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- Rankings -->
+  <section class="tables">
+    <div class="section-title">Rankings</div>
+
+    <table class="rankings-table" id="rankingsTable">
+      <thead>
+        <tr>
+          <th data-sort="name">Player</th>
+          <th data-sort="pos">Pos</th>
+          <th data-sort="team">Team</th>
+          <th class="right" data-sort="games">Games</th>
+          <th class="right" data-sort="median">Median</th>
+          <th class="right" data-sort="avg">Average</th>
+          <th class="right" data-sort="diff">Avg–Median</th>
+        </tr>
+      </thead>
+      <tbody id="rankingsTbody">
+        <tr><td colspan="7" class="muted">Loading…</td></tr>
+      </tbody>
+    </table>
+  </section>
+  </div>
+
+  <script>
+    // Nav load (match other pages)
+    fetch("nav.html")
+      .then(r => r.text())
+      .then(html => document.getElementById("nav-placeholder").innerHTML = html)
+      .catch(() => { /* keep page usable */ });
+
+    const DATA_URL = "data/weekly_points_current.json";
+
+    // Fixed rules
+    const MIN_WEEKS_REQUIRED = 3;
+    const SNAP_PCT_MIN = 40; // must match your build script default
+
+    let rawData = null;
+    let rankingsRows = [];
+    let sortState = { key: "median", dir: "desc" };
+    let compareSortState = { key: "median", dir: "desc" };
+
+    function safeNum(n) {
+      const x = Number(n);
+      return Number.isFinite(x) ? x : 0;
+    }
+
+    function median(arr) {
+      const a = arr.slice().sort((x, y) => x - y);
+      if (!a.length) return 0;
+      const mid = Math.floor(a.length / 2);
+      return a.length % 2 ? a[mid] : (a[mid - 1] + a[mid]) / 2;
+    }
+
+    function mean(arr) {
+      if (!arr.length) return 0;
+      return arr.reduce((s, x) => s + x, 0) / arr.length;
+    }
+
+    function getMaxWeek(meta, players) {
+      const fromMeta = safeNum(meta && meta.week_built_through);
+      if (fromMeta) return fromMeta;
+      // fallback: scan weeks
+      let maxW = 0;
+      for (const pid in players) {
+        const weeks = players[pid].weeks || {};
+        for (const wkStr in weeks) maxW = Math.max(maxW, safeNum(wkStr));
+      }
+      return maxW || 1;
+    }
+
+    function pickWindowWeeks(windowKey, maxWeek) {
+      if (windowKey === "season") return { start: 1, end: maxWeek };
+      const n = windowKey === "last5" ? 5 : windowKey === "last7" ? 7 : 10;
+      return { start: Math.max(1, maxWeek - n + 1), end: maxWeek };
+    }
+
+    function qualifiesWeek(weekObj) {
+      if (!weekObj) return false;
+      const snap = safeNum(weekObj.snap);
+      // If older JSON has no snap field, fall back to "any record exists"
+      if (!snap) return true;
+      return snap >= SNAP_PCT_MIN;
+    }
+
+    function computePlayerRow(pid, p, scoringKey, windowKey, maxWeek) {
+      const weeks = p.weeks || {};
+      const { start, end } = pickWindowWeeks(windowKey, maxWeek);
+
+      const pts = [];
+      for (let wk = start; wk <= end; wk++) {
+        const w = weeks[String(wk)];
+        if (!w) continue;
+        if (!qualifiesWeek(w)) continue;
+        pts.push(safeNum(w[scoringKey]));
+      }
+
+      if (pts.length < MIN_WEEKS_REQUIRED) return null;
+
+      const med = median(pts);
+      const avg = mean(pts);
+      const diff = avg - med;
+
+      return {
+        id: pid,
+        name: p.name || "",
+        pos: p.pos || "",
+        team: p.team || "",
+        games: pts.length,
+        median: med,
+        avg: avg,
+        diff: diff,
+      };
+    }
+
+    function buildRankings() {
+      const search = (document.getElementById("searchInput").value || "").toLowerCase().trim();
+      const pos = document.getElementById("posFilter").value;
+      const scoring = document.getElementById("scoringFilter").value;
+      const windowKey = document.getElementById("windowFilter").value;
+
+      const players = rawData.players || {};
+      const maxWeek = getMaxWeek(rawData.meta, players);
+
+      const rows = [];
+
+      for (const pid in players) {
+        const p = players[pid];
+
+        if (pos !== "ALL" && p.pos !== pos) continue;
+        if (search && !(p.name || "").toLowerCase().includes(search)) continue;
+
+        const row = computePlayerRow(pid, p, scoring, windowKey, maxWeek);
+        if (!row) continue;
+
+        rows.push(row);
+      }
+
+      rankingsRows = rows;
+      applySortAndRender();
+      renderCompareTable(); // keep comparator synced
+    }
+
+    function sortRows(rows, state) {
+      const dirMul = state.dir === "asc" ? 1 : -1;
+      const key = state.key;
+
+      return rows.slice().sort((a, b) => {
+        if (key === "name" || key === "pos" || key === "team") {
+          return (String(a[key]).localeCompare(String(b[key])) || (b.median - a.median)) * dirMul;
+        }
+        return (safeNum(a[key]) - safeNum(b[key])) * dirMul;
+      });
+    }
+
+    function applySortAndRender() {
+      const tbody = document.getElementById("rankingsTbody");
+      const rows = sortRows(rankingsRows, sortState);
+
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="muted">No players match the current filters.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = rows.map(r => `
+        <tr>
+          <td>${escapeHtml(r.name)}</td>
+          <td>${escapeHtml(r.pos)}</td>
+          <td>${escapeHtml(r.team)}</td>
+          <td class="right">${r.games}</td>
+          <td class="right">${r.median.toFixed(2)}</td>
+          <td class="right">${r.avg.toFixed(2)}</td>
+          <td class="right">${r.diff.toFixed(2)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function escapeHtml(str) {
+      return String(str || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function wireSorting(tableId, stateObj, onChange) {
+      const table = document.getElementById(tableId);
+      table.querySelectorAll("th[data-sort]").forEach(th => {
+        th.addEventListener("click", () => {
+          const key = th.dataset.sort;
+          if (stateObj.key === key) {
+            stateObj.dir = stateObj.dir === "asc" ? "desc" : "asc";
+          } else {
+            stateObj.key = key;
+            stateObj.dir = (key === "name" || key === "pos" || key === "team") ? "asc" : "desc";
+          }
+          onChange();
+        });
+      });
+    }
+
+    // Comparator
+    function getCompareIds() {
+      const names = [
+        document.getElementById("compare1").value,
+        document.getElementById("compare2").value,
+        document.getElementById("compare3").value,
+      ].map(s => (s || "").trim()).filter(Boolean);
+
+      if (!names.length) return [];
+
+      // build a name->id map from current rankingsRows (already filtered by pos/scoring/window)
+      const byName = new Map();
+      for (const r of rankingsRows) {
+        byName.set(r.name.toLowerCase(), r.id);
+      }
+
+      const ids = [];
+      for (const n of names) {
+        const id = byName.get(n.toLowerCase());
+        if (id && !ids.includes(id)) ids.push(id);
+      }
+      return ids;
+    }
+
+    function renderCompareTable() {
+      const tbody = document.getElementById("compareTbody");
+      if (!rawData) return;
+
+      const players = rawData.players || {};
+      const scoring = document.getElementById("scoringFilter").value;
+      const windowKey = document.getElementById("windowFilter").value;
+      const maxWeek = getMaxWeek(rawData.meta, players);
+
+      const ids = getCompareIds();
+      if (!ids.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="muted">Add players above to compare.</td></tr>';
+        return;
+      }
+
+      const rows = [];
+      for (const pid of ids) {
+        const p = players[pid];
+        if (!p) continue;
+        const row = computePlayerRow(pid, p, scoring, windowKey, maxWeek);
+        if (row) rows.push(row);
+      }
+
+      const sorted = sortRows(rows, compareSortState);
+
+      tbody.innerHTML = sorted.map(r => `
+        <tr>
+          <td>${escapeHtml(r.name)}</td>
+          <td>${escapeHtml(r.pos)}</td>
+          <td>${escapeHtml(r.team)}</td>
+          <td class="right">${r.games}</td>
+          <td class="right">${r.median.toFixed(2)}</td>
+          <td class="right">${r.avg.toFixed(2)}</td>
+          <td class="right">${r.diff.toFixed(2)}</td>
+        </tr>
+      `).join("");
+    }
+
+    // Autocomplete (lightweight: datalist-style suggestions using current ranking names)
+    function wireAutocomplete(inputId) {
+      const input = document.getElementById(inputId);
+      let box = null;
+
+      function close() {
+        if (box) { box.remove(); box = null; }
+      }
+
+      function open(matches) {
+        close();
+        box = document.createElement("div");
+        box.style.position = "absolute";
+        box.style.zIndex = 9999;
+        box.style.background = "#fff";
+        box.style.border = "1px solid #ccc";
+        box.style.borderRadius = "10px";
+        box.style.boxShadow = "0 6px 18px rgba(0,0,0,0.12)";
+        box.style.maxHeight = "220px";
+        box.style.overflowY = "auto";
+        box.style.fontFamily = "Open Sans, sans-serif";
+        box.style.fontSize = "13px";
+
+        const rect = input.getBoundingClientRect();
+        box.style.left = (rect.left + window.scrollX) + "px";
+        box.style.top = (rect.bottom + window.scrollY + 6) + "px";
+        box.style.width = rect.width + "px";
+
+        matches.slice(0, 12).forEach(name => {
+          const item = document.createElement("div");
+          item.textContent = name;
+          item.style.padding = "10px 12px";
+          item.style.cursor = "pointer";
+          item.addEventListener("mouseenter", () => item.style.background = "#e9f7f6");
+          item.addEventListener("mouseleave", () => item.style.background = "#fff");
+          item.addEventListener("mousedown", (e) => {
+            e.preventDefault();
+            input.value = name;
+            close();
+            if (inputId.startsWith("compare")) renderCompareTable();
+            else buildRankings();
+          });
+          box.appendChild(item);
+        });
+
+        document.body.appendChild(box);
+      }
+
+      input.addEventListener("input", () => {
+        const q = (input.value || "").trim().toLowerCase();
+        if (!q || !rankingsRows.length) { close(); return; }
+
+        const matches = rankingsRows
+          .map(r => r.name)
+          .filter(n => n.toLowerCase().includes(q));
+
+        if (!matches.length) close();
+        else open(matches);
+      });
+
+      input.addEventListener("blur", () => setTimeout(close, 120));
+      window.addEventListener("scroll", close, { passive: true });
+      window.addEventListener("resize", close);
+    }
+
+    async function init() {
+      try {
+        const res = await fetch(DATA_URL, { cache: "no-cache" });
+        if (!res.ok) throw new Error("Failed to load data");
+        rawData = await res.json();
+
+        buildRankings();
+
+        // Wire controls
+        ["searchInput","posFilter","scoringFilter","windowFilter"].forEach(id => {
+          document.getElementById(id).addEventListener("input", buildRankings);
+          document.getElementById(id).addEventListener("change", buildRankings);
+        });
+
+        ["compare1","compare2","compare3"].forEach(id => {
+          document.getElementById(id).addEventListener("input", renderCompareTable);
+          wireAutocomplete(id);
+        });
+
+        wireAutocomplete("searchInput");
+
+        wireSorting("rankingsTable", sortState, applySortAndRender);
+        wireSorting("compareTable", compareSortState, renderCompareTable);
+
+      } catch (e) {
+        console.error(e);
+        document.getElementById("rankingsTbody").innerHTML =
+          '<tr><td colspan="7" class="muted">Failed to load data.</td></tr>';
+      }
+    }
+
+    init();
+  </script>
+   <script>
+    // Simple shared password (soft lock, not true security)
+    const ADMIN_PASSWORD = "admin-beau";  // <-- change this to whatever you want
+    const STORAGE_KEY = "dt_admin_unlocked";
+
+    function showProtected() {
+      document.getElementById("gate").style.display = "none";
+      document.getElementById("protected").style.display = "block";
+    }
+
+    // On load, see if we've already unlocked
+    if (localStorage.getItem(STORAGE_KEY) === "true") {
+      showProtected();
+    } else {
+      document.getElementById("gate").style.display = "block";
+    }
+
+    document.getElementById("unlockBtn").addEventListener("click", () => {
+      const input = document.getElementById("adminPassword").value.trim();
+      const err = document.getElementById("gateError");
+      if (input === ADMIN_PASSWORD) {
+        localStorage.setItem(STORAGE_KEY, "true");
+        showProtected();
+      } else {
+        err.textContent = "Incorrect password.";
+      }
+    });
+
+    document
+      .getElementById("adminPassword")
+      .addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          document.getElementById("unlockBtn").click();
+        }
+      });
+  </script>
+</body>
+</html>

@@ -1046,3 +1046,75 @@ footer p {
     gap: 0.5rem;
   }
 }
+
+.gate {
+  max-width: 420px;
+  margin: 40px auto;
+  background: #ffffff;
+  border-radius: 10px;
+  border: 2px solid #004d40;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.16);
+  padding: 20px 24px;
+  text-align: center;
+}
+
+.gate h2 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: #004d40;
+}
+
+.gate input[type="password"] {
+  width: 80%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  margin-bottom: 10px;
+}
+
+.gate button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  background: #004d40;
+  color: #fff;
+  cursor: pointer;
+}
+
+.gate-error {
+  color: #c62828;
+  margin-top: 6px;
+  min-height: 18px;
+  font-size: 0.9em;
+}
+/* --- Internal dev nav for locked tools --- */
+.dev-nav {
+  max-width: 1100px;
+  margin: 10px auto 0;
+  padding: 6px 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 13px;
+  color: #444;
+}
+
+.dev-nav span {
+  font-weight: bold;
+  color: #004d40;
+}
+
+.dev-nav a {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #004d40;
+  background: #e0f2f1;
+  color: #004d40;
+  text-decoration: none;
+  font-size: 0.85em;
+}
+
+.dev-nav a:hover {
+  background: #004d40;
+  color: #ffffff;
+}
