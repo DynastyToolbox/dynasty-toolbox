@@ -71,6 +71,7 @@
             text-align: center;
         }
     </style>
+  <script src="/site_sheets.js"></script>
 </head>
 <body>
     <header>
@@ -121,20 +122,15 @@
         const backToListButton = document.getElementById("backToList");
 
         // Updated csvUrls with two dynasty mock drafts.
-        const csvUrls = {
-            "April - 3 Round Dynasty Mock": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1yFA9tPPYNMFYbo9b5Zctp85QFwC4A3I_FSIHChxYu8iV7ir-P95AAxhJLZZ1YFr9C0V1p72LtHUc/pub?gid=762929369&single=true&output=csv",
-             "March - 1st & 2nd Round Dynasty Mock": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQIA0gUvIYuSNNji5npf71R_Y17RsZYS0FTgKWXiNspjTpHffWZcAKZPVcb-Et-5CBC0J7Lrkt8pnBv/pub?gid=762929369&single=true&output=csv",
-            "February - Pre-Free Agency 1st Round Dynasty Mock": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRHACZDUQmdVLIn3SslOagbpB3vEMeU9yfrgkdjXncdrQ-10yGJN-nblzrjCLJ2XzPhOD9Mx6WRaa4m/pub?gid=762929369&single=true&output=csv",
-        };
+
 
         const photosPath = "./assets/Photos/"; // Directory for player photos
 
         // Function to fetch and parse CSV
         async function fetchMockDrafts() {
-            const drafts = {};
-            for (const [title, url] of Object.entries(csvUrls)) {
-                const response = await fetch(url);
-                const csvText = await response.text();
+            const drafts = Object.create(null);
+            for (const { title, id } of await DynastySheets.mocks("dynasty")) {
+                const csvText = await DynastySheets.csv(id);
                 const rows = csvText.split("\n").slice(1);
                 drafts[title] = rows.map(row => {
                     const [pick, player, position, team] = row.split(",");
@@ -155,7 +151,12 @@
             Object.keys(drafts).forEach((title) => {
                 const card = document.createElement("div");
                 card.className = "mock-card";
-                card.innerHTML = `<h3>${title}</h3><button onclick="viewMockDraft('${title}')">View Draft</button>`;
+                const heading = document.createElement("h3");
+        heading.textContent = title;
+        const button = document.createElement("button");
+        button.textContent = "View Draft";
+        button.addEventListener("click", () => viewMockDraft(title).catch(DynastySheets.showError));
+        card.append(heading, button);
                 gridContainer.appendChild(card);
             });
             mockDraftList.appendChild(gridContainer);
@@ -197,7 +198,7 @@
         });
 
         // Initial load.
-        displayMockDraftList();
+        displayMockDraftList().catch(DynastySheets.showError);
     </script>
      <!-- === Nav‐loader script === -->
   <script>

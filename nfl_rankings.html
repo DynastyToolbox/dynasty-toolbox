@@ -41,6 +41,7 @@
     gtag('js', new Date());
     gtag('config', 'G-1C5TVEGFXT');
   </script>
+  <script src="/nfl_rankings_data.js"></script>
 </head>
 
 <body>
@@ -124,7 +125,8 @@
         </table>
       </div>
     </section>
-  </main>
+    <p data-rankings-status role="status" style="text-align:center; font-size:0.85em;">Rankings load from the latest published copy.</p>
+</main>
 
   <footer>
     <p>&copy; 2024 Dynasty Fantasy Football</p>
@@ -146,38 +148,20 @@
     const hideDrafted = document.getElementById("hideDrafted");
     let drafted = {};
 
-    // CSV URLs
-    const csvUrls = {
-      competing: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=0&single=true&output=csv",
-      overall:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=116299513&single=true&output=csv",
-      tanking:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=1543093851&single=true&output=csv"
-    };
-
-    // Helper: fetch & parse CSV
-    async function fetchCsvData(url) {
-      const res = await fetch(url);
-      const text = await res.text();
-      return text
-        .trim()
-        .split("\n")
-        .map(line => line.split(","))
-        .reduce((acc, row, idx) => {
-          if (idx === 0) {
-            acc.headers = row.map(h => h.trim());
-          } else {
-            let obj = {};
-            row.forEach((val, j) => obj[acc.headers[j]] = val.trim());
-            acc.rows.push(obj);
-          }
-          return acc;
-        }, { headers: [], rows: [] })
-        .rows;
-    }
+    let renderRequest = 0;
 
     // Populate table: filters → ranking
     async function populateTable() {
       // 1) load + compute scores
-      const raw = await fetchCsvData(csvUrls[teamType.value]);
+      const request = ++renderRequest;
+      let raw;
+      try {
+        raw = await DynastyRankings.getRows(teamType.value);
+      } catch (error) {
+        console.error(error);
+        return;
+      }
+      if (request !== renderRequest) return;
       // apply format multipliers
       const pprMult = nonPpr.checked  ? 0.95
                     : fullPpr.checked ? 1.05

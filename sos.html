@@ -37,6 +37,7 @@
     th.sortable { cursor: pointer; }
     th.sortable:hover { text-decoration: underline; }
   </style>
+  <script src="/site_sheets.js"></script>
 </head>
 <body>
   
@@ -117,7 +118,7 @@
 
   <script>
     const csvUrl = 
-      'https://docs.google.com/spreadsheets/d/e/2PACX-1vSWEeAb82B0V6LbOmL35bvwQiVDRjTT7c_YZdcQm_8MJA-ILdCViSJCjWIwC-L2zidQ-cjFA1juV1kA/pub?gid=112962471&single=true&output=csv';
+      'sos_1';
     const divisionSelect = document.getElementById('divisionSelect');
     const tableBody      = document.querySelector('#sosTable tbody');
     const headers        = Array.from(document.querySelectorAll('#sosTable thead th.sortable'));
@@ -133,13 +134,13 @@
         const col = th.dataset.col;
         if (sortCol === col) sortAsc = !sortAsc;
         else { sortCol = col; sortAsc = true; }
-        drawTable();
+        drawTable().catch(DynastySheets.showError);
       });
     });
 
     // fetch & normalize CSV
     async function fetchCsv() {
-      const text = await fetch(csvUrl).then(r => r.text());
+      const text = await DynastySheets.csv(csvUrl);
       const rows = text.trim().split('\n').map(r => r.split(','));
       const rawHeader = rows.shift().map(h => h.trim().toLowerCase());
       const idx = {};
@@ -188,7 +189,7 @@
     }
 
     headers.forEach(h => {}); // keep headers wired up
-    drawTable();
+    drawTable().catch(DynastySheets.showError);
   </script>
 
   <script>

@@ -1,0 +1,170 @@
+{
+  "sources": {
+    "college_rankings_1": {
+      "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vR0eVwcIonMiKp6tUIlFhzAsraddB0qKGgWNNEwI4wyO0DbU9G8NHWqKuQG5C8WeNNzFSgBJjGSDEAc/pub?gid=1318370528&single=true&output=csv",
+      "headers": [
+        "TOOLBOX",
+        "CONSENSUS RANK",
+        "PLAYER NAME",
+        "POSITION",
+        "COLLEGE",
+        "HEIGHT",
+        "WEIGHT",
+        "AGE"
+      ],
+      "minRecords": 40
+    },
+    "devy_mock_simulator_1": {
+      "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS0-gweBPf_H1hdmwWNUnFoVMhKyCaFw1HiflQmHmtiaOaLCGsywBNW0SFxVTD5WAPCzjWDUagpc_Qe/pub?gid=1913028468&single=true&output=csv",
+      "headers": [
+        "Round",
+        "Pick",
+        "Team",
+        "Need"
+      ],
+      "minRecords": 195
+    },
+    "devy_mock_simulator_2": {
+      "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vR0eVwcIonMiKp6tUIlFhzAsraddB0qKGgWNNEwI4wyO0DbU9G8NHWqKuQG5C8WeNNzFSgBJjGSDEAc/pub?gid=158349735&single=true&output=csv",
+      "headers": [
+        "Rank",
+        "Name",
+        "Position"
+      ],
+      "minRecords": 81
+    },
+    "devy_mock_simulator_3": {
+      "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRvCf4id2GhAIHZQxe_xy0MnIpbvfp1GJCjHnzt4590C5sXE5AucQlIp8w4ukTm6RSS58F1FzygPWBO/pub?gid=1972908686&single=true&output=csv",
+      "headers": [
+        "TEAM",
+        "QUARTERBACK",
+        "RUNNINGBACK",
+        "WIDE RECIEVER",
+        "TIGHT END"
+      ],
+      "minRecords": 48
+    },
+    "devy_mock_simulator_4": {
+      "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vR0eVwcIonMiKp6tUIlFhzAsraddB0qKGgWNNEwI4wyO0DbU9G8NHWqKuQG5C8WeNNzFSgBJjGSDEAc/pub?gid=1999697071&single=true&output=csv",
+      "headers": [
+        "",
+        "PLAYER NAME",
+        "SCORE"
+      ],
+      "minRecords": 122
+    },
+    "sos_1": {
+      "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vSWEeAb82B0V6LbOmL35bvwQiVDRjTT7c_YZdcQm_8MJA-ILdCViSJCjWIwC-L2zidQ-cjFA1juV1kA/pub?gid=112962471&single=true&output=csv",
+      "headers": [
+        "TEAM",
+        "DIVISION",
+        "OVERALL",
+        "PLAYOFF",
+        "SEASON PASS",
+        "SEASON RUN",
+        "PLAYOFF PASS",
+        "PLAYOFF RUN",
+        "QB SCHEDULE",
+        "QB PLAYOFF",
+        "RB SCHEDULE",
+        "RB PLAYOFF",
+        "WR SCHEDULE",
+        "WR PLAYOFF",
+        "TE SCHEDULE",
+        "TE PLAYOFF",
+        "",
+        "SCHEDULE",
+        "PLAYOFF",
+        "SCHEDULE PASS",
+        "SCHEDULE RUN",
+        "PLAYOFF PASS",
+        "PLAYOFF RUN",
+        ""
+      ],
+      "minRecords": 29
+    },
+    "league_rankings_1": {
+      "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=936576734&single=true&output=csv",
+      "headers": [
+        "Rank",
+        "Player",
+        "Position",
+        "Age",
+        "Score"
+      ],
+      "minRecords": 439
+    },
+    "league_rankings_2": {
+      "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=2003106464&single=true&output=csv",
+      "headers": [
+        "Rank",
+        "Player",
+        "Position",
+        "Age",
+        "Score"
+      ],
+      "minRecords": 404
+    },
+    "league_rankings_3": {
+      "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=991171708&single=true&output=csv",
+      "headers": [
+        "Rank",
+        "Player",
+        "Position",
+        "Age",
+        "Score"
+      ],
+      "minRecords": 394
+    }
+  },
+  "mockDrafts": [
+    {
+      "id": "nfl_mock_drafts_1",
+      "kind": "nfl",
+      "title": "NFL DRAFT",
+      "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vS3eu0gtQ8dEgzrDVLh0qdBlD4VcWyGXQkc5fLghxvtMqItGtahdhaQXIN2dz6NBEyTYrRp14HObpY_/pub?gid=0&single=true&output=csv"
+    },
+    {
+      "id": "nfl_mock_drafts_2",
+      "kind": "nfl",
+      "title": "April 2026 Final 3 Round NFL Mock",
+      "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1yFA9tPPYNMFYbo9b5Zctp85QFwC4A3I_FSIHChxYu8iV7ir-P95AAxhJLZZ1YFr9C0V1p72LtHUc/pub?gid=0&single=true&output=csv"
+    },
+    {
+      "id": "nfl_mock_drafts_3",
+      "kind": "nfl",
+      "title": "March 2026 NFL 3 Round Mock",
+      "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQIA0gUvIYuSNNji5npf71R_Y17RsZYS0FTgKWXiNspjTpHffWZcAKZPVcb-Et-5CBC0J7Lrkt8pnBv/pub?gid=0&single=true&output=csv"
+    },
+    {
+      "id": "nfl_mock_drafts_4",
+      "kind": "nfl",
+      "title": "February 2026 NFL Round 1 Mock",
+      "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRHACZDUQmdVLIn3SslOagbpB3vEMeU9yfrgkdjXncdrQ-10yGJN-nblzrjCLJ2XzPhOD9Mx6WRaa4m/pub?gid=2045194100&single=true&output=csv"
+    },
+    {
+      "id": "nfl_mock_drafts_5",
+      "kind": "nfl",
+      "title": "December 2026 NFL Draft Mock",
+      "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vSaoBtiqErfzEIV03Jr2mee3YRQftBAlC20kilm25BruAzmkG344a-2hnzDgj2eNZijZVZInPS6KCqv/pub?gid=891803356&single=true&output=csv"
+    },
+    {
+      "id": "dynasty_mock_drafts_1",
+      "kind": "dynasty",
+      "title": "April - 3 Round Dynasty Mock",
+      "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ1yFA9tPPYNMFYbo9b5Zctp85QFwC4A3I_FSIHChxYu8iV7ir-P95AAxhJLZZ1YFr9C0V1p72LtHUc/pub?gid=762929369&single=true&output=csv"
+    },
+    {
+      "id": "dynasty_mock_drafts_2",
+      "kind": "dynasty",
+      "title": "March - 1st & 2nd Round Dynasty Mock",
+      "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vQIA0gUvIYuSNNji5npf71R_Y17RsZYS0FTgKWXiNspjTpHffWZcAKZPVcb-Et-5CBC0J7Lrkt8pnBv/pub?gid=762929369&single=true&output=csv"
+    },
+    {
+      "id": "dynasty_mock_drafts_3",
+      "kind": "dynasty",
+      "title": "February - Pre-Free Agency 1st Round Dynasty Mock",
+      "url": "https://docs.google.com/spreadsheets/d/e/2PACX-1vRHACZDUQmdVLIn3SslOagbpB3vEMeU9yfrgkdjXncdrQ-10yGJN-nblzrjCLJ2XzPhOD9Mx6WRaa4m/pub?gid=762929369&single=true&output=csv"
+    }
+  ]
+}

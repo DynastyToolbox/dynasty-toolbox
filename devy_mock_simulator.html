@@ -251,6 +251,7 @@
   }
 }
   </style>
+  <script src="/site_sheets.js"></script>
 </head>
 <body>
   <header>
@@ -378,13 +379,13 @@ Enable <strong>Include Devy Rankings</strong> to use unique base scores for each
 
   <script>
     /********** CSV URLs **********/
-    const draftPicksUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS0-gweBPf_H1hdmwWNUnFoVMhKyCaFw1HiflQmHmtiaOaLCGsywBNW0SFxVTD5WAPCzjWDUagpc_Qe/pub?gid=1913028468&single=true&output=csv";
-    const availablePlayersUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR0eVwcIonMiKp6tUIlFhzAsraddB0qKGgWNNEwI4wyO0DbU9G8NHWqKuQG5C8WeNNzFSgBJjGSDEAc/pub?gid=158349735&single=true&output=csv"
+    const draftPicksUrl = "devy_mock_simulator_1";
+    const availablePlayersUrl = "devy_mock_simulator_2"
 ; // <-- VERIFY URL if needed
     // (NOTE: Use your correct availablePlayersUrl)
-    const teamPosValuesUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRvCf4id2GhAIHZQxe_xy0MnIpbvfp1GJCjHnzt4590C5sXE5AucQlIp8w4ukTm6RSS58F1FzygPWBO/pub?gid=1972908686&single=true&output=csv";
+    const teamPosValuesUrl = "devy_mock_simulator_3";
     // Devy Rankings CSV URL
-    const devyRankingsUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR0eVwcIonMiKp6tUIlFhzAsraddB0qKGgWNNEwI4wyO0DbU9G8NHWqKuQG5C8WeNNzFSgBJjGSDEAc/pub?gid=1999697071&single=true&output=csv";
+    const devyRankingsUrl = "devy_mock_simulator_4";
 
     const logosPath = "./assets/Logos/";
     /********** Hit Chances by Position and Round **********/
@@ -429,8 +430,7 @@ let playerPositionFilter = "ALL";
     /********** Load Team Position Values **********/
     async function loadTeamPositionValues() {
       try {
-        const res = await fetch(teamPosValuesUrl);
-        const text = await res.text();
+        const text = await DynastySheets.csv(teamPosValuesUrl);
         const data = parseCSV(text);
         // Expected headers: TEAM, QUARTERBACK, RUNNINGBACK, WIDE RECIEVER, TIGHT END.
         data.forEach(row => {
@@ -446,14 +446,13 @@ let playerPositionFilter = "ALL";
         });
         console.log("Loaded teamPositionValues:", teamPositionValues);
       } catch (error) {
-        console.error("Error loading team position values:", error);
+        throw error;
       }
     }
 
     async function loadDevyRankings() {
   try {
-    const res = await fetch(devyRankingsUrl);
-    const text = await res.text();
+    const text = await DynastySheets.csv(devyRankingsUrl);
     const data = parseCSV(text);
     // Check for both uppercase and other variations.
     data.forEach(row => {
@@ -464,7 +463,7 @@ let playerPositionFilter = "ALL";
     });
     console.log("Loaded devyRankings:", devyRankings);
   } catch (error) {
-    console.error("Error loading devy rankings:", error);
+    throw error;
   }
 }
 
@@ -473,8 +472,7 @@ let playerPositionFilter = "ALL";
     async function loadData() {
       try {
         // Load NFL draft picks CSV and filter out rows with an empty round.
-        const resDraft = await fetch(draftPicksUrl);
-        const draftText = await resDraft.text();
+        const draftText = await DynastySheets.csv(draftPicksUrl);
         draftPicks = parseCSV(draftText);
         draftPicks = draftPicks.filter(p => {
           const r = p.ROUND || p.Round || "";
@@ -483,8 +481,7 @@ let playerPositionFilter = "ALL";
         console.log("Loaded draftPicks:", draftPicks);
   
         // Load available players CSV.
-        const resPlayers = await fetch(availablePlayersUrl);
-        const playersText = await resPlayers.text();
+        const playersText = await DynastySheets.csv(availablePlayersUrl);
         availablePlayers = parseCSV(playersText);
         console.log("Loaded availablePlayers (raw):", availablePlayers);
   
@@ -505,7 +502,7 @@ let playerPositionFilter = "ALL";
         displayDraftPicks();
         displayAvailablePlayers();
       } catch (error) {
-        console.error("Error loading data:", error);
+        DynastySheets.showError(error);
       }
     }
 
