@@ -253,7 +253,7 @@
   </style>
   <script src="/site_sheets.js"></script>
 </head>
-<body>
+<body class="page-simulator">
   <header>
     <div class="top-bar">
     <div class="social-links">
@@ -318,7 +318,9 @@ Enable <strong>Include Devy Rankings</strong> to use unique base scores for each
     <!-- NFL Draft Board (grouped by round, collapsible) -->
     <div class="draft-board">
       <h2>NFL Draft Board</h2>
-      <table id="draftTable">
+      <p class="table-scroll-hint">Swipe or scroll sideways to see all columns.</p>
+    <div class="table-responsive" tabindex="0" role="region" aria-label="NFL draft board">
+    <table id="draftTable">
         <thead>
           <tr>
             <th>Round</th>
@@ -332,10 +334,11 @@ Enable <strong>Include Devy Rankings</strong> to use unique base scores for each
           <!-- Grouped rows will be inserted here -->
         </tbody>
       </table>
+    </div>
       <p>(Click on a draft pick row to assign the selected available player.)</p>
     </div>
     <!-- Available Players -->
-    <div class="available-players">
+    <div class="available-players" id="availablePlayersPanel">
       <h2>Available Players</h2>
 
       <div class="players-controls">
@@ -360,7 +363,7 @@ Enable <strong>Include Devy Rankings</strong> to use unique base scores for each
             <tr>
               <th>Rank</th>
               <th>Name</th>
-              <th>Position</th>
+              <th><abbr title="Position">Pos</abbr></th>
               <th>Select</th>
             </tr>
           </thead>
@@ -373,9 +376,9 @@ Enable <strong>Include Devy Rankings</strong> to use unique base scores for each
     </div>
   </div>
     <!-- Mobile toggle button for the Available Players drawer -->
-  <div id="mobilePlayersToggle" class="mobile-players-toggle">
+  <button type="button" id="mobilePlayersToggle" class="mobile-players-toggle" aria-expanded="false" aria-controls="availablePlayersPanel">
     Available Players
-  </div>
+  </button>
 
   <script>
     /********** CSV URLs **********/
@@ -651,6 +654,7 @@ const teamCell = `
                     <td>${player.Name || player.name}</td>
                     <td>${player.Position || player.Pos}</td>
                     <td><button class="plus-btn" onclick="selectPlayer(event, ${index})">+</button></td>`;
+    tr.querySelector("button").setAttribute("aria-label", `Select ${player.Name || player.name}`);
     tbody.appendChild(tr);
   });
 }
@@ -787,7 +791,9 @@ const availablePanel = document.querySelector(".available-players");
 
 if (mobileToggle && availablePanel) {
   mobileToggle.addEventListener("click", () => {
-    availablePanel.classList.toggle("open");
+    const open = availablePanel.classList.toggle("open");
+    mobileToggle.setAttribute("aria-expanded", String(open));
+    mobileToggle.textContent = open ? "Close Players" : "Available Players";
   });
 }
 
