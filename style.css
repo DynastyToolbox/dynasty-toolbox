@@ -1118,3 +1118,107 @@ footer p {
   background: #004d40;
   color: #ffffff;
 }
+
+/* Shared navigation: explicit touch/keyboard toggles and bounded menus. */
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.site-nav > .dropdown {
+  margin: 10px 0;
+}
+
+.site-nav .dropbtn {
+  display: block;
+  margin: 0 15px;
+  font-family: inherit;
+  font-weight: bold;
+  list-style: none;
+}
+
+.site-nav summary::-webkit-details-marker {
+  display: none;
+}
+
+.site-nav summary::after {
+  content: "";
+  display: inline-block;
+  width: 0.3em;
+  height: 0.3em;
+  margin-left: 0.5em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-0.15em) rotate(45deg);
+}
+
+.site-nav details[open] > summary::after {
+  transform: translateY(0.05em) rotate(225deg);
+}
+
+.site-nav .dropbtn:focus-visible,
+.site-nav .dropdown-content a:focus-visible {
+  outline: 2px solid #80cbc4;
+  outline-offset: -2px;
+}
+
+.site-nav .dropdown-content {
+  width: max-content;
+  min-width: 160px;
+  max-width: calc(100vw - 2rem);
+  z-index: 2000;
+}
+
+/* Override the older hover rule: the native disclosure owns its open state. */
+.site-nav details:not([open]) > .dropdown-content {
+  display: none;
+}
+
+.site-nav details[open] > .dropdown-content {
+  display: block;
+}
+
+.site-nav .dropdown-content a {
+  margin: 0;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+@media (min-width: 901px) {
+  .site-nav > .dropdown:last-child > .dropdown-content {
+    left: auto;
+    right: 0;
+    transform: none;
+  }
+}
+
+@media (max-width: 900px) {
+  /* Use the entire nav as the anchor, even when its labels wrap to two rows. */
+  .site-nav > .dropdown {
+    position: static;
+  }
+
+  .site-nav .dropdown-content {
+    left: 0.5rem;
+    right: 0.5rem;
+    top: 100%;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    transform: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .site-nav > .dropdown {
+    margin: 0;
+  }
+
+  .site-nav .dropbtn {
+    margin: 0;
+    padding: 10px 12px;
+    font-size: 1em;
+  }
+}
