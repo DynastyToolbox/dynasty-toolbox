@@ -1,9 +1,4 @@
 /* ---------- Config ---------- */
-const RANKING_FILES = {
-      competing: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=0&single=true&output=csv",
-      overall:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=116299513&single=true&output=csv",
-      tanking:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=1543093851&single=true&output=csv"
-    };
 let waiverPlayers = [];
 let sortField = "score";
 let sortAsc = false;
@@ -23,7 +18,7 @@ async function loadLeague() {
         "<tr><td colspan='5'>Loading...</td></tr>";
 
     const rankingType = document.getElementById("rankingType").value;
-    const rankingMap = await fetchCSV(RANKING_FILES[rankingType]);
+    const rankingMap = await fetchRankingMap(rankingType);
     const sleeperPlayers = await fetch("https://api.sleeper.app/v1/players/nfl").then(r=>r.json());
     const rosters = await fetch(`https://api.sleeper.app/v1/league/${leagueId}/rosters`).then(r=>r.json());
 
@@ -170,51 +165,18 @@ function normalizeName(name) {
 }
 
 
-async function fetchCSV(url){
-  const text = await fetch(url).then(r => r.text());
-  const rows = text.trim().split(/\r?\n/);
+async function fetchRankingMap(type){
+  const rows = await DynastyRankings.getRows(type);
   const map = {};
-
-  if (rows.length <= 1) return map;
-
-const header = rows[0].split(",");
-const lowerHeader = header.map(h => h.toLowerCase());
-
-// Try to detect columns by name
-const nameIdx  = lowerHeader.findIndex(h => h.includes("player"));
-let scoreIdx   = lowerHeader.findIndex(h => h.includes("score"));
-const teamIdx  = lowerHeader.findIndex(h => h.includes("team"));
-const ageIdx   = lowerHeader.findIndex(h => h.includes("age"));
-const posIdx   = lowerHeader.findIndex(
-  h => h === "pos" || h.includes("position")
-);
-
-
-  // Fallback: if we didn't find "score" by name, assume last column is score
-  if (scoreIdx === -1) scoreIdx = header.length - 1;
-
-  rows.slice(1).forEach(line => {
-    if (!line.trim()) return;
-    const cols = line.split(",");
-    const rawName  = (cols[nameIdx]  || "").trim();
-    const rawScore = (cols[scoreIdx] || "").trim();
-
-    if (!rawName || !rawScore) return;
-    const score = Number(rawScore);
+  rows.forEach(row => {
+    if (!row.Player || !row.Score) return;
+    const score = Number(row.Score);
     if (Number.isNaN(score)) return;
-
-    const key = normalizeName(rawName);
-
-   map[key] = {
-  name: rawName,
-  team: teamIdx !== -1 ? (cols[teamIdx] || "").trim() : "",
-  age:  ageIdx !== -1  ? (cols[ageIdx]  || "").trim() : "",
-  pos:  posIdx !== -1  ? (cols[posIdx]  || "").trim().toUpperCase() : "",
-  score
-};
-
+    map[normalizeName(row.Player)] = {
+      name: row.Player, team: row.Team || "", age: row.Age,
+      pos: row.Position.toUpperCase(), score
+    };
   });
-
   return map;
 }
 

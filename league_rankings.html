@@ -234,6 +234,7 @@
       }
     }
   </style>
+  <script src="/nfl_rankings_data.js"></script>
 </head>
 <body>
   <header>
@@ -373,18 +374,12 @@
       proj2: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=2003106464&single=true&output=csv",
       proj3: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=991171708&single=true&output=csv"
     };
-    const nflRankingsUrls = {
-      competing: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=0&single=true&output=csv",
-      overall:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=116299513&single=true&output=csv",
-      tanking:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=1543093851&single=true&output=csv"
-    };
     let nflRankings = {};
 
     async function loadNFLRankings(type) {
       nflRankings = {};
-      const res = await fetch(nflRankingsUrls[type]);
-      const text = await res.text();
-      parseCSV(text).forEach(r => {
+      const rows = await DynastyRankings.getRows(type);
+      rows.forEach(r => {
         const nm = normalizeName(r["Player"]||"");
         nflRankings[nm] = parseFloat(r["Score"])||0;
       });
@@ -808,6 +803,7 @@ renderRecentLeagues();}
       .then(html=>document.getElementById('nav-placeholder').innerHTML=html)
       .catch(()=>console.error('Nav load failed'));
   </script>
+  <p data-rankings-status role="status" style="text-align:center; font-size:0.85em;">Rankings load from the latest published copy.</p>
 </body>
 </html>
 

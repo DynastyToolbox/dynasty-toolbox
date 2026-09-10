@@ -232,6 +232,7 @@
       cursor: not-allowed;
     }
   </style>
+  <script src="/nfl_rankings_data.js"></script>
 </head>
 <body>
   <!-- ---------- Header & Nav ---------- -->
@@ -318,34 +319,23 @@
     <div id="addTeamContainer">
       <button id="addTeamButton">Add Team</button>
     </div>
-  </main>
+    <p data-rankings-status role="status" style="text-align:center; font-size:0.85em;">Rankings load from the latest published copy.</p>
+</main>
 
   <script>
     /********** Globals **********/
     let teams = [1, 2];
     let nextTeamNumber = 3;
     const maxTeams = 12;
-    const csvUrls = {
-      competing:
-        "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=0&single=true&output=csv",
-      overall:
-        "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=116299513&single=true&output=csv",
-      tanking:
-        "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=1543093851&single=true&output=csv"
-    };
     let playerData = {};
     let selectedPlayers = { 1: [], 2: [] };
 
     async function loadAllPlayers() {
-      for (const [status, url] of Object.entries(csvUrls)) {
-        try {
-          const res = await fetch(url);
-          const rows = (await res.text()).split("\n").map(r => r.split(","));
-          playerData[status] = rows.slice(1).map(r => ({ name: r[1], score: r[4] }));
-        } catch (e) {
-          console.error(`Error loading ${status}:`, e);
-        }
-      }
+      const entries = await Promise.all(["competing", "overall", "tanking"].map(async status => {
+        const rows = await DynastyRankings.getRows(status);
+        return [status, rows.map(row => ({ name: row.Player, score: row.Score }))];
+      }));
+      playerData = Object.fromEntries(entries);
     }
 
     /********** Utility **********/
@@ -610,7 +600,7 @@ function updateTotals() {
       updateRemoveButtons();
       updateLayoutMode();
     }
-    initialize();
+    initialize().catch(error => console.error("Rankings could not load:", error));
   </script>
 
   <!-- Nav-loader -->

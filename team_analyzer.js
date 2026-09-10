@@ -107,20 +107,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function fetchRankings(type) {
-    const urls = {
-      competing: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=0&single=true&output=csv",
-      overall:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=116299513&single=true&output=csv",
-      tanking:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=1543093851&single=true&output=csv"
-    };
-    const csv = await fetch(urls[type]).then(r=>r.text());
-    const [hdr, ...lines] = csv.trim().split("\n");
-    const cols = hdr.split(",");
-    return lines.map(line => {
-      const vals = line.split(",");
-      const obj = {};
-      cols.forEach((c,i)=>obj[c.trim()]=(vals[i]||"").trim());
-      return obj;
-    });
+    return DynastyRankings.getRows(type);
   }
 
   function mapScores(arr) {
@@ -212,7 +199,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadBtn.addEventListener("click", async ()=>{
     const lid = leagueInput.value.trim();
     if (!lid) { alert("Enter league ID"); return; }
-    // ← Clear out old ranking data so fetchRankings() will run again
+    // Reset this analysis; the shared published snapshot stays cached for this page.
    rankings = { competing: [], tanking: [], overall: [] };
 
     loadBtn.disabled=true; loadBtn.textContent="Loading...";
@@ -286,11 +273,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const owner  = userMap[roster.owner_id]||"Unknown";
     resultsDiv.style.display = sideDepthPanel.style.display = "block";
 
-    await fetchPlayers();
-    if(!rankings.competing.length){
-      rankings.competing = await fetchRankings("competing");
-      rankings.tanking   = await fetchRankings("tanking");
-      rankings.overall   = await fetchRankings("overall");
+    try {
+      const [, competing, tanking, overall] = await Promise.all([
+        fetchPlayers(), fetchRankings("competing"), fetchRankings("tanking"), fetchRankings("overall")
+      ]);
+      rankings = { competing, tanking, overall };
+    } catch (error) {
+      resultsDiv.style.display = "none";
+      sideDepthPanel.style.display = "none";
+      console.error(error);
+      return;
     }
     const cMap = mapScores(rankings.competing),
           tMap = mapScores(rankings.tanking),
@@ -597,5 +589,4 @@ tradeIdeasDiv.innerHTML = tHTML;
   // we still keep STORAGE_KEY_LAST for future use, but we don't pre-populate the input
 
 });
-
 
