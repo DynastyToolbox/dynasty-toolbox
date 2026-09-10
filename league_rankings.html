@@ -235,6 +235,7 @@
     }
   </style>
   <script src="/nfl_rankings_data.js"></script>
+  <script src="/site_sheets.js"></script>
 </head>
 <body>
   <header>
@@ -370,9 +371,9 @@
     }
 
     const projectionUrls = {
-      proj1: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=936576734&single=true&output=csv",
-      proj2: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=2003106464&single=true&output=csv",
-      proj3: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQPMs1DdGgohxRyuKn95x0xIXNOmMLhFFlAf7Bh4yym02mISdp1sp_XrtmAVJwoxcOsSyls_4as-Yi8/pub?gid=991171708&single=true&output=csv"
+      proj1: "league_rankings_1",
+      proj2: "league_rankings_2",
+      proj3: "league_rankings_3"
     };
     let nflRankings = {};
 
@@ -618,14 +619,15 @@
 
     async function loadProjectionRankings(url) {
       try {
-        const data = parseCSV(await (await fetch(url)).text());
+        const data = parseCSV(await DynastySheets.csv(url));
         const lookup = {};
         data.forEach(r=>{
           lookup[ normalizeName(r["Player"]) ] = parseFloat(r["Score"])||0;
         });
         return lookup;
-      } catch {
-        return {};
+      } catch (error) {
+        DynastySheets.showError(error);
+        throw error;
       }
     }
     async function computeFutureProjections(lid, teamScores) {
