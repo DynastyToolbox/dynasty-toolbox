@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
 <title>Best Available | Dynasty Toolbox</title>
 <link rel="stylesheet" href="style.css">
@@ -145,7 +146,7 @@ header h1 {
   <script src="/nfl_rankings_data.js"></script>
 </head>
 
-<body>
+<body class="page-available">
 
 <header>
   <div class="top-bar">
@@ -169,22 +170,15 @@ header h1 {
 
  <!-- Password Gate -->
   <div id="gate" class="gate">
-    <h2>Restricted Tool</h2>
-    <p>Enter the admin password to view this page.</p>
-    <input type="password" id="adminPassword" placeholder="Password" />
+    <h2>In Development</h2>
+    <p>This tool is in progress. Enter the access password to preview it.</p>
+    <input type="password" id="adminPassword" placeholder="Password" aria-label="Access password" />
     <button id="unlockBtn">Unlock</button>
-    <p id="gateError" class="gate-error"></p>
+    <p id="gateError" class="gate-error" role="alert"></p>
   </div>
 <div id="protected" style="display:none;">
 <div class="container">
 
-      <!-- Internal dev nav (only visible once unlocked) -->
-  <div class="dev-nav">
-    <span>Dev Tools:</span>
-    <a href="median_rankings.html">Median Rankings</a>
-    <a href="best_available.html">Best Available</a>
-    <!-- add more as needed -->
-  </div>
 
 
   <!-- Team Analyzer–style note -->
@@ -233,6 +227,8 @@ header h1 {
     </div>
 
     <!-- Table -->
+    <p class="table-scroll-hint">Swipe or scroll sideways to see all columns.</p>
+    <div class="table-responsive" tabindex="0" role="region" aria-label="Best available players">
     <table>
         <thead>
             <tr>
@@ -245,12 +241,9 @@ header h1 {
         </thead>
         <tbody id="waiverTable"><tr><td colspan="5">Load a league above.</td></tr></tbody>
     </table>
+    </div>
 </div>
 
-    <table>
-      ...
-    </table>
-</div>
 </div>
 
 <script>

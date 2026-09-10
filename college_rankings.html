@@ -118,16 +118,17 @@
                 <label><input type="checkbox" value="RB" checked> RB</label>
                 <label><input type="checkbox" value="WR" checked> WR</label>
                 <label><input type="checkbox" value="TE" checked> TE</label>
-                <input type="text" id="searchBar" placeholder="Search by teams">
+                <input type="text" id="searchBar" placeholder="Search player or college" aria-label="Search player or college">
             </div>
-            <div class="devy-responsive">
+            <p class="table-scroll-hint">Swipe or scroll sideways to see all columns.</p>
+            <div class="devy-responsive" tabindex="0" role="region" aria-label="Devy rankings">
             <table id="rankingsTable">
                 <thead>
                     <tr>
                         <th onclick="sortTable(0, true)">Toolbox</th>
                         <th onclick="sortTable(1, true)">Consensus Rank</th>
                         <th onclick="sortTable(2, false)">Player</th>
-                        <th onclick="sortTable(3, true)">Position</th>
+                        <th onclick="sortTable(3, false)">Position</th>
                         <th onclick="sortTable(4, false)">College</th>
                         <th onclick="sortTable(5, true)">Height</th>
                         <th onclick="sortTable(6, true)">Weight</th>
@@ -165,14 +166,14 @@
         function populateTable(csvData) {
             const rows = csvData.split('\n').slice(1); // Skip header row
             const filters = Array.from(positionFilters).filter(cb => cb.checked).map(cb => cb.value);
-            const searchQuery = searchBar.value.toLowerCase();
+            const searchQuery = searchBar.value.trim().toLowerCase();
 
             rankingsTableBody.innerHTML = "";
             rows.forEach(row => {
                 const cols = row.split(',');
                 const position = cols[3]?.trim();
-                const player = cols[4]?.trim().toLowerCase();
-                const school = cols[5]?.trim().toLowerCase();
+                const player = (cols[2] || "").trim().toLowerCase();
+                const school = (cols[4] || "").trim().toLowerCase();
 
                 if (!filters.includes(position)) return; // Skip rows not matching filter
                 if (searchQuery && !player.includes(searchQuery) && !school.includes(searchQuery)) return; // Skip rows not matching search
