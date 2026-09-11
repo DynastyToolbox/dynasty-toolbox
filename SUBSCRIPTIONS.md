@@ -1,9 +1,12 @@
 # Subscription and access rollout
 
 Started September 11, 2026. Owner location: Bozeman, Montana, USA.
-Status: first server access-policy implementation and database migration prepared locally.
+Status: server access policy, owner membership dashboard and database migrations prepared locally.
 No billing, premium page restrictions, administrator grants, or new free-use limits are live.
 The existing password gates remain until the protected replacements are verified.
+Owner launch condition confirmed September 11, 2026: do not publish membership screens, access
+restrictions, or billing until the owner has completed business setup and separately approves launch.
+Development and testing may continue privately in the meantime.
 
 ## Agreed features and proposed defaults
 
@@ -17,11 +20,11 @@ unlock the same bundle. Keep billing state separate from access: a comp is not a
 | League trade ranks | Unavailable | Before/after Contending and Rebuilding rank within the entire league |
 | Best Available | Unavailable after paid launch | Full page access |
 | Median Rankings | Unavailable after paid launch | Full page including saved leagues and lineup builder |
-| Devy Mock Simulator | Proposed two rounds; owner has not finalized one versus two | All seven rounds |
+| Devy Mock Simulator | First two rounds (confirmed by owner) | All seven rounds |
 
 Other free pages retain their current access. Do not automatically gate the existing strength-of-schedule
 page, Team Analyzer, or League Rankings; additional changes need their own agreed feature split.
-Monthly/annual price, final free draft-round limit, refunds, trial policy, and paid-launch date remain open.
+Monthly/annual price, refunds, trial policy, and paid-launch date remain open. The free simulator limit is confirmed at two rounds.
 
 ## League-aware trades
 
@@ -61,7 +64,37 @@ step-up MFA and audit records. Never automatically make the first signup or a us
 
 The supplied migration allows authenticated users to read only their own access columns. They cannot write
 subscriptions or grants, see admin notes, or query other accounts. Service credentials belong only in server
-environment variables. The migration has not yet been applied or exercised against PostgreSQL.
+environment variables. Both migrations have passed isolated local PostgreSQL tests using PGlite.
+They have not been applied to a hosted Supabase project. Owner MFA enrollment/verification has
+unit coverage but still requires an end-to-end check on an isolated development Supabase project.
+
+## Saved development checkpoint
+
+The private `members.html` dashboard supports account search, paid/complimentary/free filters,
+temporary or permanent complimentary grants, revocation and per-account audit history. Every
+privileged database function rechecks the server-assigned owner UUID and an `aal2` session.
+The browser cannot appoint administrators or change paid subscription records. Duplicate requests
+are idempotent; grant/revoke and their audit record commit together. Removing a comp leaves paid access intact.
+
+`MEMBERSHIP_ADMIN_ENABLED=true` enables the administrator API; it is disabled by default.
+`SUBSCRIPTION_ACCESS_ENABLED=true` separately enables the account access lookup. Neither flag
+has been enabled in production. There is no shared navigation link to the private dashboard.
+
+Before hosted testing, use a separate development Supabase project, apply both migrations in
+order and verify the owner's account UUID through trusted project administration. A trusted
+database operator must insert that exact UUID into `public.membership_admins`; never use a
+browser-editable role, the first signup, or an email-only automatic rule. Use the owner's
+website authenticator for MFA; the Supabase dashboard login is a separate identity. Test
+enrollment, code verification, refresh, sign-out, role revocation and expired sessions there.
+
+Local automated checks: run Node's test runner against `tests/accounts.test.cjs`,
+`tests/saved-leagues.test.cjs`, `tests/subscription-access.test.cjs`,
+`tests/membership-admin.test.cjs` and `tests/membership-db.test.cjs`.
+For the database test, set `PGLITE_TEST_MODULE` to an isolated installed copy of
+`@electric-sql/pglite` (tested with 0.5.8). Without that variable the database test explicitly
+skips; require zero skipped tests for this checkpoint. All 39 checks passed locally.
+The database harness uses fictional accounts and simulated verified claims, without hosted
+credentials; it does not replace hosted Supabase/PostgREST/MFA integration testing.
 
 ## Feature enforcement and payment integration still to build
 

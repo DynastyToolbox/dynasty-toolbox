@@ -1,0 +1,24 @@
+.page-members .account-shell { max-width:1100px; }
+.page-members select,.page-members textarea { font:inherit; font-size:16px; box-sizing:border-box; width:100%; min-height:44px; border:1px solid #799c8e; border-radius:8px; padding:10px; background:white; color:#173c30; }
+.page-members button { background:#edf3f0; color:#004d40; border:1px solid #799c8e; }
+.page-members #member-status:not(:empty) { padding:12px; background:#edf3f0; border-left:3px solid #00796b; }
+.page-members #member-status[data-error="true"],.page-members #change-status { color:#8e291e; }
+.member-search { display:grid; grid-template-columns:minmax(0,1fr) minmax(180px,240px) auto; gap:14px; align-items:end; margin:22px 0; }
+.member-search button { margin-bottom:0; }
+.member-card { border:1px solid #cbd8d3; border-radius:12px; padding:20px; margin:16px 0; background:#f6f9f7; overflow-wrap:anywhere; }
+.member-card h3 { color:#004d40; margin:0 0 8px; }
+.member-card p { margin:8px 0; }
+.member-badges { display:flex; flex-wrap:wrap; gap:8px; }
+.member-badge { padding:4px 10px; border-radius:20px; background:#dceee6; font-size:13px; color:#004d40; }
+.member-actions,.member-pagination { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:14px; }
+.member-pagination { justify-content:space-between; }
+.member-grant { padding:10px 0; border-top:1px solid #dbe5df; }
+.member-grant button { margin-left:10px; }
+.page-members dialog { box-sizing:border-box; width:min(560px,calc(100vw - 24px)); max-height:calc(100dvh - 40px); overflow:auto; border:2px solid #00796b; border-radius:14px; padding:24px; font:inherit; color:#173c30; }
+.page-members dialog::backdrop { background:#0009; }
+.page-members dialog h2 { font-size:1.5rem; }
+.page-members #change-account,.page-members #history-account { overflow-wrap:anywhere; }
+.page-members #enrollment-qr { max-width:240px; width:100%; background:white; }
+.page-members #owner-verification { max-width:440px; }
+.page-members #history-events article { border-top:1px solid #cbd8d3; padding:12px 0; overflow-wrap:anywhere; }
+@media(max-width:650px) { .member-search { grid-template-columns:minmax(0,1fr); gap:8px; } .member-card { padding:14px; } .page-members dialog { padding:18px; } .member-grant button { display:block; margin:8px 0 0; } }
