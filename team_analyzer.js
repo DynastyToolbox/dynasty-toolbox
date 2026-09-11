@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Load array of { id, name }  (handles old string-only format too)
   function getRecentLeagues() {
+    if (!window.DynastyAccount?.allowsHistory()) return [];
     try {
       const raw = localStorage.getItem(STORAGE_KEY_RECENTS);
       if (!raw) return [];
@@ -47,6 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Save one league (newest first, max 10)
   function saveRecentLeague(leagueId, leagueName) {
+    if (!window.DynastyAccount?.allowsHistory()) return;
     let list = getRecentLeagues().filter(l => l.id !== leagueId);
     list.unshift({ id: leagueId, name: leagueName });
     if (list.length > 10) list = list.slice(0, 10);
@@ -233,6 +235,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     teamDropdown.style.display = "inline-block";
+    await window.DynastyLeagues?.ready;
+    const savedTeam = window.DynastyLeagues?.teamFor(lid);
+    if (savedTeam && rosterMap[savedTeam]) { teamDropdown.value = String(savedTeam); await renderAnalysis(); }
+
 
 
     // Save & render recent leagues (using Sleeper league name if available)
@@ -573,6 +579,7 @@ tradeIdeasDiv.innerHTML = tHTML;
 
    // ─── On initial load: show recent leagues (but don’t auto-fill ID) ───
   renderRecentLeagues();
+  window.addEventListener("dynasty-account-change", renderRecentLeagues);
   // we still keep STORAGE_KEY_LAST for future use, but we don't pre-populate the input
 
 });

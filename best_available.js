@@ -68,7 +68,7 @@ async function loadLeague(refresh = true) {
     availableLeague = bundle;
     waiverPlayers = freeAgents.sort((a,b) => b.score - a.score);
     renderTable();
-    try { localStorage.setItem("best_available_league", leagueId); } catch (_) {}
+    try { if (window.DynastyAccount?.allowsHistory()) localStorage.setItem("best_available_league", leagueId); } catch (_) {}
     storeLeague(leagueId, bundle.meta.name);
   } catch (error) {
     availableLeague = null;
@@ -84,7 +84,7 @@ function handleRankingChange() {
   let leagueId = input ? input.value.trim() : "";
 
   // If input is blank, fall back to last used league
-  if (!leagueId) {
+  if (!leagueId && window.DynastyAccount?.allowsHistory()) {
     leagueId = localStorage.getItem("best_available_league") || "";
     if (input && leagueId) input.value = leagueId;
   }
@@ -104,12 +104,14 @@ function handleRankingChange() {
 
 /* Recent League Storage (shared with other pages) */
 function getAvailableRecents() {
+  if (!window.DynastyAccount?.allowsHistory()) return [];
   try {
     const list = JSON.parse(localStorage.getItem("recent_leagues") || "[]");
     return Array.isArray(list) ? list.map(item => typeof item === "object" ? item : { id: String(item), name: String(item) }).filter(item => item?.id).slice(0, 5) : [];
   } catch (_) { return []; }
 }
 function storeLeague(id, name) {
+  if (!window.DynastyAccount?.allowsHistory()) return;
   const list = [{ id, name: name || id }, ...getAvailableRecents().filter(item => item.id !== id)].slice(0, 5);
   try { localStorage.setItem("recent_leagues", JSON.stringify(list)); } catch (_) {}
   renderRecent();
@@ -130,6 +132,7 @@ function renderRecent() {
   });
 }
 renderRecent();
+window.addEventListener("dynasty-account-change", renderRecent);
 
 function normalizeName(name) {
   if (!name) return "";

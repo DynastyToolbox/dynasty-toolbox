@@ -1,0 +1,44 @@
+.page-account [hidden] { display: none !important; }
+.page-account .account-shell { box-sizing: border-box; max-width: 680px; margin: 36px auto; padding: 0 18px; min-height: 52vh; }
+.page-account .account-card { background: #fff; padding: 32px; border: 1px solid #cbd8d3; border-top: 5px solid #004d40; border-radius: 18px; box-shadow: 0 8px 26px #002e2412; text-align: left; }
+.page-account .account-eyebrow { color: #00695c; letter-spacing: .12em; font: 700 .75rem Arial,sans-serif; margin: 0 0 8px; }
+.page-account h2 { color: #004d40; font-size: 2rem; margin: 0 0 8px; }
+.page-account .account-choices { display: flex; gap: 8px; background: #edf3f0; padding: 6px; border-radius: 10px; box-shadow: none; z-index: auto; margin: 22px 0; font-size: 1rem; }
+.page-account button { font: inherit; cursor: pointer; min-height: 44px; border-radius: 8px; padding: 10px 14px; }
+.page-account .account-choices button { flex: 1; background: transparent; border: 0; color: #004d40; }
+.page-account .account-choices button[aria-current="page"] { background: #004d40; color: white; }
+.page-account label { display: block; margin: 16px 0 6px; }
+.page-account input:not([type="checkbox"]) { box-sizing: border-box; display: block; width: 100%; max-width: 100%; padding: 12px; min-height: 48px; border: 1px solid #799c8e; border-radius: 8px; font: 16px Arial,sans-serif; background: #fff; color: #222; }
+.page-account .account-check { display: flex; align-items: center; gap: 8px; font-size: .9rem; margin-top: 10px; }
+.page-account .account-check input { width: 18px; height: 18px; accent-color: #004d40; }
+.page-account .account-hint { font-size: .85rem; color: #52665d; margin: 8px 0; }
+.page-account .account-primary { width: 100%; margin-top: 18px; background: #004d40; color: white; border: 1px solid #004d40; }
+.page-account .account-secondary { width: 100%; margin-top: 10px; background: white; color: #004d40; border: 1px solid #799c8e; }
+.page-account button:disabled { opacity: .6; cursor: wait; }
+.page-account .account-links { display: flex; flex-wrap: wrap; justify-content: space-between; margin-top: 14px; gap: 6px; }
+.page-account .account-links button { background: transparent; color: #00695c; border: 0; padding: 8px 0; font-size: .9rem; text-decoration: underline; }
+.page-account #account-status:not(:empty) { padding: 12px; background: #edf3f0; border-left: 3px solid #00695c; border-radius: 4px; overflow-wrap: anywhere; }
+.page-account #account-status[data-error="true"] { background: #fff0ed; border-color: #ac3022; color: #77251c; }
+.page-account .account-identity { overflow-wrap: anywhere; font-weight: bold; }
+.page-account .account-section { border-top: 1px solid #dbe5df; margin-top: 24px; padding-top: 22px; }
+.page-account .account-section h3 { margin: 0 0 12px; color: #004d40; font-size: 1.2rem; }
+.page-account .saved-league-card, .page-account .league-editor { margin-top: 16px; padding: 16px; border: 1px solid #cbd8d3; border-radius: 10px; overflow-wrap: anywhere; }
+.page-account .saved-league-card { background: #f3f7f4; }
+.page-account .saved-league-card h4, .page-account .league-editor h4 { margin: 0 0 8px; color: #004d40; }
+.page-account .saved-league-card p { margin: 8px 0; }
+.page-account .saved-league-links { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+.page-account .saved-league-links a { color: #00695c; font-size: .85rem; min-height: 36px; display: inline-flex; align-items: center; }
+.page-account #my-roster { box-sizing: border-box; width: 100%; min-height: 44px; font: inherit; font-size: 16px; padding: 8px; border: 1px solid #799c8e; border-radius: 6px; }
+.page-account #leagues-status { overflow-wrap: anywhere; }
+.page-account #leagues-status[data-error="true"] { color: #8e291e; }
+.page-account #my-leagues { scroll-margin-top: 16px; }
+.page-account .account-identity { margin: 4px 0 8px; }
+.page-account .account-verified { display: inline-block; padding: 3px 10px; margin: 0; border-radius: 20px; color: #004d40; background: #e0f2e9; font-size: .85rem; }
+.page-account .account-signout-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.page-account .account-signout-actions button { flex: 1 1 200px; margin-top: 0; }
+.page-account .account-tool-links { display: grid; gap: 10px; margin: 20px 0; }
+.page-account .account-tool-links a { color: #004d40; padding: 12px; border: 1px solid #cbd8d3; border-radius: 8px; text-decoration: none; }
+.page-account .account-tool-links a { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.page-account .account-tool-links a:hover { background: #edf3f0; }
+.page-account :is(button,input,a):focus-visible { outline: 3px solid #008573; outline-offset: 3px; }
+@media(max-width: 520px) { .page-account .account-shell { margin: 20px auto; padding: 0 12px; } .page-account .account-card { padding: 22px 18px; } .page-account h2 { font-size: 1.7rem; } .page-account header h1 { font-size: 2rem; } }
