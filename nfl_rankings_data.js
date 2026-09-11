@@ -17,13 +17,15 @@ window.DynastyRankings = (() => {
             throw new Error("The published rankings file is incomplete or unsupported.");
           }
           document.querySelectorAll("[data-rankings-status]").forEach(el => {
-            el.textContent = `Rankings published ${new Date(data.publishedAt).toLocaleDateString()}`;
+            el.hidden = true;
+            el.textContent = "";
           });
           return data;
         })
         .catch(error => {
           pending = undefined; // A later user action can retry a failed request.
           document.querySelectorAll("[data-rankings-status]").forEach(el => {
+            el.hidden = false;
             el.textContent = "Rankings could not load. Please refresh to try again.";
           });
           throw error;
