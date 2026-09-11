@@ -42,6 +42,7 @@
     gtag('config', 'G-1C5TVEGFXT');
   </script>
   <script src="/nfl_rankings_data.js"></script>
+  <script src="/scoring_formats.js"></script>
   <script src="/account-session.js" defer></script>
 </head>
 
@@ -163,20 +164,9 @@
         return;
       }
       if (request !== renderRequest) return;
-      // apply format multipliers
-      const pprMult = nonPpr.checked  ? 0.95
-                    : fullPpr.checked ? 1.05
-                    : 1.0;
-      const teMult  = tePremium.checked ? 1.05 : 1.0;
-      const sfMult  = superflex.checked ? 1.0 : 0.65;
-
-      let scored = raw.map(r => {
-        let s = parseFloat(r.Score) || 0;
-        if (["WR","TE"].includes(r.Position)) s *= pprMult;
-        if (r.Position === "TE")            s *= teMult;
-        if (r.Position === "QB")            s *= sfMult;
-        return { ...r, computedScore: s };
-      }).sort((a,b) => b.computedScore - a.computedScore);
+      const format = DynastyScoring.read();
+      let scored = raw.map(r => ({...r, computedScore: DynastyScoring.score(r.Score, r.Position, format)}))
+        .sort((a,b) => b.computedScore - a.computedScore);
 
       // 2) position filters
       const positions = Array.from(
@@ -245,25 +235,7 @@
       });
     }
 
-    // single‐select PPR toggles → re‑populate
-    [nonPpr, halfPpr, fullPpr].forEach(cb => {
-      cb.addEventListener("change", () => {
-        if (cb.checked) {
-          [nonPpr, halfPpr, fullPpr]
-            .filter(x => x!==cb)
-            .forEach(x => x.checked = false);
-        }
-        if (![nonPpr, halfPpr, fullPpr].some(x=>x.checked)) {
-          halfPpr.checked = true;
-        }
-        populateTable();
-      });
-    });
-
-    // other toggles → re‑populate
-    [superflex, tePremium].forEach(cb =>
-      cb.addEventListener("change", populateTable)
-    );
+    DynastyScoring.bind(populateTable);
     document.querySelectorAll('#filters input[type="checkbox"]')
       .forEach(cb => cb.addEventListener("change", populateTable));
     teamType.addEventListener("change", populateTable);

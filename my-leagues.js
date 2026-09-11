@@ -18,7 +18,7 @@
       const card = el('article', '', 'saved-league-card');
       card.append(el('h4', league.name), el('p', `Sleeper · ${league.season} · ${league.league_id}`, 'account-hint'), el('p', league.team_name ? 'My team: ' + league.team_name : 'No default team selected'));
       const links = el('div', '', 'saved-league-links');
-      for (const [path, name] of [['team_analyzer.html','Team Analyzer'], ['league_rankings.html','League Rankings'], ['best_available.html','Best Available']]) {
+      for (const [path, name] of [['team_analyzer.html','Team Analyzer'], ['league_rankings.html','League Rankings'], ['best_available.html','Best Available'], ['median_rankings.html','Median Rankings']]) {
         const link = el('a', name); link.href = path + '?league=' + encodeURIComponent(league.league_id); links.append(link);
       }
       const edit = el('button', 'Edit / update league', 'account-secondary'); edit.type = 'button'; edit.addEventListener('click', () => {
