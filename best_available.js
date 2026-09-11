@@ -7,85 +7,76 @@ function normalizeId(v){
     return String(v).trim();
 }
 
-async function loadLeague() {
-    const leagueId = document.getElementById("leagueInput").value.trim();
-    if (!leagueId) return;
+let availableLeague = null;
+let availableLoading = false;
+let playerIndex = null;
+let indexedPlayers = null;
 
-    localStorage.setItem("best_available_league", leagueId);
-    storeLeague(leagueId);
+function buildPlayerIndex(players) {
+  if (indexedPlayers === players) return playerIndex;
+  const index = { exact: new Map(), base: new Map() };
+  for (const [id, player] of Object.entries(players)) {
+    if (!player.full_name) continue;
+    const item = { ...player, player_id: player.player_id || id };
+    const name = normalizeName(player.full_name);
+    const base = name.replace(/\s+(iii|ii|iv|jr|sr)$/, "").trim();
+    for (const [map, key] of [[index.exact, name], [index.base, base]]) {
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(item);
+    }
+  }
+  indexedPlayers = players;
+  playerIndex = index;
+  return index;
+}
 
-    document.getElementById("waiverTable").innerHTML =
-        "<tr><td colspan='5'>Loading...</td></tr>";
-
-    const rankingType = document.getElementById("rankingType").value;
-    const rankingMap = await fetchRankingMap(rankingType);
-    const sleeperPlayers = await fetch("https://api.sleeper.app/v1/players/nfl").then(r=>r.json());
-    const rosters = await fetch(`https://api.sleeper.app/v1/league/${leagueId}/rosters`).then(r=>r.json());
-
- const owned = new Set();
-
-rosters.forEach(r => {
-    ["players","reserve","taxi","starters"].forEach(key=>{
-        if (Array.isArray(r[key])) {
-            r[key].forEach(id => owned.add(normalizeId(id)));
-        }
+async function loadLeague(refresh = true) {
+  const leagueId = document.getElementById("leagueInput").value.trim();
+  if (!leagueId || availableLoading) return;
+  availableLoading = true;
+  const button = document.getElementById("loadAvailableBtn");
+  const select = document.getElementById("rankingType");
+  button.disabled = select.disabled = true;
+  waiverPlayers = [];
+  document.getElementById("waiverTable").innerHTML = "<tr><td colspan='5'>Loading...</td></tr>";
+  try {
+    const [rankingMap, sleeperPlayers, bundle] = await Promise.all([
+      fetchRankingMap(select.value),
+      DynastySleeper.players(),
+      refresh || availableLeague?.id !== leagueId ? DynastySleeper.league(leagueId, { picks: false }) : availableLeague
+    ]);
+    const owned = new Set();
+    bundle.rosters.forEach(r => {
+      ["players", "reserve", "taxi", "starters"].forEach(key => {
+        if (Array.isArray(r[key])) r[key].forEach(id => owned.add(normalizeId(id)));
+      });
     });
-
-    if (r.player_map) {  // some leagues store players here
-        Object.values(r.player_map).forEach(id => owned.add(normalizeId(id)));
-    }
-});
-
-
-    console.log("Owned contains Walker?",
-    [...owned].some(id => id == "11564" || id == 11564),
-    "Owned IDs example:", [...owned].slice(0,50)
-);
-
-
+    const index = buildPlayerIndex(sleeperPlayers);
     const freeAgents = [];
-
-    for (const key in rankingMap) {
-        const ranked = rankingMap[key];
-        const nameKey = normalizeName(ranked.name);
-
-        const sleeper = Object.values(sleeperPlayers).find(sp => {
-    const s = normalizeName(sp.full_name);
-
-    // Exact match first = safest
-    if (s === nameKey) return true;
-
-    // Allow match without suffix (III Jr II Sr) but only at end of name
-    const base = s.replace(/\b(iii|ii|iv|jr|sr)\b/g,"").trim();
-    const baseKey = nameKey.replace(/\b(iii|ii|iv|jr|sr)\b/g,"").trim();
-
-    return base === baseKey;
-});
-
-
-
-       if (!sleeper) continue;
-
-const sid = normalizeId(sleeper.player_id);
-if (owned.has(sid)) continue; // blocks Walker, Thomas, etc.
-    // If rankings file has a position, require it to match Sleeper's position
-    if (ranked.pos && sleeper.position && ranked.pos !== sleeper.position) {
-        continue;
+    for (const ranked of Object.values(rankingMap)) {
+      const key = normalizeName(ranked.name);
+      const matchPosition = list => (list || []).filter(p => !ranked.pos || p.position === ranked.pos);
+      let candidates = matchPosition(index.exact.get(key));
+      if (!candidates.length) candidates = matchPosition(index.base.get(key.replace(/\s+(iii|ii|iv|jr|sr)$/, "").trim()));
+      // Ambiguous names must not mark a rostered player as available.
+      if (candidates.length !== 1) continue;
+      const sleeper = candidates[0];
+      if (owned.has(normalizeId(sleeper.player_id))) continue;
+      freeAgents.push({ id: sleeper.player_id, name: ranked.name, pos: sleeper.position,
+        team: sleeper.team || ranked.team || "-", age: sleeper.age || ranked.age || "?", score: Number(ranked.score) });
     }
-
-
-        freeAgents.push({
-            id: sleeper.player_id,
-            name: ranked.name,
-            pos: sleeper.position,
-            team: sleeper.team || ranked.team || "-",
-            age: sleeper.age || ranked.age || "?",
-            score: Number(ranked.score)
-        });
-    }
-
-    waiverPlayers = freeAgents.sort((a,b)=> b.score - a.score);
+    availableLeague = bundle;
+    waiverPlayers = freeAgents.sort((a,b) => b.score - a.score);
     renderTable();
+    try { localStorage.setItem("best_available_league", leagueId); } catch (_) {}
+    storeLeague(leagueId, bundle.meta.name);
+  } catch (error) {
+    availableLeague = null;
+    document.getElementById("waiverTable").innerHTML = `<tr><td colspan="5">${DynastySleeper.escapeHTML(error.message || "Unable to load league. Please try again.")}</td></tr>`;
+  } finally {
+    availableLoading = false;
+    button.disabled = select.disabled = false;
+  }
 }
 
 function handleRankingChange() {
@@ -105,57 +96,40 @@ function handleRankingChange() {
   }
 
   // Re-run full load using the new rankingType
-  loadLeague();
+  loadLeague(false);
 }
 
 
 
 
 /* Recent League Storage (shared with other pages) */
-function storeLeague(id){
-  const strId = String(id);
-  let list = JSON.parse(localStorage.getItem("recent_leagues") || "[]");
-
-  // Keep unique, newest first
-  list = list.filter(x => String(x) !== strId);
-  list.unshift(strId);
-  if (list.length > 5) list = list.slice(0, 5);
-
-  localStorage.setItem("recent_leagues", JSON.stringify(list));
+function getAvailableRecents() {
+  try {
+    const list = JSON.parse(localStorage.getItem("recent_leagues") || "[]");
+    return Array.isArray(list) ? list.map(item => typeof item === "object" ? item : { id: String(item), name: String(item) }).filter(item => item?.id).slice(0, 5) : [];
+  } catch (_) { return []; }
+}
+function storeLeague(id, name) {
+  const list = [{ id, name: name || id }, ...getAvailableRecents().filter(item => item.id !== id)].slice(0, 5);
+  try { localStorage.setItem("recent_leagues", JSON.stringify(list)); } catch (_) {}
   renderRecent();
 }
-
-async function renderRecent(){
+function renderRecent() {
   const box = document.getElementById("recentLeagues");
   if (!box) return;
-
   box.innerHTML = "";
-
-  const list = JSON.parse(localStorage.getItem("recent_leagues") || "[]").slice(0, 5);
-
-  for (const id of list) {
-    try {
-      const info = await fetch(`https://api.sleeper.app/v1/league/${id}`).then(r => r.json());
-      const label = info.name || id;
-
-      const b = document.createElement("button");
-      b.className = "recent-league-btn";
-      b.innerText = label;
-      b.onclick = () => {
-        const input = document.getElementById("leagueInput");
-        if (input) input.value = id;
-        loadLeague();
-      };
-      box.appendChild(b);
-    } catch (e) {
-      console.error("Failed to load league name for", id, e);
-    }
-  }
+  getAvailableRecents().forEach(item => {
+    const button = document.createElement("button");
+    button.className = "recent-league-btn";
+    button.textContent = item.name || item.id;
+    button.onclick = () => {
+      document.getElementById("leagueInput").value = item.id;
+      loadLeague();
+    };
+    box.appendChild(button);
+  });
 }
-
-/* initial render */
 renderRecent();
-
 
 function normalizeName(name) {
   if (!name) return "";
