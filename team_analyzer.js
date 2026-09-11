@@ -51,8 +51,10 @@ document.addEventListener("DOMContentLoaded", () => {
     list.unshift({ id: leagueId, name: leagueName });
     if (list.length > 10) list = list.slice(0, 10);
 
-    localStorage.setItem(STORAGE_KEY_RECENTS, JSON.stringify(list));
-    localStorage.setItem(STORAGE_KEY_LAST, leagueId);
+    try {
+      localStorage.setItem(STORAGE_KEY_RECENTS, JSON.stringify(list));
+      localStorage.setItem(STORAGE_KEY_LAST, leagueId);
+    } catch (_) { /* League loading works when browser storage is unavailable. */ }
   }
 
   // Render buttons under the input
@@ -91,6 +93,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let allPlayers = {}, users = [], rosters = [];
   let rankings   = { competing: [], tanking: [], overall: [] };
   let lineupConfig = [];
+  let analysisVersion = 0;
   const rosterMap = {}, userMap = {};
 
   // ─── Utils ────────────────────────────────────
@@ -101,8 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   async function fetchPlayers() {
-    if (Object.keys(allPlayers).length) return allPlayers;
-    allPlayers = await fetch("https://api.sleeper.app/v1/players/nfl").then(r=>r.json());
+    allPlayers = await DynastySleeper.players();
     return allPlayers;
   }
 
@@ -127,8 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (sc>0) items.push({pos:p.position,score:sc});
     });
     roster.picks.forEach(pk => {
-      const label = `${pk.season} Round ${pk.round}`;
-      const sc = scoreMap[normalize(label)]||0;
+      const sc = DynastySleeper.pickScore(pk, scoreMap) || 0;
       if (sc>0) items.push({pos:"PICK",score:sc});
     });
     items.sort((a,b)=>b.score-a.score);
@@ -202,46 +203,22 @@ document.addEventListener("DOMContentLoaded", () => {
     // Reset this analysis; the shared published snapshot stays cached for this page.
    rankings = { competing: [], tanking: [], overall: [] };
 
+    analysisVersion++;
     loadBtn.disabled=true; loadBtn.textContent="Loading...";
 
-    const [uData,rData,meta] = await Promise.all([
-      fetch(`https://api.sleeper.app/v1/league/${lid}/users`).then(r=>r.json()),
-      fetch(`https://api.sleeper.app/v1/league/${lid}/rosters`).then(r=>r.json()),
-      fetch(`https://api.sleeper.app/v1/league/${lid}`).then(r=>r.json())
-    ]);
+    [teamDropdown, resultsDiv, sideDepthPanel].forEach(el => el.style.display = "none");
+    depthChartType.disabled = true;
+    try {
+    const [bundle] = await Promise.all([DynastySleeper.league(lid), fetchPlayers()]);
+    const { meta } = bundle;
+    const nextRosters = DynastySleeper.withPicks(bundle);
     lineupConfig = (meta.roster_positions||meta.settings?.roster_positions||[])
       .filter(slot=>!/^B[EN]/.test(slot));
-
-    users=uData; rosters=rData;
-    users.forEach(u=>userMap[u.user_id]=u.display_name);
-    rosters.forEach(r=>{ r.picks=[]; rosterMap[r.roster_id]=r; });
-
-    const drafts = await fetch(`https://api.sleeper.app/v1/league/${lid}/drafts`)
-                         .then(r=>r.json()).catch(()=>[]);
-    const seasons = drafts.filter(d=>d.status==="complete").map(d=>+d.season);
-    const last = seasons.length?Math.max(...seasons):0;
-
-    const rounds = meta.settings.draft_rounds||0;
-    [last+1,last+2,last+3].forEach(y=>{
-      rosters.forEach(r=>{
-        for(let rd=1;rd<=rounds;rd++){
-          r.picks.push({
-            season:String(y), round:rd,
-            roster_id:r.roster_id,
-            previous_owner_id:r.roster_id,
-            owner_id:r.roster_id
-          });
-        }
-      });
-    });
-
-    const traded = await fetch(`https://api.sleeper.app/v1/league/${lid}/traded_picks`)
-                         .then(r=>r.json()).catch(()=>[]);
-    traded.filter(p=>+p.season>last).forEach(p=>{
-      const from = rosterMap[p.previous_owner_id];
-      if (from) from.picks = from.picks.filter(x=>!(x.season===p.season&&x.round===p.round));
-      rosterMap[p.owner_id].picks.push(p);
-    });
+    users = bundle.users; rosters = nextRosters;
+    Object.keys(userMap).forEach(key => delete userMap[key]);
+    Object.keys(rosterMap).forEach(key => delete rosterMap[key]);
+    users.forEach(u => userMap[u.user_id] = u.display_name);
+    rosters.forEach(r => rosterMap[r.roster_id] = r);
 
         teamDropdown.innerHTML = "";
 
@@ -256,17 +233,24 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     teamDropdown.style.display = "inline-block";
-    loadBtn.disabled = false;
-    loadBtn.textContent = "Load Teams";
+
 
     // Save & render recent leagues (using Sleeper league name if available)
     const leagueName = meta.name || `League ${lid}`;
     saveRecentLeague(lid, leagueName);
     renderRecentLeagues();
+    } catch (error) {
+      alert(error.message || "Unable to load this league. Please try again.");
+    } finally {
+      loadBtn.disabled = false;
+      loadBtn.textContent = "Load Teams";
+      depthChartType.disabled = false;
+    }
   });
 
   // ─── Main render ───────────────────────────────
   async function renderAnalysis(){
+    const version = ++analysisVersion;
     const rid = +teamDropdown.value;
     if(!rid) return;
     const roster = rosterMap[rid];
@@ -277,8 +261,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const [, competing, tanking, overall] = await Promise.all([
         fetchPlayers(), fetchRankings("competing"), fetchRankings("tanking"), fetchRankings("overall")
       ]);
+      if (version !== analysisVersion) return;
       rankings = { competing, tanking, overall };
     } catch (error) {
+      if (version !== analysisVersion) return;
+      alert(error.message || "Unable to load rankings. Please select the team again to retry.");
       resultsDiv.style.display = "none";
       sideDepthPanel.style.display = "none";
       console.error(error);
@@ -569,12 +556,12 @@ tradeIdeasDiv.innerHTML = tHTML;
     if(picks.length){
       html+=`<div class="position-group draft-picks"><h4>Draft Picks</h4><ul>`;
       picks.forEach(pk=>{
-        const pn=`${pk.season} ${ordinalSuffix(pk.round)} Round`;
-        const prev=rosterMap[pk.previous_owner_id], orig=prev?userMap[prev.owner_id]:"Unknown";
-        const sc=oMap[normalize(pn)]||0;
+        const pn = DynastySleeper.pickLabel(pk);
+        const orig = DynastySleeper.escapeHTML(DynastySleeper.originName(pk, rosters, users));
+        const sc = DynastySleeper.pickScore(pk, map);
         html+=`<li>${pn}
-                  <span class="pick-origin">(${orig})</span>
-                  <span class="pick-score">(${sc.toLocaleString()})</span>
+                  <span class="pick-origin">(Originally: ${orig})</span>
+                  <span class="pick-score">(${sc === null ? "Unranked" : sc.toLocaleString()})</span>
                </li>`;
       });
       html+=`</ul></div>`;

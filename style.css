@@ -1264,8 +1264,8 @@ footer p {
   box-sizing: border-box;
   max-width: 100%;
 }
-.page-median .table-responsive table { min-width: 680px; }
-.page-available .table-responsive table { min-width: 520px; }
+.page-median .table-responsive table { width: 100%; min-width: 680px; }
+.page-available .table-responsive table { width: 100%; min-width: 520px; }
 .page-trade .trade-box {
   box-sizing: border-box;
   flex: 0 1 444px;

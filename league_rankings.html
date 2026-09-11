@@ -235,6 +235,7 @@
     }
   </style>
   <script src="/nfl_rankings_data.js"></script>
+  <script src="/sleeper_data.js"></script>
   <script src="/site_sheets.js"></script>
 </head>
 <body class="page-league">
@@ -275,6 +276,8 @@
     Web Browser: Located in your league url (sleeper.com/leagues/1000000000000000001/)
     </p>
   </div>
+
+<div class="explanation-note"><details><summary>How picks and team scores work</summary><p>Team scores average the top 15 player and pick values. PICK ranks average the best 10 pick values. Dynasty picks cover the next three undrafted seasons at published round values; Unranked picks count as zero. Originally identifies the current manager of the original team. Future projections use player values plus the existing rank-based adjustments; future picks are not directly added to those projected values.</p></details></div>
 
   <div id="leagueInputContainer">
   <input type="text" id="leagueId" placeholder="Enter Sleeper League ID" />
@@ -387,88 +390,21 @@
     }
 
     let sleeperPlayers = {};
-    async function fetchSleeperPlayers() {
-      sleeperPlayers = await (await fetch("https://api.sleeper.app/v1/players/nfl")).json();
-    }
-    async function fetchLeagueRosters(lid) {
-      return await (await fetch(`https://api.sleeper.app/v1/league/${lid}/rosters`)).json();
-    }
-    async function fetchLeagueUsers(lid) {
-      return await (await fetch(`https://api.sleeper.app/v1/league/${lid}/users`)).json();
-    }
-    async function fetchLeagueMeta(lid) {
-      return await (await fetch(`https://api.sleeper.app/v1/league/${lid}`)).json();
-    }
-    async function fetchLeagueDrafts(lid) {
-      try { return await (await fetch(`https://api.sleeper.app/v1/league/${lid}/drafts`)).json(); }
-      catch { return []; }
-    }
-    async function fetchTradedPicks(lid) {
-      try { return await (await fetch(`https://api.sleeper.app/v1/league/${lid}/traded_picks`)).json(); }
-      catch { return []; }
-    }
+    let loadedLeague = null;
 
-    async function computeTeamScores(lid) {
-      await fetchSleeperPlayers();
+    async function computeTeamScores(bundle) {
       const rankingType = document.getElementById("rankingSelect").value;
       await loadNFLRankings(rankingType);
-
-      const [rosters, users, meta, drafts, traded] = await Promise.all([
-        fetchLeagueRosters(lid),
-        fetchLeagueUsers(lid),
-        fetchLeagueMeta(lid),
-        fetchLeagueDrafts(lid),
-        fetchTradedPicks(lid)
-      ]);
-
+      const { users } = bundle;
+      const rosters = DynastySleeper.withPicks(bundle);
       const userMap = {};
-      users.forEach(u=> userMap[u.user_id] = u.display_name);
-
-      const rosterMap = {};
-      rosters.forEach(r=> {
-        r.picks = [];
-        rosterMap[r.roster_id] = r;
-      });
-
-      const seasons = drafts.filter(d=>d.status==="complete").map(d=>+d.season);
-      const last = seasons.length ? Math.max(...seasons) : 0;
-      const rounds = meta.settings.draft_rounds||0;
-
-      [last+1, last+2, last+3].forEach(season=>{
-        rosters.forEach(r=>{
-          for(let rd=1; rd<=rounds; rd++){
-            r.picks.push({
-              season:String(season),
-              round: rd,
-              previous_owner_id: r.roster_id,
-              owner_id: r.roster_id
-            });
-          }
-        });
-      });
-
-      traded.filter(p=>+p.season>last).forEach(p=>{
-        const prev = rosterMap[p.previous_owner_id];
-        if(prev){
-          prev.picks = prev.picks.filter(x=>!(x.season===p.season && x.round===p.round));
-        }
-        rosterMap[p.owner_id].picks.push(p);
-      });
-
-      rosters.forEach(r => {
-  r.picks.sort((a,b) => {
-    const sa = Number(a.season), sb = Number(b.season);
-    if (sa !== sb) return sa - sb;
-    // guard in case round is missing
-    return (Number(a.round) || 0) - (Number(b.round) || 0);
-  });
-});
+      users.forEach(u => userMap[u.user_id] = u.display_name);
 
       return rosters.map(r => {
         let allScores = [];
         const breakdown = { QB:[], RB:[], WR:[], TE:[], PICK:[] };
 
-        r.players.forEach(pid=>{
+        (r.players || []).forEach(pid=>{
           const p = sleeperPlayers[pid];
           if(!p) return;
           const nm = normalizeName(p.full_name);
@@ -479,21 +415,15 @@
         });
 
   r.picks.forEach(pk => {
-  // 1) build the exact display label & score lookup
-  const displayLabel = `${pk.season} ${ordinalSuffix(pk.round)} Round`;
-  const sc           = nflRankings[ normalizeName(displayLabel) ] || 0;
+  const displayLabel = DynastySleeper.pickLabel(pk);
+  const value = DynastySleeper.pickScore(pk, nflRankings);
+  const sc = value || 0;
   allScores.push(sc);
-
-  // 2) find the roster, then its owner_id, then the user name
-  const fromRoster       = rosterMap[pk.previous_owner_id];
-  const originalUserId   = fromRoster?.owner_id;
-  const originalUserName = userMap[originalUserId] || "Unknown";
-
-  // 3) push into your breakdown with the real owner name
   breakdown.PICK.push({
-    name:  displayLabel,
+    name: displayLabel,
     score: sc,
-    owner: originalUserName
+    unranked: value === null,
+    owner: DynastySleeper.escapeHTML(DynastySleeper.originName(pk, rosters, users))
   });
 });
 
@@ -605,7 +535,7 @@
     // pk.name is now “2026 1st Round”
     c += `<li>
             ${pk.name}
-            <small>(${pk.owner}: ${pk.score.toFixed(0)})</small>
+            <small>(Originally: ${pk.owner}; ${pk.unranked ? "Unranked" : pk.score.toFixed(0)})</small>
           </li>`;
   });
   c += `  </ul>
@@ -630,15 +560,13 @@
         throw error;
       }
     }
-    async function computeFutureProjections(lid, teamScores) {
+    async function computeFutureProjections(bundle, teamScores) {
       const [p1,p2,p3] = await Promise.all([
         loadProjectionRankings(projectionUrls.proj1),
         loadProjectionRankings(projectionUrls.proj2),
         loadProjectionRankings(projectionUrls.proj3)
       ]);
-      await fetchSleeperPlayers();
-      const rosters = await fetchLeagueRosters(lid);
-      const users   = await fetchLeagueUsers(lid);
+      const { rosters, users } = bundle;
       const userMap = {};
       users.forEach(u=> userMap[u.user_id]=u.display_name);
       const currentMap = {};
@@ -646,7 +574,7 @@
 
       const out = rosters.map(r=>{
         let s1=[],s2=[],s3=[];
-        r.players.forEach(pid=>{
+        (r.players || []).forEach(pid=>{
           const nm = normalizeName(sleeperPlayers[pid]?.full_name||"");
           s1.push(p1[nm]||0);
           s2.push(p2[nm]||0);
@@ -747,28 +675,48 @@ function renderProjectionChart(data) {
   });
 }
 
-    async function renderAll(lid) {
-      const teams = await computeTeamScores(lid);
-      await displayTeamRankings(teams);
-      const proj  = await computeFutureProjections(lid, teams);
-      renderProjectionChart(proj);
+    let loading = false;
+    async function renderAll(lid, refresh = false) {
+      if (loading) return;
+      loading = true;
+      const button = document.getElementById("loadLeagueBtn");
+      const select = document.getElementById("rankingSelect");
+      button.disabled = select.disabled = true;
+      button.textContent = "Loading...";
+      document.getElementById("summaryRankings").textContent = "Loading league...";
+      document.getElementById("teamCards").innerHTML = "";
+      if (projectionChartInstance) { projectionChartInstance.destroy(); projectionChartInstance = null; }
+      try {
+        const [bundle, players] = await Promise.all([
+          refresh || loadedLeague?.id !== lid ? DynastySleeper.league(lid) : loadedLeague,
+          DynastySleeper.players()
+        ]);
+        sleeperPlayers = players;
+        const teams = await computeTeamScores(bundle);
+        loadedLeague = bundle;
+        await displayTeamRankings(teams);
+        const proj = await computeFutureProjections(bundle, teams);
+        renderProjectionChart(proj);
+        saveRecentLeague(lid, bundle.meta.name || "Unnamed League");
+        renderRecentLeagues();
+      } catch (error) {
+        loadedLeague = null;
+        document.getElementById("summaryRankings").textContent = error.message || "Unable to load league. Please try again.";
+        document.getElementById("teamCards").innerHTML = "";
+      } finally {
+        button.disabled = select.disabled = false;
+        button.textContent = "Load League";
+        loading = false;
+      }
     }
-    document.getElementById("loadLeagueBtn").addEventListener("click",async()=>{
+    document.getElementById("loadLeagueBtn").addEventListener("click", () => {
       const lid = document.getElementById("leagueId").value.trim();
-      saveRecentLeague(lid, ""); // name gets filled later
-      if(!lid) return alert("Enter a Sleeper League ID");
-      try { await renderAll(lid); 
-      const meta = await fetchLeagueMeta(lid);
-saveRecentLeague(lid, meta.name || "Unnamed League");
-renderRecentLeagues();}
-      catch(e){ console.error(e); alert("Error loading league."); }
+      if (!lid) return alert("Enter a Sleeper League ID");
+      renderAll(lid, true);
     });
-      // Auto-regenerate rankings when system dropdown changes
     document.getElementById("rankingSelect").addEventListener("change", () => {
       const lid = document.getElementById("leagueId").value.trim();
-      if (lid) {
-        document.getElementById("loadLeagueBtn").click();
-      }
+      if (lid) renderAll(lid);
     });
   });
 
