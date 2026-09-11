@@ -1,43 +1,45 @@
 // scripts/build_weekly_points_sleeper.mjs
 import fs from "fs";
 import path from "path";
-import https from "https";
+import { pathToFileURL } from "url";
 
 const OFFENSE_POS = new Set(["QB", "RB", "WR", "TE"]);
 
-function fetchJson(url) {
-  return new Promise((resolve, reject) => {
-    https
-      .get(url, (res) => {
-        const code = res.statusCode || 0;
+export async function fetchJson(url) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const response = await fetch(url, {signal: AbortSignal.timeout(30000)});
+      if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
+      const data = await response.json();
+      if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error(`Invalid data from ${url}`);
+      return data;
+    } catch (error) {
+      if (attempt === 2) throw error;
+      await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)));
+    }
+  }
+}
 
-        // Follow redirects if any
-        if ([301, 302, 303, 307, 308].includes(code)) {
-          const next = res.headers.location;
-          res.resume();
-          if (!next) return reject(new Error(`Redirect (${code}) with no Location for ${url}`));
-          const nextUrl = next.startsWith("http") ? next : new URL(next, url).toString();
-          return resolve(fetchJson(nextUrl));
-        }
-
-        if (code !== 200) {
-          res.resume();
-          return reject(new Error(`HTTP ${code} for ${url}`));
-        }
-
-        let data = "";
-        res.setEncoding("utf8");
-        res.on("data", (chunk) => (data += chunk));
-        res.on("end", () => {
-          try {
-            resolve(JSON.parse(data));
-          } catch (e) {
-            reject(new Error(`Failed to parse JSON from ${url}: ${e.message}`));
-          }
-        });
-      })
-      .on("error", reject);
-  });
+// Sleeper advances to the upcoming week. Never include an in-progress week.
+// Keep a complete prior season until current-season medians can qualify.
+export function buildPlan(state) {
+  const season = Number(state.season), week = Number(state.week);
+  if (!Number.isInteger(season) || season < 2020 || season > 2100 ||
+      !Number.isInteger(week) || week < 0 || week > 25 ||
+      !['regular','post','pre','off'].includes(state.season_type)) throw new Error('Unexpected Sleeper season state; keeping published data.');
+  const current = state.season_type === 'regular' && week >= 4 || state.season_type === 'post';
+  const target = current ? season : Number(state.previous_season || season - 1);
+  if (!Number.isInteger(target) || target < 2020 || target > season) throw new Error('Invalid previous season.');
+  return {season:String(target), through:current && state.season_type === 'regular' ? Math.min(18, week-1) : 18};
+}
+export function validateOutput(out, previous) {
+  const entries = Object.values(out.players);
+  if (!entries.length || !entries.some(p => Object.keys(p.weeks).length >= 3)) throw new Error('No qualifying medians; keeping published data.');
+  if (Number(previous?.meta?.season) > Number(out.meta.season)) throw new Error('Refusing to move published data to an earlier season.');
+  if (previous?.meta?.season === out.meta.season && Number(previous.meta.week_built_through) > out.meta.week_built_through) throw new Error('Refusing to move published data backwards.');
+  for (const p of entries) for (const [week, values] of Object.entries(p.weeks)) {
+    if (Number(week) < 1 || Number(week) > out.meta.week_built_through || !['std','hppr','ppr'].every(key => Number.isFinite(values[key]))) throw new Error('Invalid weekly points.');
+  }
 }
 
 function toNum(v) {
@@ -56,18 +58,11 @@ const MIN_RUSH_ATT = Number(process.env.MIN_RUSH_ATT || 2);
 const MIN_TARGETS = Number(process.env.MIN_TARGETS || 2);
 const MIN_PASS_ATT = Number(process.env.MIN_PASS_ATT || 8);
 
-async function main() {
+export async function main() {
   // 1) Season/week from Sleeper
   const state = await fetchJson("https://api.sleeper.app/v1/state/nfl");
-  const season = state.season;              // "2025"
-  const currentWeek = Number(state.week);   // 16
-  const seasonType = state.season_type;     // "regular"
-
-  if (seasonType !== "regular") {
-    console.log(`Note: season_type is ${seasonType}. This script expects regular season.`);
-  }
-
-  console.log(`Sleeper state: season=${season}, week=${currentWeek}, type=${seasonType}`);
+  const {season, through} = buildPlan(state);
+  console.log(`Building ${season} regular-season medians through completed week ${through}.`);
 
   // 2) Player map
   console.log("Downloading Sleeper players map...");
@@ -98,7 +93,7 @@ async function main() {
 
     const name =
       p.full_name ||
-      p.first_name && p.last_name ? `${p.first_name} ${p.last_name}` :
+      (p.first_name && p.last_name ? `${p.first_name} ${p.last_name}` : null) ||
       p.player_id ||
       pid;
 
@@ -108,17 +103,15 @@ async function main() {
     return out.players[pid];
   }
 
-  // 4) Loop weeks 1..currentWeek, but stop once Sleeper stops returning stats.
-  // This keeps the UI's "Last 5 weeks" anchored to the last *completed* week.
+  // 4) Rebuild only completed weeks, including any later stat corrections.
   let lastWeekWithStats = 0;
-  for (let wk = 1; wk <= currentWeek; wk++) {
+  for (let wk = 1; wk <= through; wk++) {
     const url = `https://api.sleeper.app/v1/stats/nfl/regular/${season}/${wk}`;
     console.log(`Downloading week ${wk}: ${url}`);
 
     const weekStats = await fetchJson(url);
     if (!weekStats || Object.keys(weekStats).length === 0) {
-      console.log(`(no stats yet) week ${wk} — stopping downloads at week ${wk - 1}`);
-      break;
+      throw new Error(`No stats for completed week ${wk}; keeping published data.`);
     }
     lastWeekWithStats = wk;
 
@@ -161,24 +154,34 @@ async function main() {
   }
 
   // Meta: anchor "last N weeks" to the last week that actually has stats.
-  out.meta.week_built_through = lastWeekWithStats || Math.max(0, currentWeek - 1);
+  out.meta.week_built_through = lastWeekWithStats;
 
   // 5) Write output files
-  const outDir = path.join(process.cwd(), "data");
+  const outDir = process.env.WEEKLY_OUTPUT_DIR || path.join(process.cwd(), "data");
   if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
 
   const currentPath = path.join(outDir, "weekly_points_current.json");
   const seasonPath = path.join(outDir, `weekly_points_${season}.json`);
 
-  fs.writeFileSync(currentPath, JSON.stringify(out));
-  fs.writeFileSync(seasonPath, JSON.stringify(out));
+  const previous = fs.existsSync(currentPath) ? JSON.parse(fs.readFileSync(currentPath, 'utf8')) : null;
+  validateOutput(out, previous);
+  const comparable = value => JSON.stringify({...value, meta:{...value.meta, updated:null}});
+  if (previous && comparable(previous) === comparable(out) && fs.existsSync(seasonPath)) {
+    console.log('No weekly data changes.'); return;
+  }
+  const serialized = JSON.stringify(out);
+  // All network requests and validation finish before either published file changes.
+  for (const file of [seasonPath, currentPath]) {
+    fs.writeFileSync(file + '.tmp', serialized);
+    fs.renameSync(file + '.tmp', file);
+  }
 
   console.log(`✅ Wrote: ${currentPath}`);
   console.log(`✅ Wrote: ${seasonPath}`);
   console.log(`Players in file: ${Object.keys(out.players).length}`);
 }
 
-main().catch((err) => {
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) main().catch((err) => {
   console.error(err);
   process.exit(1);
 });
