@@ -1397,3 +1397,9 @@ body > header { position: relative; padding-top: 44px; }
 .saved-league-picker a { color: #00695c; font-size: .85em; }
 .saved-league-picker p { margin: 8px 0; font-size: .9em; }
 @media (max-width: 660px) { .saved-league-picker { margin: 14px 12px; } }
+
+/* Calculator scoring controls use the NFL Rankings defaults. */
+.page-trade .trade-scoring { display:flex; flex-wrap:wrap; justify-content:center; gap:12px 20px; max-width:900px; margin:20px auto 0; padding:14px; border:1px solid #b2cbc4; border-radius:10px; color:#004d40; box-sizing:border-box; }
+.page-trade .trade-scoring label { display:inline-flex; align-items:center; gap:6px; min-height:36px; cursor:pointer; }
+.page-trade .trade-scoring input { accent-color:#00796b; }
+@media(max-width:700px) { .page-trade .trade-scoring { margin:16px 12px 0; } }

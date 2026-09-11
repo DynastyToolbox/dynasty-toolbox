@@ -202,7 +202,12 @@
     
 
 </style>
+  <link rel="stylesheet" href="/median_team.css">
+  <script src="/median_data.js"></script>
   <script src="/account-session.js" defer></script>
+  <script src="/sleeper_data.js" defer></script>
+  <script src="/median_team.js" defer></script>
+  <script src="/my-leagues.js" defer></script>
 </head>
 
 <body class="page-median">
@@ -338,9 +343,11 @@ Allowing for more accurate expectations of weekly scores.
     </div>
   </section>
 
+  <div class="median-workspace">
   <!-- Rankings -->
   <section class="tables">
     <div class="section-title">Rankings</div>
+    <p id="median-season-context" class="subtle"></p>
 
     <p class="table-scroll-hint">Swipe or scroll sideways to see all columns.</p>
     <div class="table-responsive" tabindex="0" role="region" aria-label="Median rankings">
@@ -362,6 +369,30 @@ Allowing for more accurate expectations of weekly scores.
     </table>
     </div>
   </section>
+  <aside class="median-team-panel" aria-labelledby="median-team-heading">
+    <h2 id="median-team-heading">Your team's medians</h2>
+    <div id="leagueInputContainer">
+      <label for="leagueId">Sleeper league ID</label>
+      <input id="leagueId" inputmode="numeric" pattern="[0-9]{10,22}" placeholder="Enter Sleeper league ID">
+      <button id="loadLeagueBtn" type="button">Load league</button>
+    </div>
+    <p id="median-league-status" role="status"></p>
+    <div id="median-team-choice" hidden>
+      <label for="medianTeamSelect">Team</label>
+      <select id="medianTeamSelect"></select>
+    </div>
+    <div id="median-roster-content" hidden>
+      <h3>Best median lineup</h3>
+      <p class="median-hint">Add your league's starting spots. FLEX uses RB/WR/TE; Superflex also includes QB.</p>
+      <div id="median-slot-controls" aria-label="Starting lineup positions"></div>
+      <ol id="median-lineup"></ol>
+      <p id="median-lineup-total" role="status"></p>
+      <h3 id="median-roster-title">Roster</h3>
+      <p id="median-roster-context" class="median-hint"></p>
+      <div id="median-roster"></div>
+    </div>
+  </aside>
+  </div>
   </div>
 
   <script>
@@ -382,78 +413,8 @@ Allowing for more accurate expectations of weekly scores.
     let sortState = { key: "median", dir: "desc" };
     let compareSortState = { key: "median", dir: "desc" };
 
-    function safeNum(n) {
-      const x = Number(n);
-      return Number.isFinite(x) ? x : 0;
-    }
-
-    function median(arr) {
-      const a = arr.slice().sort((x, y) => x - y);
-      if (!a.length) return 0;
-      const mid = Math.floor(a.length / 2);
-      return a.length % 2 ? a[mid] : (a[mid - 1] + a[mid]) / 2;
-    }
-
-    function mean(arr) {
-      if (!arr.length) return 0;
-      return arr.reduce((s, x) => s + x, 0) / arr.length;
-    }
-
-    function getMaxWeek(meta, players) {
-      const fromMeta = safeNum(meta && meta.week_built_through);
-      if (fromMeta) return fromMeta;
-      // fallback: scan weeks
-      let maxW = 0;
-      for (const pid in players) {
-        const weeks = players[pid].weeks || {};
-        for (const wkStr in weeks) maxW = Math.max(maxW, safeNum(wkStr));
-      }
-      return maxW || 1;
-    }
-
-    function pickWindowWeeks(windowKey, maxWeek) {
-      if (windowKey === "season") return { start: 1, end: maxWeek };
-      const n = windowKey === "last5" ? 5 : windowKey === "last7" ? 7 : 10;
-      return { start: Math.max(1, maxWeek - n + 1), end: maxWeek };
-    }
-
-    function qualifiesWeek(weekObj) {
-      if (!weekObj) return false;
-      const snap = safeNum(weekObj.snap);
-      // If older JSON has no snap field, fall back to "any record exists"
-      if (!snap) return true;
-      return snap >= SNAP_PCT_MIN;
-    }
-
-    function computePlayerRow(pid, p, scoringKey, windowKey, maxWeek) {
-      const weeks = p.weeks || {};
-      const { start, end } = pickWindowWeeks(windowKey, maxWeek);
-
-      const pts = [];
-      for (let wk = start; wk <= end; wk++) {
-        const w = weeks[String(wk)];
-        if (!w) continue;
-        if (!qualifiesWeek(w)) continue;
-        pts.push(safeNum(w[scoringKey]));
-      }
-
-      if (pts.length < MIN_WEEKS_REQUIRED) return null;
-
-      const med = median(pts);
-      const avg = mean(pts);
-      const diff = avg - med;
-
-      return {
-        id: pid,
-        name: p.name || "",
-        pos: p.pos || "",
-        team: p.team || "",
-        games: pts.length,
-        median: med,
-        avg: avg,
-        diff: diff,
-      };
-    }
+    const {safeNum, getMaxWeek, computePlayerRow} = DynastyMedian;
+    window.DynastyMedianPage = {get data() {return rawData;}};
 
     function buildRankings() {
       const search = (document.getElementById("searchInput").value || "").toLowerCase().trim();
@@ -464,6 +425,7 @@ Allowing for more accurate expectations of weekly scores.
       const players = rawData.players || {};
       const maxWeek = getMaxWeek(rawData.meta, players);
 
+      document.getElementById('median-season-context').textContent = `${rawData.meta.season} season · Through week ${maxWeek} · At least 3 qualifying games`;
       const rows = [];
 
       for (const pid in players) {
@@ -481,6 +443,7 @@ Allowing for more accurate expectations of weekly scores.
       rankingsRows = rows;
       applySortAndRender();
       renderCompareTable(); // keep comparator synced
+      window.dispatchEvent(new Event("dynasty-median-change"));
     }
 
     function sortRows(rows, state) {

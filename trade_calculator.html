@@ -233,6 +233,7 @@
     }
   </style>
   <script src="/nfl_rankings_data.js"></script>
+  <script src="/scoring_formats.js"></script>
   <script src="/account-session.js" defer></script>
 </head>
 <body class="page-trade">
@@ -261,6 +262,14 @@
   </div>
 
   <main>
+    <fieldset id="scoring-filters" class="trade-scoring">
+      <legend>League scoring</legend>
+      <label><input type="checkbox" id="nonPpr"> Non-PPR</label>
+      <label><input type="checkbox" id="halfPpr" checked> Half-PPR</label>
+      <label><input type="checkbox" id="fullPpr"> Full-PPR</label>
+      <label><input type="checkbox" id="superflex" checked> Superflex</label>
+      <label><input type="checkbox" id="tePremium"> TE Premium</label>
+    </fieldset>
     <div class="trade-container" id="tradeContainer">
       <!-- Team 1 -->
       <div class="trade-box" id="team1Box">
@@ -329,14 +338,26 @@
     let nextTeamNumber = 3;
     const maxTeams = 12;
     let playerData = {};
+    let baselinePlayers = {};
     let selectedPlayers = { 1: [], 2: [] };
 
     async function loadAllPlayers() {
       const entries = await Promise.all(["competing", "overall", "tanking"].map(async status => {
         const rows = await DynastyRankings.getRows(status);
-        return [status, rows.map(row => ({ name: row.Player, score: row.Score }))];
+        return [status, rows.map(row => ({ name: row.Player, score: row.Score, position: row.Position }))];
       }));
-      playerData = Object.fromEntries(entries);
+      baselinePlayers = Object.fromEntries(entries);
+      applyScoring();
+    }
+
+    function applyScoring() {
+      const format = DynastyScoring.read();
+      playerData = Object.fromEntries(Object.entries(baselinePlayers).map(([status, rows]) => [status,
+        rows.map(player => ({...player, score: DynastyScoring.score(player.score, player.position, format)}))]));
+    }
+    function changeScoring() {
+      applyScoring();
+      teams.forEach(team => updateSendScores(team));
     }
 
     /********** Utility **********/
@@ -363,7 +384,9 @@
           if (item.classList.contains("bonus-item")) return;
           const name = item.dataset.name;
           const score = playerData[status].find(p => p.name === name)?.score || "0";
-          item.querySelector(".player-score").textContent = score;
+          const label = item.querySelector(".player-score");
+          label.dataset.score = score;
+          label.textContent = Number(score).toFixed(2);
         });
       updateReceives();
     }
@@ -383,7 +406,7 @@
                 .find(p => p.name === name)?.score || "0";
               const el = document.createElement("li");
               el.className = "trade-item";
-              el.innerHTML = `${name} <span class="player-score">${score}</span>`;
+              el.innerHTML = `${name} <span class="player-score" data-score="${score}">${Number(score).toFixed(2)}</span>`;
               list.appendChild(el);
             }
           });
@@ -424,8 +447,8 @@ function updateTotals() {
     const sEls = sList.querySelectorAll(".player-score");
     const rEls = rList.querySelectorAll(".player-score");
 
-    const sVals = Array.from(sEls).map(e => parseFloat(e.textContent) || 0);
-    const rVals = Array.from(rEls).map(e => parseFloat(e.textContent) || 0);
+    const sVals = Array.from(sEls).map(e => parseFloat(e.dataset.score ?? e.textContent) || 0);
+    const rVals = Array.from(rEls).map(e => parseFloat(e.dataset.score ?? e.textContent) || 0);
 
     const rawS = sVals.reduce((a, b) => a + b, 0);
     const rawR = rVals.reduce((a, b) => a + b, 0);
@@ -470,7 +493,7 @@ function updateTotals() {
       li.dataset.from = team;
       li.dataset.dest = teams.find(t=>t!==team);
       li.innerHTML = `
-        ${name} <span class="player-score">${player.score}</span>
+        ${name} <span class="player-score" data-score="${player.score}">${Number(player.score).toFixed(2)}</span>
         <select class="dest-select" onchange="destinationChanged(${team},'${name}',this)"></select>
         <button class="remove-btn" onclick="removePlayerFromTeam(${team},'${name}')">✖</button>
       `;
@@ -596,6 +619,7 @@ function updateTotals() {
     /********** Initialization **********/
     async function initialize() {
       await loadAllPlayers();
+      DynastyScoring.bind(changeScoring);
       teams.forEach(t => attachTeamListeners(t));
       document.getElementById("addTeamButton").addEventListener("click", addTeam);
       updateRemoveButtons();
