@@ -27,7 +27,8 @@ test('parallel consumers and repeated filters share one request without mutating
   lists[0].reverse();
   assert.equal((await api.getRows('overall'))[0].Score, bundle.rankings.overall[0].Score);
   assert.equal(calls.length, 1);
-  assert.match(status.textContent, /Rankings published/);
+  assert.equal(status.textContent, "");
+  assert.equal(status.hidden, true);
 });
 
 test('HTTP failure rejects all pending readers and a later action retries', async () => {
@@ -36,8 +37,11 @@ test('HTTP failure rejects all pending readers and a later action retries', asyn
   assert.ok(result.every(r => r.status === 'rejected'));
   assert.equal(calls.length, 1);
   assert.match(status.textContent, /could not load/);
+  assert.equal(status.hidden, false);
   assert.ok((await api.getRows('overall')).length > 100);
   assert.equal(calls.length, 2);
+  assert.equal(status.textContent, "");
+  assert.equal(status.hidden, true);
 });
 
 test('incomplete releases and unknown modes cannot produce silent zero rankings', async () => {
