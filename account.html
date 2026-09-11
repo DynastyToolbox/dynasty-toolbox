@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>Your Account – Dynasty Toolbox</title>
+  <link rel="icon" href="/assets/Logos/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bree+Serif&display=swap">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="account.css">
+  <script src="/account-session.js" defer></script>
+  <script src="account.js" defer></script>
+  <script src="/my-leagues.js" defer></script>
+</head>
+<body class="page-account">
+  <header><div class="header-account"><a href="account.html" data-account-link><span>Account</span></a></div><h1>Dynasty Toolbox</h1><p>Your leagues. Your tools. Your account.</p></header>
+  <div id="nav-placeholder"></div>
+  <main class="account-shell">
+    <section class="account-card" aria-labelledby="account-heading">
+      <p class="account-eyebrow">DYNASTY TOOLBOX</p>
+      <h2 id="account-heading">Your account</h2>
+      <p id="account-intro">Sign in to your Dynasty Toolbox account.</p>
+      <p id="account-status" role="status" aria-live="polite">Checking your account…</p>
+      <noscript><p>Please enable JavaScript to use your account.</p></noscript>
+      <div id="signed-out" hidden>
+        <nav class="account-choices" aria-label="Account options">
+          <button type="button" data-mode="signin">Sign in</button>
+          <button type="button" data-mode="signup">Create account</button>
+        </nav>
+        <p class="account-hint">See how we use your information in our <a href="privacy.html">privacy notice</a>.</p>
+        <form id="account-form">
+          <label for="account-email">Email address</label>
+          <input id="account-email" name="email" type="email" autocomplete="username" maxlength="254" required>
+          <div id="code-field" hidden>
+            <label id="code-label" for="account-code">Email verification code</label>
+            <input id="account-code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{8}" minlength="8" maxlength="8" aria-describedby="code-help">
+            <p class="account-hint" id="code-help">Enter the 8-digit code from your email. It expires after one hour.</p>
+          </div>
+          <div id="password-field">
+            <label for="account-password">Password</label>
+            <input id="account-password" name="password" type="password" autocomplete="current-password" required>
+            <label class="account-check"><input id="show-password" type="checkbox">Show password</label>
+            <p class="account-hint" id="password-help" hidden>Use at least 12 characters. A long, unique passphrase works well.</p>
+          </div>
+          <button class="account-primary" id="account-submit" type="submit">Sign in</button>
+        </form>
+        <button class="account-secondary" id="account-resend" type="button" hidden>Send a new code</button>
+        <div class="account-links">
+          <button type="button" data-mode="forgot">Forgot password?</button>
+          <button type="button" data-mode="verify">Enter a verification code</button>
+        </div>
+        <button class="account-secondary" id="account-back" type="button" hidden>Back to my account</button>
+      </div>
+      <div id="signed-in" hidden>
+        <section class="account-section" id="my-leagues" aria-labelledby="my-leagues-heading">
+          <h3 id="my-leagues-heading">My Leagues</h3>
+          <p class="account-hint">Save your Sleeper leagues and choose your team. They’ll follow your account across devices.</p>
+          <p id="leagues-status" role="status" aria-live="polite"></p>
+          <div id="my-league-list"></div>
+          <div class="league-editor">
+            <h4 id="league-editor-title">Add a league</h4>
+            <label for="saved-league-id">Sleeper league ID</label>
+            <input id="saved-league-id" type="text" inputmode="numeric" pattern="[0-9]{10,22}" maxlength="22" required autocomplete="off">
+            <button type="button" class="account-secondary" id="find-saved-league">Find league</button>
+            <div id="league-team-fields" hidden>
+              <p id="found-league-name"></p>
+              <label for="my-roster">My team</label>
+              <select id="my-roster"></select>
+              <button type="button" class="account-primary" id="save-my-league">Save league</button>
+            </div>
+            <button type="button" class="account-secondary" id="cancel-league-edit" hidden>Cancel edit</button>
+          </div>
+        </section>
+        <section class="account-section" aria-labelledby="profile-heading">
+          <h3 id="profile-heading">Account details</h3>
+          <p class="account-hint">Email address</p>
+          <p class="account-identity" id="account-identity"></p>
+          <p class="account-verified">Email verified</p>
+        </section>
+        <section class="account-section" aria-labelledby="security-heading">
+          <h3 id="security-heading">Security settings</h3>
+          <p class="account-hint">We’ll send a code to your email when you reset your password.</p>
+          <button class="account-secondary" type="button" id="account-reset">Reset your password</button>
+          <div class="account-signout-actions">
+            <button class="account-primary" type="button" id="account-signout">Sign out</button>
+            <button class="account-secondary" type="button" id="account-signout-all">Sign out on all devices</button>
+          </div>
+        </section>
+        <section class="account-section" aria-labelledby="tools-heading">
+          <h3 id="tools-heading">Your dynasty tools</h3>
+          <div class="account-tool-links"><a href="team_analyzer.html">Team Analyzer <span aria-hidden="true">→</span></a><a href="league_rankings.html">League Rankings <span aria-hidden="true">→</span></a><a href="trade_calculator.html">Trade Calculator <span aria-hidden="true">→</span></a></div>
+        </section>
+      </div>
+    </section>
+  </main>
+  <footer><p>&copy; 2026 Dynasty Toolbox · <a href="privacy.html">Privacy</a></p></footer>
+</body>
+</html>
