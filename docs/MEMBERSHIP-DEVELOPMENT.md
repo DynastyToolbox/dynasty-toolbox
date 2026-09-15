@@ -52,7 +52,7 @@ entry directly in the browser. No automatic email-based or first-user administra
 - A short, custom-expiry grant automatically stopped granting access at its end time.
 - Removing the development owner role denied the next request from the existing AAL2 session and cleared member results. The owner role was restored afterward.
 - Browser sign-out succeeded; revisiting memberships required sign-in and returned no member data.
-- All 40 local account, saved-league, access, owner API and PostgreSQL tests passed, zero skipped.
+- All 43 local account, configuration, saved-league, access, owner API and PostgreSQL tests passed, zero skipped.
 - Hosted anonymous RPC/table calls and an unsigned forged AAL2 JWT were rejected.
 - Local origin isolation, signed-out denial, source/config denial and page security headers passed.
 
@@ -62,7 +62,28 @@ Repeat the read-only integration checks with:
 node --env-file=.env.membership-development scripts/check-membership-development.cjs
 ```
 
-Still pending at this checkpoint: a second sign-in/MFA challenge with the existing factor,
-refresh/token-expiry behavior, and an HTTPS-hosted preview check for secure cookies. The local front end uses HTTP loopback cookies;
-hosted Supabase API tests alone do not verify Vercel's HTTPS session behavior. Do not publish or
-declare subscriptions ready based on these partial integration results.
+## Protected HTTPS preview
+
+The `feat/subscription-access-foundation` branch has a Vercel Preview deployment. Only this
+branch receives the development Supabase URL/key, `MEMBERSHIP_DEV_PROJECT_REF`,
+`MEMBERSHIP_ADMIN_ENABLED=true`, `SUBSCRIPTION_ACCESS_ENABLED=true` and
+`ACCOUNT_DEVELOPMENT_COOKIE_SECONDS=60`. Production/shared settings remain unchanged.
+The account configuration refuses to use the production project on this branch, and refuses
+development configuration in a production deployment. Missing development settings return 503.
+
+Vercel's existing deployment protection redirects anonymous requests for the account page,
+membership page and account API to Vercel authentication. The signed-out account page loaded
+over HTTPS with the DEVELOPMENT TEST SITE banner. Access to the preview alone does not
+authorize the member directory; the application still requires its separate owner role and MFA.
+
+The temporary 60-second access-cookie lifetime exercises the real refresh-token flow after
+the browser expires that cookie. It does not shorten the provider's JWT lifetime. Production
+ignores this test setting and does not receive the development banner or renewal diagnostics.
+Local tests verify Secure/HttpOnly/SameSite=Strict and __Host cookie handling.
+
+HTTPS sign-in with the existing development account succeeded and the owner member directory
+loaded. After the 60-second access-cookie lifetime elapsed, the account page reported successful
+session renewal against the real provider. The browser remained signed in, and the owner member
+directory still loaded after renewal without another authenticator prompt.
+Subscriptions are not ready for production: premium feature enforcement, billing integration
+and launch review remain separate work.
