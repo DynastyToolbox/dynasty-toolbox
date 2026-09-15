@@ -41,6 +41,15 @@ test('production accounts stay disabled until deliberately enabled',async()=>{
   const res={setHeader(){},end(){status=this.statusCode;}};
   await handler({headers:{},method:'POST'},res);assert.equal(status,503);
 });
+
+test('explicit local origin configuration excludes the older production-connected preview',async()=>{
+  const handler=createHandler(()=>({auth:{}}),{ACCOUNT_ALLOWED_ORIGINS:'http://localhost:8773'});
+  for(const [origin,expected] of [['http://localhost:8773',200],['http://127.0.0.1:8770',403],['http://localhost:8770',403]]){
+    let status;const res={setHeader(){},end(){status=this.statusCode;}};
+    await handler({method:'POST',headers:{origin,'content-type':'application/json'},body:{action:'session'}},res);
+    assert.equal(status,expected);
+  }
+});
 test('rejects malformed bodies, oversized requests, unknown actions, bad email, short codes and weak passwords',async()=>{
   const f=fixture();
   for(const body of ['{',null,[],{action:'admin'}, {action:'signup',email:'bad',password:'long-enough-password'}, {action:'signup',email:user.email,password:'short'}, {action:'verify',email:user.email,code:'123456'}]) assert.equal((await f.run(body)).status,400);
