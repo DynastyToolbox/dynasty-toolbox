@@ -12,7 +12,7 @@
   function updateControls(){
     $('addTeamButton').disabled=loading||!access||teams.length>=access.features.tradeTeams;
     $('trade-league-section').hidden=!access?.features.tradeLeagueImport;
-    $('trade-access-note').textContent=access?.premium?'Premium access · Up to 12 teams and Sleeper league trades.':'Free access · Two teams. Premium adds up to 12 teams and Sleeper league trades.';
+    $('trade-access-note').textContent=access?.premium?'Premium access · Up to 12 team trades and league input.':'Free access · Two teams. Premium: Up to 12 team trades and league input.';
     $('leave-league').hidden=!league;
     $('loadLeagueBtn').disabled=loading||!access?.features.tradeLeagueImport;
     $('refresh-trade-league').hidden=!league;
@@ -79,7 +79,19 @@
       if(team.studBonus>0){const row=el('li',undefined,'trade-item bonus-item');row.append(el('span','Stud Bonus'),el('span',team.studBonus.toFixed(2),'player-score'));sends.insertBefore(row,sends.children[1]||null);}
       const receives=$(`team${team.id}Receives`);receives.replaceChildren();for(const asset of team.receives){const row=el('li',undefined,'trade-item');row.append(el('span',asset.label,'trade-asset-name'),el('span',asset.ranked?asset.score.toFixed(2):'Unranked · 0.00','player-score'));receives.append(row);}
       const totals=$(`team${team.id}Totals`);totals.replaceChildren();for(const [name,value] of [['Sends Total',team.sendsTotal],['Receives Total',team.receivesTotal],['Trade Total',team.total]]){const p=el('p',name+': '),v=el('span',value.toFixed(2),name==='Trade Total'?'trade-total '+(value>0?'positive':value<0?'negative':''):'');p.append(v);totals.append(p);}
-      if(team.ranks){const panel=$(`team${team.id}Ranks`);panel.replaceChildren(el('strong','League ranks · Before → After'));for(const [type,name] of [['competing','Contending'],['tanking','Rebuilding']]){const before=team.ranks.before[type],after=team.ranks.after[type];panel.append(el('p',`${name}: #${before.rank} → #${after.rank} of ${team.ranks.total}`),el('small',`Team score: ${before.score.toFixed(2)} → ${after.score.toFixed(2)}`));}}
+      if(team.ranks){
+        const panel=$(`team${team.id}Ranks`);panel.replaceChildren(el('strong','League rank'));
+        for(const [type,name] of [['competing','Contending'],['tanking','Rebuilding']]){
+          const before=team.ranks.before[type].rank,after=team.ranks.after[type].rank;
+          const row=el('p',`${name}: #${after}`);
+          if(before!==after){
+            const up=after<before,arrow=el('span',up?'↑':'↓','trade-rank-change '+(up?'rank-up':'rank-down'));
+            const description=`${up?'Up':'Down'} ${Math.abs(before-after)} ${Math.abs(before-after)===1?'place':'places'} from the original roster rank`;
+            arrow.setAttribute('role','img');arrow.setAttribute('aria-label',description);arrow.title=description;row.append(arrow);
+          }
+          panel.append(row);
+        }
+      }
     }
   }
   function schedule(){clearTimeout(timer);timer=setTimeout(calculate,150);}

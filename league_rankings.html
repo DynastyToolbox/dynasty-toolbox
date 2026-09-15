@@ -279,7 +279,7 @@
     </p>
   </div>
 
-<div class="explanation-note"><details><summary>How picks and team scores work</summary><p>Team scores average the top 15 player and pick values. PICK ranks average the best 10 pick values. Dynasty picks cover the next three undrafted seasons at published round values; Unranked picks count as zero. Originally identifies the current manager of the original team. Future projections use player values plus the existing rank-based adjustments; future picks are not directly added to those projected values.</p></details></div>
+<div class="explanation-note"><details><summary>How picks and team scores work</summary><p>Team scores average the top 15 player and pick values. PICK ranks average the best 10 pick values. Dynasty picks cover the next three undrafted seasons at published round values; Unranked picks count as zero. The name in parentheses identifies the current manager of the original team. Future projections use player values plus the existing rank-based adjustments; future picks are not directly added to those projected values.</p></details></div>
 
   <div id="leagueInputContainer">
   <input type="text" id="leagueId" placeholder="Enter Sleeper League ID" />
@@ -539,8 +539,8 @@
   t.draftPicks.forEach(pk => {
     // pk.name is now “2026 1st Round”
     c += `<li>
-            ${pk.name}
-            <small>(Originally: ${pk.owner}; ${pk.unranked ? "Unranked" : pk.score.toFixed(0)})</small>
+            ${pk.name} (${pk.owner})
+            <small>${pk.unranked ? "Unranked" : pk.score.toFixed(0)}</small>
           </li>`;
   });
   c += `  </ul>

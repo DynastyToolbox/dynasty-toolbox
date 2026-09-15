@@ -26,7 +26,7 @@ test('manual totals retain asymmetric ranking types, scoring and stud bonus',()=
 test('traded pick keeps its origin and identical-round picks are distinct',()=>{
   const league=fixture(),owner=league.teams[1];
   assert.equal(owner.assets.filter(a=>a.id.startsWith('pick:2027:1')).length,2);
-  assert.match(owner.assets.find(a=>a.id==='pick:2027:1:1').label,/Originally Original/);
+  assert.equal(owner.assets.find(a=>a.id==='pick:2027:1:1').label,'2027 1st Round (Original)');
   const input=body();input.transfers=[{from:2,to:1,asset:'pick:2027:1:1'},{from:2,to:3,asset:'pick:2027:1:2'}];
   const result=evaluate(input,premium,book,league);assert.equal(result.teams[1].sends.length,2);assert.equal(result.teams[0].receives.length,1);assert.equal(result.teams[2].receives.length,1);
   assert.equal(league.teams[1].assets.filter(a=>a.id.startsWith('pick:2027:1')).length,2,'does not mutate original rosters');

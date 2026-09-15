@@ -566,7 +566,7 @@ tradeIdeasDiv.innerHTML = tHTML;
         const orig = DynastySleeper.escapeHTML(DynastySleeper.originName(pk, rosters, users));
         const sc = DynastySleeper.pickScore(pk, map);
         html+=`<li>${pn}
-                  <span class="pick-origin">(Originally: ${orig})</span>
+                  <span class="pick-origin">(${orig})</span>
                   <span class="pick-score">(${sc === null ? "Unranked" : sc.toLocaleString()})</span>
                </li>`;
       });

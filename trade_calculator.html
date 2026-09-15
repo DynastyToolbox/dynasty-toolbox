@@ -267,14 +267,16 @@
   <main>
     <fieldset id="scoring-filters" class="trade-scoring">
       <legend>League scoring</legend>
+      <div class="trade-scoring-options">
       <label><input type="checkbox" id="nonPpr"> Non-PPR</label>
       <label><input type="checkbox" id="halfPpr" checked> Half-PPR</label>
       <label><input type="checkbox" id="fullPpr"> Full-PPR</label>
       <label><input type="checkbox" id="superflex" checked> Superflex</label>
       <label><input type="checkbox" id="tePremium"> TE Premium</label>
+      </div>
     </fieldset>
     <p id="trade-access-note">Checking calculator access…</p>
-    <section id="trade-league-section" class="trade-league-section" hidden aria-label="Sleeper league trades">
+    <section id="trade-league-section" class="trade-league-section" hidden aria-label="League input">
       <h2>Trade with your league</h2>
       <div class="flex-row"><label for="leagueId">Sleeper league ID</label><input id="leagueId" inputmode="numeric" placeholder="Enter league ID"><button id="loadLeagueBtn" disabled>Load league</button><button id="refresh-trade-league" hidden>Refresh & clear trade</button></div>
       <h3 id="trade-league-name"></h3>

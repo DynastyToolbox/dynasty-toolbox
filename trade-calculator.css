@@ -8,7 +8,13 @@
 .page-trade .trade-team-label select,.page-trade .trade-roster-assets{display:block;width:100%;max-width:100%;box-sizing:border-box;margin:8px 0;padding:10px;font:inherit;color:#004d40;border:1px solid #004d40;border-radius:6px;background:#e0f2f1}
 .page-trade .trade-ranks{background:#f0f5f3;border-left:4px solid #00796b;padding:12px;border-radius:6px;margin:12px 0;overflow-wrap:anywhere}
 .page-trade .trade-ranks p{margin:8px 0 2px}
-.page-trade .trade-ranks small{display:block;color:#35584b}
+.page-trade .trade-rank-change{display:inline-block;margin-left:7px;font-family:Arial,sans-serif;font-weight:bold;font-size:1.1em;line-height:1}
+.page-trade .rank-up{color:#087d38}
+.page-trade .rank-down{color:#be2525}
+.page-trade #scoring-filters{display:block;width:calc(100% - 24px);min-width:0;margin:20px auto 0}
+.page-trade #scoring-filters label{margin:0}
+.page-trade .trade-scoring legend{margin-inline:auto;padding-inline:8px}
+.page-trade .trade-scoring-options{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:12px 20px;width:100%}
 .page-trade .trade-asset-name{flex:1 1 145px;min-width:0;overflow-wrap:anywhere}
 .page-trade .dest-select{flex:1 1 130px;min-width:0;margin-left:0;overflow:hidden;text-overflow:ellipsis}
 .page-trade button.suggestion-item{display:block;width:100%;text-align:left;border:0;background:white;font:inherit;min-height:44px}
