@@ -47,6 +47,11 @@ entry directly in the browser. No automatic email-based or first-user administra
 - Real development email signup and verification succeeded.
 - Before role assignment, the signed-in account was denied the member directory.
 - After role assignment, the session was required to verify an authenticator; enrollment displayed a QR.
+- The owner completed real TOTP verification and the member directory loaded.
+- A temporary complimentary grant succeeded; revocation returned the account to Free and both actions appeared in audit history.
+- A short, custom-expiry grant automatically stopped granting access at its end time.
+- Removing the development owner role denied the next request from the existing AAL2 session and cleared member results. The owner role was restored afterward.
+- Browser sign-out succeeded; revisiting memberships required sign-in and returned no member data.
 - All 40 local account, saved-league, access, owner API and PostgreSQL tests passed, zero skipped.
 - Hosted anonymous RPC/table calls and an unsigned forged AAL2 JWT were rejected.
 - Local origin isolation, signed-out denial, source/config denial and page security headers passed.
@@ -57,8 +62,7 @@ Repeat the read-only integration checks with:
 node --env-file=.env.membership-development scripts/check-membership-development.cjs
 ```
 
-Still pending at this checkpoint: user completion of authenticator verification, owner grant/revoke
-and expiry with real sessions, owner role revocation, sign-out and refresh/expiry behavior, and an
-HTTPS-hosted preview check for secure cookies. The local front end uses HTTP loopback cookies;
+Still pending at this checkpoint: a second sign-in/MFA challenge with the existing factor,
+refresh/token-expiry behavior, and an HTTPS-hosted preview check for secure cookies. The local front end uses HTTP loopback cookies;
 hosted Supabase API tests alone do not verify Vercel's HTTPS session behavior. Do not publish or
 declare subscriptions ready based on these partial integration results.

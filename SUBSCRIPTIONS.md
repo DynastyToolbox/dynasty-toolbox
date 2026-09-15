@@ -65,8 +65,10 @@ step-up MFA and audit records. Never automatically make the first signup or a us
 The supplied migration allows authenticated users to read only their own access columns. They cannot write
 subscriptions or grants, see admin notes, or query other accounts. Service credentials belong only in server
 environment variables. Both migrations have passed isolated local PostgreSQL tests using PGlite.
-They have not been applied to a hosted Supabase project. Owner MFA enrollment/verification has
-unit coverage but still requires an end-to-end check on an isolated development Supabase project.
+On September 14, they were applied to a separate development Supabase project. Real email signup,
+TOTP verification, owner directory access, grants, revocation, automatic grant expiry, owner-role
+revocation and browser sign-out were verified there. Production is unchanged. See
+`docs/MEMBERSHIP-DEVELOPMENT.md` for evidence and the remaining HTTPS/refresh-session checks.
 
 ## Saved development checkpoint
 
@@ -78,7 +80,8 @@ are idempotent; grant/revoke and their audit record commit together. Removing a 
 
 `MEMBERSHIP_ADMIN_ENABLED=true` enables the administrator API; it is disabled by default.
 `SUBSCRIPTION_ACCESS_ENABLED=true` separately enables the account access lookup. Neither flag
-has been enabled in production. There is no shared navigation link to the private dashboard.
+has been enabled in production. Both are enabled only in the isolated test server. There is no
+shared navigation link to the private dashboard.
 
 Before hosted testing, use a separate development Supabase project, apply both migrations in
 order and verify the owner's account UUID through trusted project administration. A trusted
