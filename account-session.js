@@ -16,6 +16,17 @@
     const response = await fetch('/api/account', {method:'POST', credentials:'same-origin', cache:'no-store', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action, ...fields})});
     let result;
     try { result = await response.json(); } catch (_) { throw new Error('Account services are unavailable. Please try again shortly.'); }
+    if(result.environment==='development' && document.body.classList.contains('page-account')) {
+      let banner=document.getElementById('development-account-banner');
+      if(!banner){
+        banner=document.createElement('aside');banner.id='development-account-banner';banner.className='account-card';
+        const title=document.createElement('strong');title.textContent='DEVELOPMENT TEST SITE';
+        const note=document.createElement('p');note.textContent='Separate test accounts. No live memberships or payments.';
+        const link=document.createElement('a');link.href='members.html';link.textContent='Owner memberships';
+        banner.append(title,note,link);document.querySelector('main')?.prepend(banner);
+      }
+      if(result.sessionRenewed===true){let note=document.getElementById('development-renewal');if(!note){note=document.createElement('p');note.id='development-renewal';banner.append(note);}note.textContent='Test check passed: your session renewed successfully.';}
+    }
     if (!response.ok) throw new Error(result.error || 'Unable to complete that request. Please try again.');
     if (['session', 'signin', 'verify'].includes(action)) update(result.user || null);
     if (['signout', 'reset'].includes(action)) update(null);

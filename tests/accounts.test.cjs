@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const {createHandler, validPassword} = require('../lib/account-server.cjs');
 const user = {email:'owner@example.com',email_confirmed_at:'2026-09-10T00:00:00Z',id:'private-id'};
 const session = {access_token:'private-access',refresh_token:'private-refresh',expires_at:Math.floor(Date.now()/1000)+3600};
-function fixture(overrides={}) {
+function fixture(overrides={},envOverrides={}) {
   const calls=[];
   const method=(name,result)=>async args=>{calls.push({name,args});return result;};
   const auth={
@@ -19,7 +19,7 @@ function fixture(overrides={}) {
     refreshSession:method('refresh',{data:{session,user},error:null}),
     admin:{signOut:method('signout',{error:null})}, ...overrides,
   };
-  const handler=createHandler(()=>({auth}),{VERCEL:'1',VERCEL_ENV:'preview',VERCEL_URL:'preview.example.com'});
+  const handler=createHandler(()=>({auth}),{VERCEL:'1',VERCEL_ENV:'preview',VERCEL_URL:'preview.example.com',...envOverrides});
   return {calls, run:async (body, headers={},method='POST')=>{
     const out={headers:{}};
     const res={setHeader:(k,v)=>out.headers[k]=v,end:value=>{out.status=res.statusCode;out.body=JSON.parse(value);}};
@@ -100,6 +100,18 @@ test('unauthenticated and forged/revoked sessions cannot return private account 
   for(const cookie of ['', '__Host-dt-access=forged; __Host-dt-refresh=revoked']) {
     const r=await f.run({action:'session'},{cookie});assert.deepEqual(r.body,{user:null});assert.ok(r.headers['Set-Cookie'].every(c=>c.includes('Max-Age=0')));
   }
+});
+
+test('short cookie lifetime and renewal diagnostics apply only to development',async()=>{
+  const flags={ACCOUNT_DEVELOPMENT:'true',ACCOUNT_DEVELOPMENT_COOKIE_SECONDS:'60'};
+  const dev=await fixture({},flags).run({action:'signin',email:user.email,password:'long-enough-password'});
+  assert.match(dev.headers['Set-Cookie'][0],/Max-Age=60;/);assert.equal(dev.body.environment,'development');
+  assert.equal(dev.body.sessionRenewed,false);
+  const refresh=await fixture({},flags).run({action:'session'},{cookie:'__Host-dt-refresh=refresh-value'});
+  assert.equal(refresh.body.sessionRenewed,true);assert.match(refresh.headers['Set-Cookie'][0],/Max-Age=60;/);
+  const prod=await fixture({},{...flags,VERCEL_ENV:'production',ACCOUNT_PUBLIC_ENABLED:'true'}).run({action:'signin',email:user.email,password:'long-enough-password'});
+  assert.ok(!prod.headers['Set-Cookie'][0].includes('Max-Age=60;'));assert.equal(prod.body.environment,undefined);
+  assert.equal(prod.body.sessionRenewed,undefined);
 });
 test('forgot-password and duplicate signup do not identify existing accounts',async()=>{
   const f=fixture({signUp:async()=>({error:{code:'user_already_exists'}})});
