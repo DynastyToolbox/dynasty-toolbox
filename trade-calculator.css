@@ -1,0 +1,19 @@
+.page-trade .trade-league-section,.page-trade .trade-actions{max-width:940px;margin:18px auto;padding:16px;box-sizing:border-box;border:1px solid #b2cbc4;border-radius:10px;background:#fff;color:#004d40}
+.page-trade .trade-league-section[hidden]{display:none}
+.page-trade .trade-league-section .flex-row,.page-trade .trade-actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:center}
+.page-trade .trade-league-section input,.page-trade .trade-league-section button,.page-trade .trade-actions button{font:inherit;padding:10px;border:1px solid #004d40;border-radius:6px;max-width:100%;box-sizing:border-box}
+.page-trade .trade-league-section button,.page-trade .trade-actions button{background:#004d40;color:white;cursor:pointer}
+.page-trade button:disabled{opacity:.55;cursor:not-allowed}
+.page-trade .trade-team-label{display:block;font-weight:bold}
+.page-trade .trade-team-label select,.page-trade .trade-roster-assets{display:block;width:100%;max-width:100%;box-sizing:border-box;margin:8px 0;padding:10px;font:inherit;color:#004d40;border:1px solid #004d40;border-radius:6px;background:#e0f2f1}
+.page-trade .trade-ranks{background:#f0f5f3;border-left:4px solid #00796b;padding:12px;border-radius:6px;margin:12px 0;overflow-wrap:anywhere}
+.page-trade .trade-ranks p{margin:8px 0 2px}
+.page-trade .trade-ranks small{display:block;color:#35584b}
+.page-trade .trade-asset-name{flex:1 1 145px;min-width:0;overflow-wrap:anywhere}
+.page-trade .dest-select{flex:1 1 130px;min-width:0;margin-left:0;overflow:hidden;text-overflow:ellipsis}
+.page-trade button.suggestion-item{display:block;width:100%;text-align:left;border:0;background:white;font:inherit;min-height:44px}
+.page-trade button.suggestion-item:hover,.page-trade button.suggestion-item:focus{background:#d2ebe3;color:#004d40}
+.page-trade #trade-message{min-height:1.5em;max-width:940px;margin:12px auto;padding:0 12px;overflow-wrap:anywhere}
+.page-trade #trade-message[data-error=true]{color:#9d2020}
+.page-trade .trade-help{max-width:900px;margin:12px auto;padding:0 16px;font-size:.9em;color:#35584b}
+@media(max-width:700px){.page-trade .trade-league-section,.page-trade .trade-actions{margin:12px}.page-trade .trade-league-section input{width:100%}}

@@ -133,5 +133,7 @@
     return result;
   }
 
-  root.DynastySleeper = { players, league, withPicks, pickLabel, pickScore, originName, escapeHTML };
+  const api = { players, league, withPicks, pickLabel, pickScore, originName, escapeHTML };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  root.DynastySleeper = api;
 })(globalThis);

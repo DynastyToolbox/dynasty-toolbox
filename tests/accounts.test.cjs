@@ -41,6 +41,15 @@ test('production accounts stay disabled until deliberately enabled',async()=>{
   const res={setHeader(){},end(){status=this.statusCode;}};
   await handler({headers:{},method:'POST'},res);assert.equal(status,503);
 });
+test('trade API keeps free access anonymous and refuses forged premium requests',async()=>{
+  const f=fixture({}, {SUBSCRIPTION_ACCESS_ENABLED:'true'});
+  const config=await f.run({action:'trade-config'});assert.equal(config.body.access.features.tradeTeams,2);
+  assert.equal((await f.run({action:'trade-league',league_id:'1318402338695708672',premium:true})).status,403);
+  assert.equal((await f.run({action:'trade-evaluate',teams:[{id:1},{id:2},{id:3}],premium:true})).status,403);
+  const disabled=await fixture().run({action:'trade-config'});assert.equal(disabled.status,503);
+  const result=await f.run({action:'trade-evaluate',teams:[{id:1,status:'overall'},{id:2,status:'overall'}],transfers:[],format:{ppr:'hppr',superflex:true,tePremium:false}});
+  assert.equal(result.status,200);assert.equal(result.body.teams[0].total,0);
+});
 
 test('explicit local origin configuration excludes the older production-connected preview',async()=>{
   const handler=createHandler(()=>({auth:{}}),{ACCOUNT_ALLOWED_ORIGINS:'http://localhost:8773'});

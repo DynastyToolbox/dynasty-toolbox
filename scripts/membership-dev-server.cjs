@@ -13,9 +13,11 @@ const handler=createHandler(access=>createClient(process.env.SUPABASE_URL,proces
   ...(access?{global:{headers:{Authorization:'Bearer '+access}}}:{}),
   auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
 }),env);
-const files=new Set(['account.html','members.html','privacy.html','account.js','members.js','account-session.js','my-leagues.js','style.css','account.css','members.css','assets/Logos/favicon.svg']);
+const files=new Set(['account.html','members.html','privacy.html','account.js','members.js','account-session.js','my-leagues.js','style.css','account.css','members.css','assets/Logos/favicon.svg',
+  'trade_calculator.html','trade-calculator.js','trade-calculator.css','nfl_rankings_data.js','scoring_formats.js','data/nfl_rankings.json','nav.html','nav.js',
+  'assets/icons/instagram.svg','assets/icons/x.png','assets/icons/tiktok.svg','assets/Logos/favicon-96x96.png','assets/Logos/favicon.ico','assets/Logos/apple-touch-icon.png','assets/Logos/site.webmanifest']);
 const headers=JSON.parse(fs.readFileSync(path.join(root,'vercel.json'),'utf8')).headers;
-const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml'};
+const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.json':'application/json','.png':'image/png','.ico':'image/x-icon','.webmanifest':'application/manifest+json'};
 const banner='<aside class="account-card"><strong>DEVELOPMENT TEST SITE</strong><p>Separate test accounts. No live memberships or payments.</p><a href="account.html">Test account</a> · <a href="members.html">Owner memberships</a></aside>';
 http.createServer(async(req,res)=>{
   // Restrict host and origin as well as binding to loopback. Keep cookies off the old 127.0.0.1 preview.
@@ -27,7 +29,7 @@ http.createServer(async(req,res)=>{
   if(!files.has(rel)){res.writeHead(404);return res.end('This test preview contains accounts and memberships only.');}
   try{
     let data=fs.readFileSync(path.join(root,rel));
-    if(rel.endsWith('.html'))data=Buffer.from(data.toString('utf8').replace('<main class="account-shell">','<main class="account-shell">'+banner));
+    if(rel.endsWith('.html'))data=Buffer.from(data.toString('utf8').replace('<main class="account-shell">','<main class="account-shell">'+banner).replace('<main>','<main>'+banner));
     res.setHeader('Content-Type',types[path.extname(rel)]);res.setHeader('Cache-Control','no-store');
     for(const rule of headers)if(rule.source==='/'+rel)for(const h of rule.headers)res.setHeader(h.key,h.value);
     res.end(req.method==='HEAD'?undefined:data);
