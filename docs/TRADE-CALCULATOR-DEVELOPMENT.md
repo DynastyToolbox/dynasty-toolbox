@@ -40,6 +40,24 @@ not been published to the live site. The local review page is
 - Saved-link loading waits for both account leagues and calculator membership configuration,
   preventing a disabled Load button from dropping the initial automatic import.
 
+## Market balance review — September 21, 2026
+
+- Server evaluation now returns each team's Overall sends, receives and net, applying the
+  shared league scoring filters and excluding stud bonus. Existing team totals and ranks
+  retain their independent scoring modes and calculations.
+- A lightweight SVG display sits above the team cards: two-team balance bar, or 3–12 team
+  radar polygon. Numbered axes map to full team names and signed values in an adjacent list.
+  The radar's halfway ring is zero; outward means gain, inward loss. Shared symmetric scale
+  starts at ±5,000 and expands in 5,000-point steps. Unranked transfers display an incomplete
+  balance warning. Pending/error states remove stale results.
+- Eight trade tests pass, including Overall independence from team modes/bonus, league
+  scoring changes, three-way conservation, unranked values, scale expansion and 12 axes.
+- Browser checks: two-team Josh Allen transfer expanded to ±15,000; a three-way Allen /
+  Jefferson / Bowers exchange returned -3,351 / +3,033 / +318 despite mixed ranking modes.
+  TE Premium changed Bowers' market contribution. Clear restored zero and ±5,000. Twelve
+  slots fit a 375px viewport without horizontal overflow; desktop checked at 1440px.
+- This addition remains local to the development branch, not production or hosted preview.
+
 ## Remaining launch work
 
 This checkpoint is for review. The protected HTTPS preview still needs this commit uploaded

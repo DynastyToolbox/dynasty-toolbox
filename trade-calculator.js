@@ -19,7 +19,11 @@
     $('refresh-trade-league').disabled=loading;
     $('trade-league-name').textContent=league?`${league.name} · ${league.season}`:'';
   }
-  function changed(clearMessage=true){if(clearMessage)message('');revision++;renderTeams();schedule();}
+  function balancePending(text='Updating market values…'){
+    $('trade-balance').setAttribute('aria-busy','true');
+    $('trade-balance-content').replaceChildren(el('p',text));
+  }
+  function changed(clearMessage=true){if(clearMessage)message('');revision++;balancePending();renderTeams();schedule();}
   function addAsset(team,asset){
     if(transfers.some(m=>m.from===team.id&&m.asset===asset))return;
     const other=teams.find(t=>t.id!==team.id&&(!league||t.roster_id));
@@ -72,6 +76,8 @@
     container.classList.toggle('grid',teams.length>=3);updateControls();
   }
   function renderResult(result){
+    DynastyTradeBalance.render($('trade-balance-content'),result.teams.map(t=>({...t,name:teamName(teams.find(team=>team.id===t.id))})),transfers.length>0);
+    $('trade-balance').setAttribute('aria-busy','false');
     for(const team of result.teams){
       const sends=$(`team${team.id}Sends`);if(!sends)continue;
       for(const asset of team.sends){const row=[...sends.children].find(r=>r.dataset.asset===asset.asset);if(row)row.querySelector('.player-score').textContent=asset.ranked?asset.score.toFixed(2):'Unranked · 0.00';}
@@ -96,15 +102,15 @@
   }
   function schedule(){clearTimeout(timer);timer=setTimeout(calculate,150);}
   async function calculate(){
-    if(running||!access||loading)return;running=true;const version=revision;
+    if(running||!access||loading)return;running=true;const version=revision;balancePending();
     try{
       const result=await api('trade-evaluate',{teams:teams.map(t=>({...t})),transfers:transfers.map(m=>({...m})),format:format(),league_id:league?.id});
       if(version===revision)renderResult(result);
-    }catch(e){if(version===revision){message(e.message,true);document.querySelectorAll('.trade-totals').forEach(n=>n.textContent='Values unavailable — retry below.');document.querySelectorAll('.trade-ranks').forEach(n=>n.textContent='Ranks unavailable.');}}
+    }catch(e){if(version===revision){message(e.message,true);balancePending('Market values unavailable — use Retry values below.');$('trade-balance').setAttribute('aria-busy','false');document.querySelectorAll('.trade-totals').forEach(n=>n.textContent='Values unavailable — retry below.');document.querySelectorAll('.trade-ranks').forEach(n=>n.textContent='Ranks unavailable.');}}
     finally{running=false;if(version!==revision)schedule();}
   }
   async function loadLeague(refresh=false){
-    await ready;if(loading)return;loading=true;revision++;updateControls();message('Loading league rosters and draft picks…');
+    await ready;if(loading)return;loading=true;revision++;balancePending();updateControls();message('Loading league rosters and draft picks…');
     try{
       const id=refresh?league.id:$('leagueId').value.trim(), result=await api('trade-league',{league_id:id,refresh});
       league=result.league;transfers=[];
@@ -125,7 +131,7 @@
   async function initialize(){
     try{
       const [config,rows]=await Promise.all([api('trade-config'),DynastyRankings.getRows('overall')]);access=config.access;players=rows;changed();
-    }catch(e){message(e.message,true);updateControls();}
+    }catch(e){message(e.message,true);balancePending('Market values unavailable — use Retry values below.');$('trade-balance').setAttribute('aria-busy','false');updateControls();}
   }
   const ready=initialize();
   // Saved leagues can finish loading before membership access enables the Load button.
@@ -139,6 +145,6 @@
   window.addEventListener('pageshow',event=>{if(event.persisted)location.reload();});
   document.addEventListener('visibilitychange',async()=>{
     if(document.hidden||loading)return;
-    try{access=(await api('trade-config')).access;if(!access.premium&&(league||teams.length>2)){league=null;teams=teams.slice(0,2);teams.forEach(t=>t.roster_id='');transfers=[];}changed();}catch(e){access=null;message(e.message,true);updateControls();}
+    try{access=(await api('trade-config')).access;if(!access.premium&&(league||teams.length>2)){league=null;teams=teams.slice(0,2);teams.forEach(t=>t.roster_id='');transfers=[];}changed();}catch(e){access=null;revision++;balancePending('Sign in again or use Retry values below.');$('trade-balance').setAttribute('aria-busy','false');message(e.message,true);updateControls();}
   });
 })();

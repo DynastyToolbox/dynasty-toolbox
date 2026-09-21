@@ -236,6 +236,7 @@
   <script src="/scoring_formats.js"></script>
   <script src="/account-session.js" defer></script>
   <link rel="stylesheet" href="/trade-calculator.css">
+  <script src="/trade-balance.js" defer></script>
   <script src="/trade-calculator.js" defer></script>
   <script src="/my-leagues.js" defer></script>
 </head>
@@ -282,6 +283,11 @@
       <h3 id="trade-league-name"></h3>
       <p>Choose each league team once. Changing a team clears its transfers.</p>
       <button id="leave-league" hidden>Clear trade & leave league</button>
+    </section>
+    <section id="trade-balance" class="trade-balance" aria-labelledby="trade-balance-title" aria-busy="true">
+      <h2 id="trade-balance-title">Market value balance</h2>
+      <p class="balance-caption">Overall values · League scoring applied · No stud bonus</p>
+      <div id="trade-balance-content"><p>Loading market values…</p></div>
     </section>
     <div class="trade-container" id="tradeContainer"></div>
     <div class="trade-actions"><button id="addTeamButton" disabled>Add Team</button><button id="clear-trade">Clear trade</button><button id="retry-trade">Retry values</button></div>

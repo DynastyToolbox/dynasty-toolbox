@@ -23,3 +23,28 @@
 .page-trade #trade-message[data-error=true]{color:#9d2020}
 .page-trade .trade-help{max-width:900px;margin:12px auto;padding:0 16px;font-size:.9em;color:#35584b}
 @media(max-width:700px){.page-trade .trade-league-section,.page-trade .trade-actions{margin:12px}.page-trade .trade-league-section input{width:100%}}
+.page-trade .trade-balance{width:calc(100% - 24px);max-width:940px;box-sizing:border-box;margin:20px auto 0;padding:18px 24px;border:1px solid #b2cbc4;border-top:3px solid #00796b;border-radius:12px;background:linear-gradient(135deg,#fff,#edf3f0);color:#004d40}
+.page-trade .trade-balance h2{font-size:1.25rem;margin:0 0 4px}
+.page-trade .balance-caption,.page-trade .balance-note,.page-trade .balance-scale{font-size:.85rem;color:#476257;margin:6px 0}
+.page-trade .balance-layout{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);align-items:center;gap:24px;max-width:730px;margin:12px auto}
+.page-trade .balance-chart{min-width:0}
+.page-trade .balance-chart svg{display:block;width:100%;height:auto;overflow:visible;font-family:inherit;fill:#004d40;font-size:15px}
+.page-trade .balance-grid{fill:none;stroke:#c9d6d0;stroke-width:1}
+.page-trade .balance-axis{stroke:#d2ddd7;stroke-width:1}
+.page-trade .balance-zero-ring{fill:none;stroke:#54766b;stroke-width:1.6;stroke-dasharray:4 3}
+.page-trade .balance-shape{fill:#00856c;fill-opacity:.22;stroke:#00735d;stroke-width:2;stroke-linejoin:round}
+.page-trade .balance-dot{fill:#00735d;stroke:#fff;stroke-width:2}
+.page-trade .balance-loss-dot{fill:#b02e35}
+.page-trade .balance-track{stroke:#d3dfd9;stroke-width:12;stroke-linecap:round}
+.page-trade .balance-bar-fill{stroke:#00856c;stroke-width:12;stroke-linecap:round}
+.page-trade .balance-zero{stroke:#54766b;stroke-width:2;stroke-dasharray:3 3}
+.page-trade .balance-svg-note{font-size:12px;fill:#476257}
+.page-trade .balance-team-list{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:minmax(0,1fr);gap:8px;text-align:left}
+.page-trade .balance-team-list li{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#fff9;border:1px solid #d8e3dd;border-radius:7px;padding:8px 10px;min-width:0;font-size:.95rem}
+.page-trade .balance-team-name{display:flex;align-items:center;gap:8px;overflow-wrap:anywhere;min-width:0}
+.page-trade .balance-badge{display:inline-flex;align-items:center;justify-content:center;flex:0 0 24px;height:24px;border-radius:50%;background:#dce9e2;color:#004d40;font-size:.8rem}
+.page-trade .balance-team-list strong{white-space:nowrap;font-variant-numeric:tabular-nums}
+.page-trade .balance-gain{color:#087d38}.page-trade .balance-loss{color:#b02e35}
+.page-trade .balance-warning{color:#814900;font-size:.9rem;margin-bottom:0}
+.page-trade .trade-balance[aria-busy=true] #trade-balance-content{min-height:70px;display:grid;place-items:center}
+@media(max-width:600px){.page-trade .trade-balance{padding:16px 12px}.page-trade .balance-layout{grid-template-columns:minmax(0,1fr);gap:12px}.page-trade .balance-chart{width:100%;max-width:280px;margin:auto}.page-trade .balance-team-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.page-trade .balance-team-list li{flex-direction:column;align-items:flex-start;gap:4px;font-size:.85rem}.page-trade .balance-note{font-size:.8rem}}

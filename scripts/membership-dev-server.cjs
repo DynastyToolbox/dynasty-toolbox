@@ -14,7 +14,7 @@ const handler=createHandler(access=>createClient(process.env.SUPABASE_URL,proces
   auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
 }),env);
 const files=new Set(['account.html','members.html','privacy.html','account.js','members.js','account-session.js','my-leagues.js','style.css','account.css','members.css','assets/Logos/favicon.svg',
-  'trade_calculator.html','trade-calculator.js','trade-calculator.css','nfl_rankings_data.js','scoring_formats.js','data/nfl_rankings.json','nav.html','nav.js',
+  'trade_calculator.html','trade-calculator.js','trade-calculator.css','trade-balance.js','nfl_rankings_data.js','scoring_formats.js','data/nfl_rankings.json','nav.html','nav.js',
   'assets/icons/instagram.svg','assets/icons/x.png','assets/icons/tiktok.svg','assets/Logos/favicon-96x96.png','assets/Logos/favicon.ico','assets/Logos/apple-touch-icon.png','assets/Logos/site.webmanifest']);
 const headers=JSON.parse(fs.readFileSync(path.join(root,'vercel.json'),'utf8')).headers;
 const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.json':'application/json','.png':'image/png','.ico':'image/x-icon','.webmanifest':'application/manifest+json'};

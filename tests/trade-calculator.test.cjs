@@ -19,9 +19,13 @@ test('free server operations refuse league imports and more than two teams befor
 test('manual totals retain asymmetric ranking types, scoring and stud bonus',()=>{
   const input={format,teams:[{id:1,status:'overall'},{id:2,status:'tanking'}],transfers:[{from:1,to:2,asset:'QB One'},{from:2,to:1,asset:'WR Two'},{from:2,to:1,asset:"TE O'Neil"}]};
   const result=evaluate(input,free,book);assert.equal(result.teams[0].sendsTotal,115);assert.equal(result.teams[0].receivesTotal,130);assert.equal(result.teams[1].receivesTotal,50);
+  assert.equal(result.teams[0].market.net,30,'Overall balance excludes the 15 point stud bonus');
+  assert.equal(result.teams[1].market.net,-30,'Rebuilding selection does not change market balance');
   assert.equal(bonus([100],[80]),0);assert.equal(bonus([100],[]),0);
   const scored=evaluate({...input,format:{ppr:'ppr',superflex:false,tePremium:true}},free,book);
   assert.equal(scored.teams[0].sendsTotal,65);assert.equal(scored.teams[0].receivesTotal,139.125);
+  assert.equal(scored.teams[0].market.net,74.125,'market values use the league scoring filters');
+  assert.equal(scored.teams.reduce((sum,t)=>sum+t.market.net,0),0);
 });
 test('traded pick keeps its origin and identical-round picks are distinct',()=>{
   const league=fixture(),owner=league.teams[1];
@@ -40,6 +44,8 @@ test('three-way trades rank every roster after all transfers, without stud bonus
   assert.equal(result.teams[1].ranks.after.competing.score,160/5);
   assert.equal(result.teams[2].ranks.after.competing.rank,2);
   assert.equal(result.teams[0].ranks.after.tanking.score,25/3);
+  assert.deepEqual(result.teams.map(t=>t.market.net),[-50,20,30]);
+  assert.equal(result.teams.reduce((sum,t)=>sum+t.market.net,0),0,'market values are conserved across destinations');
 });
 test('server rejects spoofed ownership, duplicate players/picks, duplicate rosters and missing destinations',()=>{
   const league=fixture();
@@ -57,4 +63,15 @@ test('unranked imported assets stay visible and contribute zero, not a fabricate
   const league=fixture();league.teams[0].assets.push({id:'player:unknown',label:'Unknown',scores:Object.fromEntries(['overall','competing','tanking'].map(t=>[t,{value:0,position:'RB',ranked:false}]))});
   const result=evaluate({...body(),transfers:[{from:1,to:2,asset:'player:unknown'}]},premium,book,league);
   assert.equal(result.teams[0].sends[0].score,0);assert.equal(result.teams[0].sends[0].ranked,false);
+  assert.equal(result.teams[0].market.unranked,true);assert.equal(result.teams[1].market.unranked,true);
+});
+test('balance scale is shared and symmetric, expands beyond 5000, and places zero on the halfway ring',()=>{
+  const {model}=require('../trade-balance.js');
+  const make=values=>values.map((net,i)=>({id:i+3,market:{net}}));
+  const empty=model(make([0,0]));assert.equal(empty.limit,5000);assert.deepEqual(empty.teams.map(t=>t.radius),[.5,.5]);
+  const edge=model(make([-5000,5000]));assert.equal(edge.limit,5000);assert.deepEqual(edge.teams.map(t=>t.radius),[0,1]);
+  const large=model(make([-12001,8000,4001]));assert.equal(large.limit,15000);
+  assert.ok(large.teams.every(t=>t.radius>=0&&t.radius<=1));
+  const twelve=model(make([-6000,6000,...Array(10).fill(0)]));assert.equal(twelve.teams.length,12);assert.equal(new Set(twelve.teams.map(t=>t.angle)).size,12);
+  assert.throws(()=>model(make([NaN,0])));assert.throws(()=>model([{id:1},{id:2}]));
 });
