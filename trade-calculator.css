@@ -5,6 +5,10 @@
 .page-trade .trade-league-section button,.page-trade .trade-actions button{background:#004d40;color:white;cursor:pointer}
 .page-trade button:disabled{opacity:.55;cursor:not-allowed}
 .page-trade .trade-team-label{display:block;font-weight:bold}
+.page-trade .trade-header{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}
+.page-trade .trade-header>span{min-width:0;overflow-wrap:anywhere}
+.page-trade .trade-header .remove-team-btn{grid-column:1 / -1;justify-self:start;margin-left:0}
+@media(max-width:700px){.page-trade .trade-header{grid-template-columns:minmax(0,1fr)}.page-trade .trade-header .remove-team-btn{justify-self:stretch}}
 .page-trade .trade-team-label select,.page-trade .trade-roster-assets{display:block;width:100%;max-width:100%;box-sizing:border-box;margin:8px 0;padding:10px;font:inherit;color:#004d40;border:1px solid #004d40;border-radius:6px;background:#e0f2f1}
 .page-trade .trade-ranks{background:#f0f5f3;border-left:4px solid #00796b;padding:12px;border-radius:6px;margin:12px 0;overflow-wrap:anywhere}
 .page-trade .trade-ranks p{margin:8px 0 2px}
