@@ -42,6 +42,9 @@
         const label=el('label','League team','trade-team-label'),select=choices([['','Choose a league team'],...league.teams.map(t=>[t.roster_id,`${t.name}${t.manager&&t.name!==t.manager?' — '+t.manager:''}`,teams.some(other=>other!==team&&other.roster_id===t.roster_id)])],team.roster_id,`Team ${team.id} league roster`,value=>{
           team.roster_id=value;transfers=transfers.filter(m=>m.from!==team.id&&m.to!==team.id);changed();
         });label.append(select);box.append(label);
+        const pickLabel=el('label','Pick preference','trade-team-label');
+        pickLabel.append(choices([['low','Low (−20%)'],['neutral','Neutral'],['high','High (+20%)']],team.pickWeight||'neutral',`Team ${team.id} pick preference`,value=>{team.pickWeight=value;changed();}));
+        box.append(pickLabel);
         const ranks=el('div','Select a team to see its league ranks.','trade-ranks');ranks.id=`team${team.id}Ranks`;box.append(ranks);
       }
       const sends=el('div',undefined,'trade-sends');sends.append(el('h3','Sends:'));
@@ -115,7 +118,7 @@
       const id=refresh?league.id:$('leagueId').value.trim(), result=await api('trade-league',{league_id:id,refresh});
       league=result.league;transfers=[];
       const defaultTeam=String(window.DynastyLeagues?.teamFor(id)||'');
-      teams=teams.map((t,i)=>({...t,roster_id:refresh&&league.teams.some(r=>r.roster_id===t.roster_id)?t.roster_id:i===0&&league.teams.some(r=>r.roster_id===defaultTeam)?defaultTeam:''}));
+      teams=teams.map((t,i)=>({...t,pickWeight:refresh?t.pickWeight:'neutral',roster_id:refresh&&league.teams.some(r=>r.roster_id===t.roster_id)?t.roster_id:i===0&&league.teams.some(r=>r.roster_id===defaultTeam)?defaultTeam:''}));
       $('leagueId').value=id;message('Choose a league team in each box. Loading or refreshing a league clears the trade.');
     }catch(e){message(e.message,true);}
     finally{loading=false;changed(false);}
@@ -123,7 +126,7 @@
   $('loadLeagueBtn').onclick=()=>loadLeague();
   $('leagueId').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();loadLeague();}};
   $('refresh-trade-league').onclick=()=>loadLeague(true);
-  $('leave-league').onclick=()=>{league=null;transfers=[];teams.forEach(t=>t.roster_id='');changed();};
+  $('leave-league').onclick=()=>{league=null;transfers=[];teams.forEach(t=>{t.roster_id='';t.pickWeight='neutral';});changed();};
   $('clear-trade').onclick=()=>{transfers=[];changed();};
   $('retry-trade').onclick=()=>{if(access)calculate();else initialize();};
   $('addTeamButton').onclick=()=>{if(!access||teams.length>=access.features.tradeTeams)return;teams.push({id:nextId++,status:'overall',roster_id:''});changed();};
@@ -143,10 +146,13 @@
       if(!league&&!loading){$('leagueId').value=chosen;await loadLeague();}
       if(!league||league.id!==chosen)return;
       const from=league.teams.find(t=>t.roster_id===params.get('from')),to=league.teams.find(t=>t.roster_id===params.get('to'));
-      if(!from||!to||from===to||!from.assets.some(a=>a.id===params.get('send'))||!to.assets.some(a=>a.id===params.get('receive'))){message('This trade idea no longer matches the league rosters. Build a new trade.',true);return;}
+      const send=params.getAll('send'),receive=params.getAll('receive'),assets=[...send,...receive];
+      if(!from||!to||from===to||!send.length||!receive.length||assets.length>120||new Set(assets).size!==assets.length||send.some(id=>!from.assets.some(a=>a.id===id))||receive.some(id=>!to.assets.some(a=>a.id===id))){message('This trade idea no longer matches the league rosters. Build a new trade.',true);return;}
       const mode=['overall','competing','tanking'].includes(params.get('mode'))?params.get('mode'):'overall';
-      teams=[{id:1,status:mode,roster_id:from.roster_id},{id:2,status:'overall',roster_id:to.roster_id}];
-      transfers=[{from:1,to:2,asset:params.get('send')},{from:2,to:1,asset:params.get('receive')}];nextId=3;
+      const theirMode=['overall','competing','tanking'].includes(params.get('theirMode'))?params.get('theirMode'):'overall';
+      const weight=key=>['low','neutral','high'].includes(params.get(key))?params.get(key):'neutral';
+      teams=[{id:1,status:mode,roster_id:from.roster_id,pickWeight:weight('pickWeight')},{id:2,status:theirMode,roster_id:to.roster_id,pickWeight:weight('theirPickWeight')}];
+      transfers=[...send.map(asset=>({from:1,to:2,asset})),...receive.map(asset=>({from:2,to:1,asset}))];nextId=3;
       const ppr=['std','hppr','ppr'].includes(params.get('ppr'))?params.get('ppr'):'hppr';
       $('nonPpr').checked=ppr==='std';$('halfPpr').checked=ppr==='hppr';$('fullPpr').checked=ppr==='ppr';$('superflex').checked=params.get('sf')!=='false';$('tePremium').checked=params.get('tep')==='true';
       changed();message('Trade idea loaded. Review the values and adjust the proposal.');return;
@@ -157,6 +163,6 @@
   window.addEventListener('pageshow',event=>{if(event.persisted)location.reload();});
   document.addEventListener('visibilitychange',async()=>{
     if(document.hidden||loading)return;
-    try{access=(await api('trade-config')).access;if(!access.premium&&(league||teams.length>2)){league=null;teams=teams.slice(0,2);teams.forEach(t=>t.roster_id='');transfers=[];}changed();}catch(e){access=null;revision++;balancePending('Sign in again or use Retry values below.');$('trade-balance').setAttribute('aria-busy','false');message(e.message,true);updateControls();}
+    try{access=(await api('trade-config')).access;if(!access.premium&&(league||teams.length>2)){league=null;teams=teams.slice(0,2);teams.forEach(t=>{t.roster_id='';t.pickWeight='neutral';});transfers=[];}changed();}catch(e){access=null;revision++;balancePending('Sign in again or use Retry values below.');$('trade-balance').setAttribute('aria-busy','false');message(e.message,true);updateControls();}
   });
 })();

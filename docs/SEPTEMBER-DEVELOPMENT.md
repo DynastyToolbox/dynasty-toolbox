@@ -15,22 +15,42 @@ links remain usable if catalogue loading fails. Longer editorial copy remains th
 ## Trade Finder
 
 Free server result: team selection and explanations of complementary roster depth.
-Premium server result: specific targets, up to three one-for-one proposals per partner,
-and up to 120 untouchable players across rosters. Exclusions last for the current visit.
+Premium adds targets and up to six package proposals per partner, team-specific ranking
+systems and Low/Neutral/High pick weights (0.8/1/1.2), and up to 120 untouchable players
+or picks. Preferences and exclusions apply to the current page visit. Roster checklists
+are position-grouped, use analyzer colors, and sort by the roster's preference-adjusted
+score and shared scoring format. Picks retain owner/origin identities and compact labels.
 Saved accounts/leagues/default team use the existing shared integration.
 
-First-version method: sum top three ranked players at each of QB/RB/WR/TE, compare against
-the league median positional sum; below 80% is a need, above 120% is depth. The selected
-Overall/Contending/Rebuilding system and scoring adjustments apply to these profiles.
-Picks/unranked players do not create positional needs. This does not model starting slots,
-injuries, age curves, managers' preferences, or actual willingness to trade. Proposals
-require mutually matching positions and Overall market values within 25% of the larger
-side; no stud bonus. No promise of fairness or of a player being undervalued.
+Needs/depth: sum the top three ranked players at QB/RB/WR/TE, compare with league median;
+below 80% is need, above 120% is depth. Each roster is compared against ALL rosters in
+its own selected ranking system so differently scaled rankings are never mixed. Picks
+and unranked players do not create positional needs. Profiles do not model starting slots.
 
-Only Sleeper dynasty leagues are currently supported, via the calculator's server loader.
-Premium checks happen before private target-roster responses and on every match request.
-Calculator handoff validates roster IDs and current asset ownership, preserves scoring,
-and recalculates using the established calculator server logic. No trade is sent to Sleeper.
+Packages: 1:1, 2:1, 3:1, 2:2 and reverse; at most three assets/two picks per side and four
+assets total. At least one player must change teams. In consolidations, the larger
+package's best asset must be at least 50% of the smaller package's best asset. Only
+positive Overall assets ranked in both selected modes enter the candidate pool. Deep
+rosters are bounded to their top 40 players and 24 picks by Overall value (UI explains
+this and flags when it applies). Sorted value ranges avoid a full Cartesian package search.
+
+Market difference <=15% of the larger unweighted Overall total, with shared scoring
+adjustments and WITHOUT Stud Bonus. Each team's own net must be >=-1000 using its own
+ranking mode and pick weight for BOTH sends/receives, including the existing calculator
+Stud Bonus. Pick preference never affects league rank scores or the market graph.
+Need improvements and mutual preference gains prioritize suggestions; player-for-pick
+ideas can appear without complementary positions. Results cap repetitive main exchanges.
+No claim that a manager will accept or that ranking value equals actual market price.
+
+Calculator handoff validates each current owner's repeated send/receive IDs, applies
+both approaches and pick preferences, and recalculates through the shared server logic.
+Neutral preference preserves previous behavior. No trade is sent to Sleeper. Premium
+rosters and team preferences remain server-gated; rollout flag still applies.
+
+Homepage copy now explains the three systems and distinguishes numbers-based values
+from crowdsourced market prices, in the owner's voice. Mock draft team/logo normalization
+preserves traded-pick arrow files. The local preview file allowlist now permits those
+existing filenames while keeping all other file/path restrictions.
 
 ## Simulator
 
@@ -74,3 +94,11 @@ players have at least three qualifying games. Browser: saved team import, rollin
 team medians and QB/FLEX/Superflex lineup, real partner matches, player proposal handoff
 (Quinshon Judkins / Harold Fannin, +293 Overall), simulator assignment/result, and mock
 deep link checked. No production deployment or GitHub push performed.
+
+September 22 refinement validation: 72 tests passed, including seven focused package /
+preference / threshold tests. Real 10-team league search produced 54 proposals across
+nine partners in 652ms after roster import. Three-for-one browser handoff retained both
+modes/weights and produced matching +1244 / +2303 totals. All 521 published NFL pick
+rows resolve to existing logos; browser full (100), condensed (100), and team (32) views
+had zero broken logos. No production deployment or GitHub push.
+Responsive review: Trade Finder and Home at 375px had no horizontal overflow; roster groups, pick preference controls, and exclusion updates worked. Desktop Finder also had no horizontal overflow.
