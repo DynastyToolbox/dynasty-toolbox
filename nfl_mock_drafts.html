@@ -246,6 +246,9 @@
     function normalizeTeamClass(team) {
       return team.toLowerCase().replace(/[^a-z0-9]/g, "").trim();
     }
+    function teamLogoFile(team) {
+      return normalizeTeamClass(team) + (team.includes('↕') ? '-↕' : '') + '.png';
+    }
     // Helper: Normalize team display names: remove extra symbols and set to all caps.
     function normalizeTeamDisplay(team) {
       return team.toUpperCase().replace(/[^A-Z0-9]/g, "").trim();
@@ -380,7 +383,7 @@
           if (!pick.team || pick.team.trim().toUpperCase() === "TEAM") return;
           const card = document.createElement("div");
           card.className = "condensed-card";
-          const logoFileName = pick.team ? pick.team.toLowerCase().replace(/\s+/g, "-") + ".png" : "";
+          const logoFileName = pick.team ? teamLogoFile(pick.team) : "";
           const logoPath = logosPath + logoFileName;
           card.innerHTML = `
             ${pick.team ? `<img src="${logoPath}" alt="${pick.team} logo">` : ""}
@@ -398,9 +401,9 @@
         data.forEach(pick => {
           if (!pick.team || pick.team.trim().toUpperCase() === "TEAM") return;
           const row = document.createElement("div");
-          const teamColorClass = pick.team ? "team-" + pick.team.toLowerCase().replace(/\s+/g, "-") : "";
+          const teamColorClass = pick.team ? "team-" + normalizeTeamClass(pick.team) : "";
           row.className = `draft-row ${teamColorClass}`;
-          const logoFileName = pick.team ? pick.team.toLowerCase().replace(/\s+/g, "-") + ".png" : "";
+          const logoFileName = pick.team ? teamLogoFile(pick.team) : "";
           const logoPath = logosPath + logoFileName;
           const logoHTML = pick.team ? `<img src="${logoPath}" alt="${pick.team} logo" class="team-logo">` : "";
           row.innerHTML = `

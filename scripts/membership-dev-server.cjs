@@ -29,7 +29,7 @@ http.createServer(async(req,res)=>{
   if(pathname==='/api/account')return handler(req,res);
   if(!['GET','HEAD'].includes(req.method)){res.writeHead(405);return res.end();}
   const rel=pathname==='/'?'account.html':pathname.slice(1);
-  if(!files.has(rel)&&!/^assets\/Logos\/[a-zA-Z0-9_-]+\.(png|svg)$/.test(rel)){res.writeHead(404);return res.end('This page is not included in the isolated development preview.');}
+  if(!files.has(rel)&&!/^assets\/Logos\/[a-zA-Z0-9_-]+(?:↕)?\.(png|svg)$/.test(rel)){res.writeHead(404);return res.end('This page is not included in the isolated development preview.');}
   try{
     let data=fs.readFileSync(path.join(root,rel));
     if(rel.endsWith('.html')){let html=data.toString('utf8');html=/<main(?:\s[^>]*)?>/.test(html)?html.replace(/<main(?:\s[^>]*)?>/,match=>match+banner):html.replace('<div id="nav-placeholder"></div>','<div id="nav-placeholder"></div>'+banner);data=Buffer.from(html);}
