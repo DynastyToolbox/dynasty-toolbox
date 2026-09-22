@@ -14,7 +14,7 @@ const handler=createHandler(access=>createClient(process.env.SUPABASE_URL,proces
   auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
 }),env);
 const files=new Set(['account.html','members.html','privacy.html','account.js','members.js','account-session.js','my-leagues.js','style.css','account.css','members.css','assets/Logos/favicon.svg',
-  'index.html','home.css','home.js','trade_finder.html','trade-finder.js','trade-finder.css','devy_mock_simulator.html','site_sheets.js','data/site_sheets.json',
+  'index.html','home.css','home.js','trade_finder.html','trade-finder.js','pick_preferences.js','trade-finder.css','devy_mock_simulator.html','site_sheets.js','data/site_sheets.json',
   'nfl_rankings.html','college_rankings.html','team_analyzer.html','team_analyzer.js','league_rankings.html','sos.html','best_available.html','best_available.js',
   'median_rankings.html','median_data.js','median_team.js','median_team.css','sleeper_data.js','data/weekly_points_current.json','nfl_mock_drafts.html','dynasty_mock_drafts.html',
   'trade_calculator.html','trade-calculator.js','trade-calculator.css','trade-balance.js','nfl_rankings_data.js','scoring_formats.js','data/nfl_rankings.json','nav.html','nav.js',

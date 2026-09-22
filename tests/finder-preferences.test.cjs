@@ -19,12 +19,15 @@ test('saved preferences isolate accounts and leagues, allow updates, deny anonym
  const {PGlite}=require(process.env.PGLITE_TEST_MODULE),db=new PGlite(),a=user.id,b='22222222-2222-4222-8222-222222222222';
  try{
  await db.exec("create role anon; create role authenticated; create schema auth; grant usage on schema auth to anon,authenticated; create table auth.users(id uuid primary key); create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.sub',true),'')::uuid$$;");
- await db.exec(fs.readFileSync(path.join(__dirname,'../supabase/migrations/202609220002_finder_preferences.sql'),'utf8'));await db.query('insert into auth.users values($1),($2)',[a,b]);
+ await db.exec(fs.readFileSync(path.join(__dirname,'../supabase/migrations/202609220002_finder_preferences.sql'),'utf8'));await db.exec(fs.readFileSync(path.join(__dirname,'../supabase/migrations/202609220003_pick_preference_slider.sql'),'utf8'));await db.query('insert into auth.users values($1),($2)',[a,b]);
  async function as(id,fn,role='authenticated'){await db.exec('begin; set local role '+role);await db.query("select set_config('request.jwt.sub',$1,true)",[id||'']);try{const r=await fn();await db.exec('commit');return r;}catch(e){await db.exec('rollback');throw e;}}
  const save=(owner,id,data=prefs)=>db.query('insert into finder_preferences values($1,$2,$3::jsonb) on conflict(user_id,league_id) do update set preferences=excluded.preferences',[owner,id,JSON.stringify(data)]);
  await as(a,()=>save(a,'123456789'));await as(a,()=>save(a,'987654321',[]));
  await as(a,()=>save(a,'123456789',[{...prefs[0],pickWeight:'high'}]));
  assert.equal((await as(a,()=>db.query("select preferences from finder_preferences where league_id='123456789'"))).rows[0].preferences[0].pickWeight,'high');
+ await as(a,()=>save(a,'123456789',[{...prefs[0],pickWeight:-7}]));
+ assert.equal((await as(a,()=>db.query("select preferences from finder_preferences where league_id='123456789'"))).rows[0].preferences[0].pickWeight,-7);
+ for(const bad of [21,-21,1.5,'7',null,undefined])await assert.rejects(()=>as(a,()=>save(a,'123456789',[{...prefs[0],pickWeight:bad}])),/check constraint/);
  assert.equal((await as(b,()=>db.query('select * from finder_preferences'))).rows.length,0);
  assert.equal((await as(b,()=>db.query("update finder_preferences set preferences='[]' returning *"))).rows.length,0);
  await assert.rejects(()=>as(b,()=>save(a,'123456789')),/row-level security/);

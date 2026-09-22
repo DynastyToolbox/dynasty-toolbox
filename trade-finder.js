@@ -1,7 +1,7 @@
 'use strict';
 (()=>{
   const $=id=>document.getElementById(id),api=(action,body)=>DynastyAccount.request(action,body);
-  const modes={overall:'Overall',competing:'Contending',tanking:'Rebuilding'},weights={low:.8,neutral:1,high:1.2},positions=['QB','RB','WR','TE','PICK'];
+  const modes={overall:'Overall',competing:'Contending',tanking:'Rebuilding'},weights=DynastyPickPreferences,positions=['QB','RB','WR','TE','PICK'];
   let league=null,rosters=[],excluded=new Set(),preferences=new Map(),busy=false,saving=false,version=0,prefsDirty=false,prefsTask=null,accountEpoch=0,prefsReady=false;
   const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;if(cls)n.className=cls;return n;};
   const status=(text,error=false)=>{$('finder-status').textContent=text;$('finder-status').dataset.error=String(error);};
@@ -36,11 +36,13 @@
       const label=el('label','Approach'),select=el('select');select.setAttribute('aria-label',t.name+' approach');
       for(const [v,text] of Object.entries(modes))select.add(new Option(text,v));select.value=pref.mode;
       select.onchange=()=>{pref.mode=select.value;if(t.id===$('finder-team').value)$('finder-mode').value=select.value;preferenceChanged();};label.append(select);
-      const field=el('fieldset',null,'finder-pick-weight');field.append(el('legend','Pick preference'));
-      for(const [v,text] of [['low','Low −20%'],['neutral','Neutral'],['high','High +20%']]){
-        const l=el('label'),input=el('input');input.type='radio';input.name='pick-weight-'+t.id;input.value=v;input.checked=pref.pickWeight===v;input.setAttribute('aria-label',t.name+' picks '+text);
-        input.onchange=()=>{pref.pickWeight=v;preferenceChanged();};l.append(input,el('span',text));field.append(l);
-      }
+      const field=el('label',null,'finder-pick-slider'),heading=el('span','Pick preference'),input=el('input'),output=el('output');
+      input.type='range';input.min='-20';input.max='20';input.step='1';input.value=weights.percent(pref.pickWeight);
+      input.setAttribute('aria-label',t.name+' pick preference');
+      const update=()=>{const n=Number(input.value);output.textContent=(n>0?'+':'')+n+'%';input.setAttribute('aria-valuetext',output.textContent+' '+weights.label(n)+' pick preference');};
+      update();input.oninput=update;input.onchange=()=>{pref.pickWeight=Number(input.value);preferenceChanged();};
+      const ends=el('span',null,'finder-slider-ends');ends.append(el('span','-20%'),el('span','0%'),el('span','+20%'));
+      heading.append(output);field.append(heading,input,ends);
       row.append(name,label,field);box.append(row);
     }
   }
@@ -48,7 +50,7 @@
     const box=$('exclude-players');box.replaceChildren();
     const roster=rosters.find(t=>t.id===$('exclude-roster').value),q=$('exclude-search').value.toLowerCase(),pref=preferences.get(roster?.id);
     if(!roster||!pref)return;
-    const value=p=>DynastyScoring.score(p.scores[pref.mode].value,p.scores[pref.mode].position,format())*(p.position==='PICK'?weights[pref.pickWeight]:1);
+    const value=p=>DynastyScoring.score(p.scores[pref.mode].value,p.scores[pref.mode].position,format())*(p.position==='PICK'?weights.multiplier(pref.pickWeight):1);
     for(const pos of positions){
       const assets=roster.players.filter(p=>p.position===pos&&p.name.toLowerCase().includes(q)).sort((a,b)=>value(b)-value(a)||a.name.localeCompare(b.name));
       if(!assets.length)continue;
@@ -125,7 +127,6 @@
   }
   function render(result){
     const summary=$('finder-summary');summary.replaceChildren(el('h2',result.team.name),el('p','Needs: '+(result.team.needs.join(', ')||'None')),el('p','Depth: '+(result.team.surplus.join(', ')||'None')));
-    summary.append(el('p',(result.team.requirements.fallback?'Default lineup (Sleeper slots unavailable): ':'Sleeper lineup: ')+result.team.requirements.slots.join(' \u00b7 '),'finder-note'));
     const box=$('finder-results');box.replaceChildren();
     if(result.pinsError)box.append(el('p',result.pinsError,'finder-pin-error'));
     const matches=[...result.matches];
@@ -136,7 +137,7 @@
       card.append(el('h3',m.name),el('p','Needs: '+(m.needs.join(', ')||'None')));
       if(!result.premium)card.append(el('p','Premium adds trade ideas, pins and team preferences.'));
       else{
-        card.append(el('p',modes[m.preference.mode]+' · '+m.preference.pickWeight+' pick preference','finder-note'));
+        card.append(el('p',modes[m.preference.mode]+' · '+weights.label(m.preference.pickWeight)+' pick preference','finder-note'));
         const pins=result.pins.filter(p=>p.partner_id===m.id),keys=new Set(pins.map(tradeKey)),ideas=m.proposals.filter(p=>!keys.has(tradeKey(p)));
         if(pins.length){card.append(el('h4','Pinned trades'),el('p','Values use your current settings.','finder-note'));pins.forEach(p=>card.append(proposal(p,result,m)));}
         if(pins.length&&ideas.length)card.append(el('h4','More ideas'));
