@@ -252,7 +252,7 @@
 }
   </style>
   <script src="/site_sheets.js"></script>
-  <script src="/account-session.js" defer></script>
+  <script src="/account-session.js"></script>
 </head>
 <body class="page-simulator">
   <header><div class="header-account"><a href="account.html" data-account-link><span>Account</span></a></div>
@@ -303,6 +303,7 @@ Enable <strong>Include Devy Rankings</strong> to use unique base scores for each
     </label>
   </div>
   
+  <p id="devy-access-note" role="status" style="text-align:center">Checking simulator access…</p>
   <!-- Finish Draft button -->
   <div style="text-align:center;">
     <button id="finishDraftButton">Finish Draft</button>
@@ -382,172 +383,21 @@ Enable <strong>Include Devy Rankings</strong> to use unique base scores for each
   </button>
 
   <script>
-    /********** CSV URLs **********/
-    const draftPicksUrl = "devy_mock_simulator_1";
-    const availablePlayersUrl = "devy_mock_simulator_2"
-; // <-- VERIFY URL if needed
-    // (NOTE: Use your correct availablePlayersUrl)
-    const teamPosValuesUrl = "devy_mock_simulator_3";
-    // Devy Rankings CSV URL
-    const devyRankingsUrl = "devy_mock_simulator_4";
-
-    const logosPath = "./assets/Logos/";
-    /********** Hit Chances by Position and Round **********/
-    const hitChances = {
-      "RB": { 1: 0.85, 2: 0.475, 3: 0.375, 4: 0.175, 5: 0.16, 6: 0.12, 7: 0.04 },
-      "WR": { 1: 0.575, 2: 0.40, 3: 0.24, 4: 0.09, 5: 0.075, 6: 0.05, 7: 0.04 },
-      "QB": { 1: 0.645, 2: 0.425, 3: 0.125, 4: 0.105, 5: 0.0, 6: 0.10, 7: 0.0 },
-      "TE": { 1: 0.80, 2: 0.375, 3: 0.27, 4: 0.26, 5: 0.04, 6: 0.075, 7: 0.0 }
-    };
-
-    /********** Global Data Arrays **********/
-    let draftPicks = [];       // From NFL draft board CSV
-    let availablePlayers = []; // From available players CSV
-    let teamPositionValues = {}; // From team position values CSV
-    let devyRankings = {};     // From devy rankings CSV
-    let selectedAvailablePlayer = null;
-
-    // Global object to store the collapse state for each round.
-    let collapsedRounds = {};
-
-    // Search & sort state for available players
-let playerSearchTerm = "";
-let playerSortMode = "rank";
-let playerPositionFilter = "ALL";
-
-    /********** CSV Parsing Utility **********/
-    function parseCSV(text) {
-      const lines = text.trim().split("\n").filter(line => line.trim().length > 0);
-      if (lines.length === 0) return [];
-      const headers = lines[0].split(",").map(h => h.trim().replace(/"/g, ""));
-      const data = lines.slice(1).map(line => {
-        const values = line.split(",").map(v => v.trim().replace(/"/g, ""));
-        let obj = {};
-        headers.forEach((header, i) => {
-          obj[header] = values[i] || "";
-        });
-        return obj;
-      });
-      return data;
+    const logosPath='./assets/Logos/';
+    let draftPicks=[],availablePlayers=[],selectedAvailablePlayer=null,collapsedRounds={};
+    let playerSearchTerm='',playerSortMode='rank',playerPositionFilter='ALL',draftRevision=0,loadRevision=0;
+    async function loadData(){
+      const version=++loadRevision;
+      document.getElementById('finishDraftButton').disabled=true;
+      try{
+        const data=await DynastyAccount.request('devy-config');
+        if(version!==loadRevision)return;
+        draftPicks=data.picks;availablePlayers=data.players;
+        document.getElementById('devy-access-note').textContent=data.rounds===7?'Premium access · All seven NFL draft rounds.':'Free access · First two NFL draft rounds. Premium includes all seven.';
+        displayDraftPicks();displayAvailablePlayers();document.getElementById('finishDraftButton').disabled=false;
+      }catch(e){if(version===loadRevision)document.getElementById('devy-access-note').textContent=e.message;}
     }
-
-    /********** Load Team Position Values **********/
-    async function loadTeamPositionValues() {
-      try {
-        const text = await DynastySheets.csv(teamPosValuesUrl);
-        const data = parseCSV(text);
-        // Expected headers: TEAM, QUARTERBACK, RUNNINGBACK, WIDE RECIEVER, TIGHT END.
-        data.forEach(row => {
-          const teamName = row["TEAM"] || row["Team"] || row[0];
-          if (!teamName) return;
-          const key = teamName.toLowerCase();
-          teamPositionValues[key] = {
-            "QB": parseFloat(row["QUARTERBACK"]) || 0,
-            "RB": parseFloat(row["RUNNINGBACK"]) || 0,
-            "WR": parseFloat(row["WIDE RECIEVER"]) || 0,
-            "TE": parseFloat(row["TIGHT END"]) || 0
-          };
-        });
-        console.log("Loaded teamPositionValues:", teamPositionValues);
-      } catch (error) {
-        throw error;
-      }
-    }
-
-    async function loadDevyRankings() {
-  try {
-    const text = await DynastySheets.csv(devyRankingsUrl);
-    const data = parseCSV(text);
-    // Check for both uppercase and other variations.
-    data.forEach(row => {
-      const name = row["PLAYER NAME"] || row["player name"] || row["Player Name"] || row["Name"] || "";
-      let score = parseFloat(row["SCORE"] || row["score"]);
-      if (isNaN(score)) score = 1;
-      devyRankings[normalizeName(name)] = score;
-    });
-    console.log("Loaded devyRankings:", devyRankings);
-  } catch (error) {
-    throw error;
-  }
-}
-
-
-    /********** Data Loading **********/
-    async function loadData() {
-      try {
-        // Load NFL draft picks CSV and filter out rows with an empty round.
-        const draftText = await DynastySheets.csv(draftPicksUrl);
-        draftPicks = parseCSV(draftText);
-        draftPicks = draftPicks.filter(p => {
-          const r = p.ROUND || p.Round || "";
-          return r.trim() !== "" && !isNaN(parseInt(r));
-        });
-        console.log("Loaded draftPicks:", draftPicks);
-  
-        // Load available players CSV.
-        const playersText = await DynastySheets.csv(availablePlayersUrl);
-        availablePlayers = parseCSV(playersText);
-        console.log("Loaded availablePlayers (raw):", availablePlayers);
-  
-        // Filter available players to only include QB, RB, WR, TE using Position.
-        availablePlayers = availablePlayers.filter(p => {
-          let pos = p.Position || p.Pos;
-          return pos && ["QB", "RB", "WR", "TE"].includes(pos.toUpperCase());
-        });
-        availablePlayers.sort((a, b) => parseInt(a.Rank) - parseInt(b.Rank));
-        console.log("Filtered & Sorted availablePlayers:", availablePlayers);
-  
-        // Load team position values.
-        await loadTeamPositionValues();
-  
-        // Load devy rankings.
-        await loadDevyRankings();
-  
-        displayDraftPicks();
-        displayAvailablePlayers();
-      } catch (error) {
-        DynastySheets.showError(error);
-      }
-    }
-
-    /********** Scoring Helper Function **********/
-   function calculateScore(pick, player) {
-  const round = parseInt(pick.ROUND || pick.Round || "1");
-  const pos = (player.Position || player.Pos).toUpperCase();
-  const hitChance = (hitChances[pos] && hitChances[pos][round]) ? hitChances[pos][round] : 0;
-  const teamName = (pick.TEAM || pick.Team || "").toLowerCase();
-  let teamPosNum = 0;
-  if (teamName && teamPositionValues[teamName] && teamPositionValues[teamName][pos] !== undefined) {
-    teamPosNum = teamPositionValues[teamName][pos];
-  }
-
-  // Base scoring formula.
-  let score = 5000 * hitChance + 300 * teamPosNum;
-
-  // Superflex toggle: default checked
-  const superflexCheckbox = document.getElementById("superflexCheckbox");
-  const isSuperflex = superflexCheckbox ? superflexCheckbox.checked : true;
-
-  // Additional multipliers.
-  let posMultiplier = 1.0;
-  if (pos === "QB") {
-    // Superflex: 0.9, Non-superflex: 0.7
-    posMultiplier = isSuperflex ? 0.9 : 0.7;
-  } else if (pos === "TE") {
-    posMultiplier = 0.8;
-  }
-  score = score * posMultiplier;
-
-  // Check if Devy Rankings Score is enabled.
-  const includeDevy = document.getElementById("includeDevyCheckbox").checked;
-  if (includeDevy) {
-    let pName = player.Name || player.name || "";
-    const normName = normalizeName(pName);
-    const devyScore = (devyRankings.hasOwnProperty(normName) && !isNaN(devyRankings[normName])) ? devyRankings[normName] : 1;
-    score += 300 * devyScore;
-  }
-  return score;
-}
+    function recalcAssignedScores(){draftRevision++;document.getElementById('results').replaceChildren();}
 
     /********** UI Display Functions **********/
     // Toggle collapse/expand for a given round.
@@ -678,9 +528,9 @@ const teamCell = `
     // Assign the selected available player to a draft pick.
     function assignPlayerToPick(pickIndex, player) {
       // Calculate score using the helper function.
-      const score = calculateScore(draftPicks[pickIndex], player);
+      recalcAssignedScores();
       draftPicks[pickIndex].assignedPlayer = player;
-      draftPicks[pickIndex].score = score;
+
   
       const playerName = player.Name || player.name || "";
       availablePlayers = availablePlayers.filter(p => (p.Name || p.name) !== playerName);
@@ -692,6 +542,7 @@ const teamCell = `
     // Remove an assignment from a draft pick.
     function removeAssignment(event, pickIndex) {
       event.stopPropagation();
+      recalcAssignedScores();
       const removedPlayer = draftPicks[pickIndex].assignedPlayer;
       if (removedPlayer) {
         delete draftPicks[pickIndex].assignedPlayer;
@@ -703,21 +554,15 @@ const teamCell = `
       }
     }
 
-    // Recalculate scores for all assigned picks (to reflect current checkbox state).
-    function recalcAssignedScores() {
-      draftPicks.forEach(pick => {
-        if (pick.assignedPlayer) {
-          pick.score = calculateScore(pick, pick.assignedPlayer);
-        }
-      });
-    }
-
-    // When Finish Draft is clicked, recalc scores then display results.
-    function finishDraft() {
-      recalcAssignedScores();
-      const assignedPicks = draftPicks.filter(p => p.assignedPlayer);
-      assignedPicks.sort((a, b) => b.score - a.score);
-      displayResults(assignedPicks);
+    // Scores and round permissions are checked on the server for every result.
+    async function finishDraft(){
+      const button=document.getElementById('finishDraftButton'),revision=draftRevision;button.disabled=true;
+      document.getElementById('results').replaceChildren();
+      try{
+        const data=await DynastyAccount.request('devy-evaluate',{assignments:draftPicks.filter(p=>p.assignedPlayer).map(p=>({pick:p.id,player:p.assignedPlayer.id})),superflex:document.getElementById('superflexCheckbox').checked,includeDevy:document.getElementById('includeDevyCheckbox').checked});
+        if(revision===draftRevision)displayResults(data.results.map(r=>({...r.pick,assignedPlayer:r.player,score:r.score})));
+      }catch(e){document.getElementById('devy-access-note').textContent=e.message;}
+      finally{button.disabled=false;}
     }
 
     function displayResults(picks) {
@@ -799,6 +644,7 @@ if (mobileToggle && availablePanel) {
 }
 
     loadData();
+    window.addEventListener("dynasty-account-change",()=>{draftRevision++;draftPicks=[];availablePlayers=[];selectedAvailablePlayer=null;document.getElementById("results").replaceChildren();loadData();});
   </script>
    <!-- === Nav‐loader script === -->
   <script>

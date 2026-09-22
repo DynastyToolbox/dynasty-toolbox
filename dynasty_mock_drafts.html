@@ -199,7 +199,7 @@
         });
 
         // Initial load.
-        displayMockDraftList().catch(DynastySheets.showError);
+        displayMockDraftList().then(async()=>{const id=new URLSearchParams(location.search).get('draft'); if(!id)return; const draft=(await DynastySheets.mocks('dynasty')).find(d=>d.id===id);if(draft)await viewMockDraft(draft.title);}).catch(DynastySheets.showError);
     </script>
      <!-- === Nav‐loader script === -->
   <script>

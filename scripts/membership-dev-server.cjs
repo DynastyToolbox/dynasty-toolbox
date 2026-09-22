@@ -14,6 +14,9 @@ const handler=createHandler(access=>createClient(process.env.SUPABASE_URL,proces
   auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
 }),env);
 const files=new Set(['account.html','members.html','privacy.html','account.js','members.js','account-session.js','my-leagues.js','style.css','account.css','members.css','assets/Logos/favicon.svg',
+  'index.html','home.css','home.js','trade_finder.html','trade-finder.js','trade-finder.css','devy_mock_simulator.html','site_sheets.js','data/site_sheets.json',
+  'nfl_rankings.html','college_rankings.html','team_analyzer.html','team_analyzer.js','league_rankings.html','sos.html','best_available.html','best_available.js',
+  'median_rankings.html','median_data.js','median_team.js','median_team.css','sleeper_data.js','data/weekly_points_current.json','nfl_mock_drafts.html','dynasty_mock_drafts.html',
   'trade_calculator.html','trade-calculator.js','trade-calculator.css','trade-balance.js','nfl_rankings_data.js','scoring_formats.js','data/nfl_rankings.json','nav.html','nav.js',
   'assets/icons/instagram.svg','assets/icons/x.png','assets/icons/tiktok.svg','assets/Logos/favicon-96x96.png','assets/Logos/favicon.ico','assets/Logos/apple-touch-icon.png','assets/Logos/site.webmanifest']);
 const headers=JSON.parse(fs.readFileSync(path.join(root,'vercel.json'),'utf8')).headers;
@@ -26,10 +29,10 @@ http.createServer(async(req,res)=>{
   if(pathname==='/api/account')return handler(req,res);
   if(!['GET','HEAD'].includes(req.method)){res.writeHead(405);return res.end();}
   const rel=pathname==='/'?'account.html':pathname.slice(1);
-  if(!files.has(rel)){res.writeHead(404);return res.end('This test preview contains accounts and memberships only.');}
+  if(!files.has(rel)&&!/^assets\/Logos\/[a-zA-Z0-9_-]+\.(png|svg)$/.test(rel)){res.writeHead(404);return res.end('This page is not included in the isolated development preview.');}
   try{
     let data=fs.readFileSync(path.join(root,rel));
-    if(rel.endsWith('.html'))data=Buffer.from(data.toString('utf8').replace('<main class="account-shell">','<main class="account-shell">'+banner).replace('<main>','<main>'+banner));
+    if(rel.endsWith('.html')){let html=data.toString('utf8');html=/<main(?:\s[^>]*)?>/.test(html)?html.replace(/<main(?:\s[^>]*)?>/,match=>match+banner):html.replace('<div id="nav-placeholder"></div>','<div id="nav-placeholder"></div>'+banner);data=Buffer.from(html);}
     res.setHeader('Content-Type',types[path.extname(rel)]);res.setHeader('Cache-Control','no-store');
     for(const rule of headers)if(rule.source==='/'+rel)for(const h of rule.headers)res.setHeader(h.key,h.value);
     res.end(req.method==='HEAD'?undefined:data);

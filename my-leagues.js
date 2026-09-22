@@ -68,7 +68,7 @@
   const ready = account.check().then(async () => {
     await refresh();
     const chosen = new URLSearchParams(location.search).get('league');
-    if (pageInput && leagues.some(l => l.league_id === chosen)) { $('saved-league-select').value = chosen; pageInput.value = chosen; pageButton.click(); }
+    if (pageInput && leagues.some(l => l.league_id === chosen)) { $('saved-league-select').value = chosen; pageInput.value = chosen; if(!(location.pathname.endsWith('/trade_calculator.html')&&new URLSearchParams(location.search).has('from')))pageButton.click(); }
   }).catch(e => {status(e.message,true); if (pageInput && account.user) {renderPicker(); picker.querySelector('p').textContent = 'Saved leagues could not be loaded. Reload to try again.';} });
   window.DynastyLeagues = Object.freeze({ready, teamFor: id => leagues.find(l => l.league_id === id)?.roster_id || null});
   window.addEventListener('dynasty-account-change', () => { refresh().catch(e => status(e.message,true)); });

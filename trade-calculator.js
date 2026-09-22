@@ -138,7 +138,19 @@
   // Retry the saved-link handoff once both are ready, without importing an unknown URL ID.
   ready.then(async()=>{
     await window.DynastyLeagues?.ready;
-    const chosen=new URLSearchParams(location.search).get('league');
+    const params=new URLSearchParams(location.search),chosen=params.get('league');
+    if(access?.features.tradeLeagueImport&&chosen&&params.has('from')&&params.has('to')){
+      if(!league&&!loading){$('leagueId').value=chosen;await loadLeague();}
+      if(!league||league.id!==chosen)return;
+      const from=league.teams.find(t=>t.roster_id===params.get('from')),to=league.teams.find(t=>t.roster_id===params.get('to'));
+      if(!from||!to||from===to||!from.assets.some(a=>a.id===params.get('send'))||!to.assets.some(a=>a.id===params.get('receive'))){message('This trade idea no longer matches the league rosters. Build a new trade.',true);return;}
+      const mode=['overall','competing','tanking'].includes(params.get('mode'))?params.get('mode'):'overall';
+      teams=[{id:1,status:mode,roster_id:from.roster_id},{id:2,status:'overall',roster_id:to.roster_id}];
+      transfers=[{from:1,to:2,asset:params.get('send')},{from:2,to:1,asset:params.get('receive')}];nextId=3;
+      const ppr=['std','hppr','ppr'].includes(params.get('ppr'))?params.get('ppr'):'hppr';
+      $('nonPpr').checked=ppr==='std';$('halfPpr').checked=ppr==='hppr';$('fullPpr').checked=ppr==='ppr';$('superflex').checked=params.get('sf')!=='false';$('tePremium').checked=params.get('tep')==='true';
+      changed();message('Trade idea loaded. Review the values and adjust the proposal.');return;
+    }
     if(access?.features.tradeLeagueImport&&chosen&&$('saved-league-select')?.value===chosen&&!league&&!loading)await loadLeague();
   }).catch(e=>message(e.message,true));
   // Returning from account settings must recheck grants instead of trusting old page state.
