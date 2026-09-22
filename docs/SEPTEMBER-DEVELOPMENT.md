@@ -15,7 +15,7 @@ links remain usable if catalogue loading fails. Longer editorial copy remains th
 ## Trade Finder
 
 Free server result: team selection and explanations of complementary roster depth.
-Premium adds targets and up to six package proposals per partner, team-specific ranking
+Premium adds up to six package proposals per partner, team-specific ranking
 systems and Low/Neutral/High pick weights (0.8/1/1.2), and up to 120 untouchable players
 or picks. Preferences and exclusions apply to the current page visit. Roster checklists
 are position-grouped, use analyzer colors, and sort by the roster's preference-adjusted
@@ -27,7 +27,8 @@ below 80% is need, above 120% is depth. Each roster is compared against ALL rost
 its own selected ranking system so differently scaled rankings are never mixed. Picks
 and unranked players do not create positional needs. Profiles do not model starting slots.
 
-Packages: 1:1, 2:1, 3:1, 2:2 and reverse; at most three assets/two picks per side and four
+Packages: each side requires an asset worth at least 3,000 unweighted Overall points
+after scoring adjustments; smaller assets can balance the trade. Shapes: 1:1, 2:1, 3:1, 2:2 and reverse; at most three assets/two picks per side and four
 assets total. At least one player must change teams. In consolidations, the larger
 package's best asset must be at least 50% of the smaller package's best asset. Only
 positive Overall assets ranked in both selected modes enter the candidate pool. Deep
@@ -42,10 +43,24 @@ Need improvements and mutual preference gains prioritize suggestions; player-for
 ideas can appear without complementary positions. Results cap repetitive main exchanges.
 No claim that a manager will accept or that ranking value equals actual market price.
 
-Calculator handoff validates each current owner's repeated send/receive IDs, applies
-both approaches and pick preferences, and recalculates through the shared server logic.
-Neutral preference preserves previous behavior. No trade is sent to Sleeper. Premium
-rosters and team preferences remain server-gated; rollout flag still applies.
+Finder cards now show the partner's needs and concise preference/value information, with
+no target list or calculator link. The calculator's existing deep-link support remains
+for compatibility, but new Finder ideas use account-backed pins instead.
+
+Pinned trades: migration 202609220001_saved_trades.sql creates owner-only RLS storage,
+a 50-pin account cap, structure constraints, and duplicate fingerprints. Applied only to
+DEVELOPMENT phkbpputgegvesmpscrx on September22; production still needs this migration
+with a separately approved release. No service-role key is used. Each pin is scoped to
+account + exact league ID + selected source roster. League renewal does not silently
+transfer pins to a different league.
+
+The server validates current ownership and score/anchor/package limits before saving;
+client IDs/labels/scores do not establish ownership or value. Reads recalculate with
+current rankings, scoring filters and the page's current team preferences. The assets
+stay fixed. Pins outside current limits or marked untouchable remain visible with a
+notice; moved/missing or unranked assets display a warning instead of invented scores.
+Pin removal is scoped to the verified account; losing premium does not delete pins.
+Preferences/untouchables remain visit-specific. Pins use the database, not local storage.
 
 Homepage copy now explains the three systems and distinguishes numbers-based values
 from crowdsourced market prices, in the owner's voice. Mock draft team/logo normalization
@@ -102,3 +117,11 @@ modes/weights and produced matching +1244 / +2303 totals. All 521 published NFL 
 rows resolve to existing logos; browser full (100), condensed (100), and team (32) views
 had zero broken logos. No production deployment or GitHub push.
 Responsive review: Trade Finder and Home at 375px had no horizontal overflow; roster groups, pick preference controls, and exclusion updates worked. Desktop Finder also had no horizontal overflow.
+
+September 22 pin refinement validation: all81 tests pass including real local PostgreSQL
+RLS/limits/constraints checks (zero skipped). Hosted development anonymous reads denied.
+Browser pin Jake Ferguson /2027 1st(alexyskay) saved, survived page reload, and showed
+-246 Overall net at Neutral, +728 at High picks; Contending/Low changed it to-2356 and
+kept the pin with an outside-limits notice. Production remains unchanged.
+
+Phone verification: saved-trade card fits a 375px viewport (360px content area) without horizontal overflow. The test-created pin was unchecked successfully; the page confirmed Trade unpinned. No production publication or database changes.

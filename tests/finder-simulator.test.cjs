@@ -6,7 +6,7 @@ const {simulate,dataset,parseCSV}=require('../lib/devy-simulator.cjs');
 const id='11111111-1111-4111-8111-111111111111';
 const premium=resolveAccess(id,null,[{user_id:id,plan:'premium',starts_at:'2026-01-01',expires_at:null,revoked_at:null}]),free=resolveAccess(null);
 const format={ppr:'hppr',superflex:true,tePremium:false};
-function asset(id,pos,value){return {id,name:id,position:pos,scores:Object.fromEntries(['overall','competing','tanking'].map(type=>[type,{value,position:pos,ranked:true}]))};}
+function asset(id,pos,value){value*=50;return {id,name:id,position:pos,scores:Object.fromEntries(['overall','competing','tanking'].map(type=>[type,{value,position:pos,ranked:true}]))};}
 const league={id:'123456789',name:'Fixture',teams:[{roster_id:'1',name:'Me',assets:[asset('my-r1','RB',100),asset('my-r2','RB',100),asset('my-r3','RB',100),asset('my-w','WR',20)]},{roster_id:'2',name:'Match',assets:[asset('their-w1','WR',100),asset('their-w2','WR',100),asset('their-w3','WR',100),asset('their-r','RB',20)]},{roster_id:'3',name:'Average',assets:[asset('avg-r','RB',150),asset('avg-w','WR',150)]}]};
 test('free finder explains complementary depth without leaking premium players or proposals',()=>{
   const result=findPartners(league,{roster_id:'1',format},free);

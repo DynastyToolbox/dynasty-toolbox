@@ -19,8 +19,8 @@ test('independent modes and pick weights create different gains while market bal
   assert.equal(mixed.myNet,3200);assert.equal(mixed.theirNet,4200);assert.equal(mixed.marketNet,0);
 });
 test('15% market tolerance and both teams’ 1000-point loss limits are enforced at their boundaries',()=>{
-  assert.ok(ideas([asset('a','RB',1000)],[asset('b','WR',850)]).length);
-  assert.equal(ideas([asset('a','RB',1000)],[asset('b','WR',849)]).length,0);
+  assert.ok(ideas([asset('a','RB',4000)],[asset('b','WR',3400)]).length);
+  assert.equal(ideas([asset('a','RB',4000)],[asset('b','WR',3396)]).length,0);
   const a=asset('a','RB',3000,4000),b=asset('b','WR',3000,3000);
   assert.equal(ideas([a],[b],{mode:'competing',pickWeight:'neutral'})[0].myNet,-1000);
   a.scores.competing.value=4001;
@@ -78,4 +78,11 @@ test('preference input is validated and premium-gated; neutral rosters can match
   assert.equal(roster.teams[0].players[0].id,'pick:a');assert.equal(roster.teams[0].players[0].scores.overall.value,3000);
   const bad={format,teams:[{id:1,status:'overall',roster_id:'1',pickWeight:'bad'},{id:2,status:'overall',roster_id:'2'}],transfers:[]};
   assert.throws(()=>evaluate(bad,premium,{},league),{status:400});
+});
+
+test('each side needs its own 3000-point anchor; smaller balancing assets remain allowed',()=>{
+  assert.equal(ideas([asset('a','RB',2999)],[asset('b','WR',3000)]).length,0);
+  assert.equal(ideas([asset('a','RB',3000)],[asset('b','WR',2999)]).length,0);
+  assert.ok(ideas([asset('a','RB',3000)],[asset('b','WR',3000)]).length);
+  assert.ok(ideas([asset('a','RB',3500),asset('pick:a','PICK',1000)],[asset('b','WR',4500)]).some(p=>p.send.length===2));
 });

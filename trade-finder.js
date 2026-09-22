@@ -2,12 +2,14 @@
 (()=>{
   const $=id=>document.getElementById(id),api=(action,body)=>DynastyAccount.request(action,body);
   const modes={overall:'Overall',competing:'Contending',tanking:'Rebuilding'},weights={low:.8,neutral:1,high:1.2},positions=['QB','RB','WR','TE','PICK'];
-  let league=null,rosters=[],excluded=new Set(),preferences=new Map(),busy=false,version=0;
+  let league=null,rosters=[],excluded=new Set(),preferences=new Map(),busy=false,saving=false,version=0;
   const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;if(cls)n.className=cls;return n;};
   const status=(text,error=false)=>{$('finder-status').textContent=text;$('finder-status').dataset.error=String(error);};
   const format=()=>({ppr:$('finder-ppr').value,superflex:$('finder-sf').checked,tePremium:$('finder-te').checked});
   const signed=n=>(n>=0?'+':'−')+Math.abs(n).toLocaleString(undefined,{maximumFractionDigits:0});
-  function lock(value){busy=value;for(const id of ['loadLeagueBtn','find-partners','apply-exclusions','apply-preferences'])$(id).disabled=value||(id!=='loadLeagueBtn'&&!league);}
+  function lock(value){busy=value;for(const id of ['loadLeagueBtn','find-partners','apply-exclusions','apply-preferences'])$(id).disabled=value||saving||(id!=='loadLeagueBtn'&&!league);}
+  const context=()=>({league_id:league.id,roster_id:$('finder-team').value,mode:$('finder-mode').value,format:format(),excluded:[...excluded],preferences:[...preferences].map(([roster_id,p])=>({roster_id,...p}))});
+  const tradeKey=p=>JSON.stringify([p.send.map(a=>a.id).sort(),p.receive.map(a=>a.id).sort()]);
   function invalidate(){version++;$('finder-results').replaceChildren();$('finder-summary').replaceChildren();}
   function settingsChanged(){invalidate();exclusions();status('Settings changed. Choose Find partners or Update matches.');}
   function teamPreferences(){
@@ -44,7 +46,7 @@
     if(!box.children.length)box.append(el('p','No matching players or picks.'));
   }
   async function load(){
-    if(busy)return;invalidate();const current=version;lock(true);league=null;rosters=[];excluded.clear();preferences.clear();
+    if(busy||saving)return;invalidate();const current=version;lock(true);league=null;rosters=[];excluded.clear();preferences.clear();
     $('finder-exclusions').hidden=true;$('finder-preferences').hidden=true;$('finder-team').disabled=true;$('finder-team').replaceChildren(new Option('Loading…',''));status('Finding league rosters…');
     try{
       const result=await api('finder-league',{league_id:$('leagueId').value.trim()});if(current!==version)return;
@@ -60,42 +62,62 @@
     if(current===version&&league&&$('finder-team').value)await find();
   }
   async function find(){
-    if(busy||!league)return;if(!$('finder-team').value){status('Choose your team first.',true);return;}
+    if(busy||saving||!league)return;if(!$('finder-team').value){status('Choose your team first.',true);return;}
     invalidate();const current=version;lock(true);status('Comparing players, picks and team preferences…');
     try{
-      const result=await api('finder-matches',{league_id:league.id,roster_id:$('finder-team').value,mode:$('finder-mode').value,format:format(),excluded:[...excluded],preferences:[...preferences].map(([roster_id,p])=>({roster_id,...p}))});
+      const body=context(),result=await api('finder-matches',body);
+      result.pins=[];
+      if(result.premium){try{result.pins=(await api('finder-pins',body)).pins;}catch(e){result.pinsError=e.message;}}
       if(current!==version)return;render(result);status(result.matches.length+' potential trade '+(result.matches.length===1?'partner':'partners')+' · '+league.name);
     }catch(e){if(current===version)status(e.message,true);}finally{lock(false);}
   }
   function proposal(p,result,m){
-    const idea=el('div',null,'finder-proposal');
+    const idea=el('div',null,'finder-proposal'+(p.id?' finder-pinned':''));
     idea.append(el('p','You send: '+p.send.map(a=>a.name).join(' + ')),el('p','You receive: '+p.receive.map(a=>a.name).join(' + ')));
+    if(!p.unavailable){
     idea.append(el('p','Overall balance: '+(p.gap*100).toFixed(1)+'% apart','finder-market'));
     const values=el('div',null,'finder-values');
     for(const [name,pref,net] of [['You',result.team.preference,p.myNet],[m.name,m.preference,p.theirNet]]){
       const line=el('p',name+' · '+modes[pref.mode]+': ');line.append(el('strong',signed(net),net>=0?'finder-gain':'finder-loss'));values.append(line);
     }
     idea.append(values);
-    const a=el('a','Review in calculator →','finder-open');
-    const params=new URLSearchParams({league:league.id,from:result.team.id,to:m.id,ppr:format().ppr,sf:String(format().superflex),tep:String(format().tePremium),mode:result.team.preference.mode,theirMode:m.preference.mode,pickWeight:result.team.preference.pickWeight,theirPickWeight:m.preference.pickWeight});
-    for(const asset of p.send)params.append('send',asset.id);for(const asset of p.receive)params.append('receive',asset.id);
-    a.href='trade_calculator.html?'+params;a.target='_blank';a.rel='noopener';idea.append(a);return idea;
+    }
+    if(p.notice)idea.append(el('p',p.notice,'finder-pin-notice'));
+    const label=el('label',null,'finder-pin-control'),input=el('input');input.type='checkbox';input.checked=!!p.id;input.disabled=!!result.pinsError;
+    input.setAttribute('aria-label',(p.id?'Unpin':'Pin')+' trade: '+p.send.map(a=>a.name).join(' + ')+' for '+p.receive.map(a=>a.name).join(' + '));
+    label.append(input,el('span',p.id?'Pinned to your account':'Pin this trade'));idea.append(label);
+    input.onchange=async()=>{
+      if(saving||busy){input.checked=!!p.id;return;}
+      const current=version,wantPin=input.checked,body=context();saving=true;lock(busy);input.disabled=true;
+      try{
+        const response=await api(wantPin?'finder-pin':'finder-unpin',wantPin?{...body,partner_id:m.id,send:p.send.map(a=>a.id),receive:p.receive.map(a=>a.id)}:{id:p.id});
+        if(current!==version)return;
+        if(wantPin)result.pins.push(response.pin);else result.pins=result.pins.filter(pin=>pin.id!==p.id);
+        render(result);status(response.message);
+      }catch(e){if(current===version){input.checked=!!p.id;input.disabled=false;status(e.message,true);}}
+      finally{saving=false;lock(busy);}
+    };
+    return idea;
   }
   function render(result){
     const summary=$('finder-summary');summary.replaceChildren(el('h2',result.team.name),el('p','Needs: '+(result.team.needs.join(', ')||'No clear positional shortage')),el('p','Depth: '+(result.team.surplus.join(', ')||'No clear positional surplus')));
     const box=$('finder-results');box.replaceChildren();
-    if(!result.matches.length)box.append(el('p','No trade ideas met these settings. Try another approach or adjust team preferences.'));
-    for(const m of result.matches){
+    if(result.pinsError)box.append(el('p',result.pinsError,'finder-pin-error'));
+    const matches=[...result.matches];
+    for(const pin of result.pins)if(!matches.some(m=>m.id===pin.partner_id))matches.push({id:pin.partner_id,name:pin.partnerName,needs:pin.needs,preference:pin.preference,proposals:[]});
+    if(!matches.length)box.append(el('p','No trade ideas met these settings. Try another approach or adjust team preferences.'));
+    for(const m of matches){
       const card=el('article',null,'finder-match');
-      card.append(el('h3',m.name),el('span',m.mutual?'Needs match in both directions':m.receive.length||m.send.length?'One-way depth match':'Player / pick value match','finder-tag'));
-      if(m.receive.length)card.append(el('p','Their depth matches your needs: '+m.receive.join(', ')));if(m.send.length)card.append(el('p','Your depth matches their needs: '+m.send.join(', ')));
-      if(!result.premium)card.append(el('p','Premium adds player targets, trade ideas and team preferences.'));
+      card.append(el('h3',m.name),el('p','Needs: '+(m.needs.join(', ')||'No clear positional shortage')));
+      if(!result.premium)card.append(el('p','Premium adds trade ideas, pins and team preferences.'));
       else{
         card.append(el('p',modes[m.preference.mode]+' · '+m.preference.pickWeight+' pick preference','finder-note'));
-        if(m.targets.length)card.append(el('p','Players to explore: '+m.targets.map(p=>p.name+' ('+p.position+')').join(', ')));
-        m.proposals.slice(0,2).forEach(p=>card.append(proposal(p,result,m)));
-        if(m.proposals.length>2){const more=el('details',null,'finder-more');more.append(el('summary',(m.proposals.length-2)+' more trade ideas'));m.proposals.slice(2).forEach(p=>more.append(proposal(p,result,m)));card.append(more);}
-        if(!m.proposals.length)card.append(el('p','No packages met the 15% Overall balance and both teams’ value limits.'));
+        const pins=result.pins.filter(p=>p.partner_id===m.id),keys=new Set(pins.map(tradeKey)),ideas=m.proposals.filter(p=>!keys.has(tradeKey(p)));
+        if(pins.length){card.append(el('h4','Pinned trades'),el('p','Values use your current settings.','finder-note'));pins.forEach(p=>card.append(proposal(p,result,m)));}
+        if(pins.length&&ideas.length)card.append(el('h4','More ideas'));
+        ideas.slice(0,2).forEach(p=>card.append(proposal(p,result,m)));
+        if(ideas.length>2){const more=el('details',null,'finder-more');more.append(el('summary',(ideas.length-2)+' more trade ideas'));ideas.slice(2).forEach(p=>more.append(proposal(p,result,m)));card.append(more);}
+        if(!ideas.length&&!pins.length)card.append(el('p','No packages met the 3,000-point main-asset rule, Overall balance and both teams’ value limits.'));
         if(m.searchLimited)card.append(el('p','Deep-roster search: top 40 ranked players and 24 ranked picks per team.','finder-note'));
       }
       box.append(card);
