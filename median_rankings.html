@@ -334,7 +334,7 @@ Allowing for more accurate expectations of weekly scores.
       <div class="filter-item">
         <label for="windowFilter">Window</label>
         <select id="windowFilter">
-          <option value="season" selected>Season to date</option>
+          <option value="season" selected>Last 17 weeks</option>
           <option value="last5">Last 5 weeks</option>
           <option value="last7">Last 7 weeks</option>
           <option value="last10">Last 10 weeks</option>
@@ -425,7 +425,7 @@ Allowing for more accurate expectations of weekly scores.
       const players = rawData.players || {};
       const maxWeek = getMaxWeek(rawData.meta, players);
 
-      document.getElementById('median-season-context').textContent = `${rawData.meta.season} season · Through week ${maxWeek} · At least 3 qualifying games`;
+      document.getElementById('median-season-context').textContent = `${DynastyMedian.windowLabel(rawData.meta,windowKey)} · At least 3 qualifying games`;
       const rows = [];
 
       for (const pid in players) {

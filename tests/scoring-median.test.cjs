@@ -48,15 +48,39 @@ test('lineup greedy result matches exhaustive best total for constrained roster'
     assert.equal(bestLineup(rows,Object.fromEntries(slots.map(s=>[s,1]))).reduce((n,s)=>n+(s.player?.median||0),0),brute(0,new Set()));
   }
 });
-test('weekly update excludes in-progress weeks and preserves useful prior season early on', async () => {
+test('weekly update rolls 17 completed weeks across seasons, excluding week 18', async () => {
   const {buildPlan,validateOutput}=await import('../scripts/build_weekly_points_sleeper.mjs');
-  assert.deepEqual(buildPlan({season:'2026',week:1,season_type:'regular',previous_season:'2025'}),{season:'2025',through:18});
-  assert.deepEqual(buildPlan({season:'2026',week:4,season_type:'regular'}),{season:'2026',through:3});
-  assert.deepEqual(buildPlan({season:'2026',week:1,season_type:'post'}),{season:'2026',through:18});
+  const preseason=buildPlan({season:'2026',week:1,season_type:'regular',previous_season:'2025'});
+  assert.equal(preseason.season,'2025'); assert.equal(preseason.through,17);
+  const early=buildPlan({season:'2026',week:3,season_type:'regular'});
+  assert.equal(early.slots.length,17);
+  assert.deepEqual(early.slots[0],{season:'2025',week:3});
+  assert.deepEqual(early.slots.at(-1),{season:'2026',week:2});
+  for(const state of [{season:'2026',week:19,season_type:'regular'},{season:'2026',week:1,season_type:'post'},{season:'2026',week:0,season_type:'off',season_has_scores:true}]){
+    const plan=buildPlan(state);assert.equal(plan.through,17);assert.ok(plan.slots.every(s=>s.season==='2026'&&s.week<=17));
+  }
   assert.throws(()=>buildPlan({season:'bad',week:4,season_type:'regular'}));
   assert.throws(()=>validateOutput({meta:{},players:{}},null));
   const data={meta:{season:'2026',week_built_through:3},players:{a:{weeks:{1:{std:1,hppr:2,ppr:3},2:{std:1,hppr:2,ppr:3},3:{std:1,hppr:2,ppr:3}}}}};
   validateOutput(data,null);
   assert.throws(()=>validateOutput(data,{meta:{season:'2027',week_built_through:1}}));
   assert.throws(()=>validateOutput(data,{meta:{season:'2026',week_built_through:4}}));
+});
+test('rolling medians and short windows cross seasons without duplicate week numbers',async()=>{
+  const {buildPlan,qualifyingPoints}=await import('../scripts/build_weekly_points_sleeper.mjs');
+  const {getMaxWeek,qualifiesWeek}=require('../median_data.js');
+  const slots=buildPlan({season:'2026',week:3,season_type:'regular'}).slots;
+  const weeks=Object.fromEntries(slots.map((s,i)=>[i+1,{hppr:i+1,snap:80}]));
+  const max=getMaxWeek({week_slots:slots,week_built_through:2},{});
+  assert.equal(computePlayerRow('a',{weeks},'hppr','season',max).median,9);
+  assert.equal(computePlayerRow('a',{weeks},'hppr','last5',max).median,15);
+  const sample={gms_active:1,rec_tgt:2,off_snp:40,tm_off_snp:100,pts_std:0,pts_half_ppr:0,pts_ppr:0};
+  assert.equal(qualifyingPoints(sample).snap,40);
+  assert.equal(qualifyingPoints({...sample,off_snp:39}),null);
+  assert.equal(qualifyingPoints({...sample,gms_active:0}),null);
+  assert.equal(qualifyingPoints({...sample,rec_tgt:1}),null);
+  assert.equal(qualifyingPoints({...sample,off_snp:undefined}).snap,null);
+  assert.equal(qualifiesWeek({snap:0}),false); assert.equal(qualifiesWeek({}),true);
+  assert.equal(qualifyingPoints({...sample,pts_ppr:undefined}).ppr,0);
+  assert.throws(()=>qualifyingPoints({...sample,pts_ppr:'bad'}));
 });

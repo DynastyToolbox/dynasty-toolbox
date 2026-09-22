@@ -19,6 +19,7 @@ const MIN_WEEKS_REQUIRED = 3, SNAP_PCT_MIN = 40;
     }
 
     function getMaxWeek(meta, players) {
+      if (Array.isArray(meta?.week_slots)) return meta.week_slots.length;
       const fromMeta = safeNum(meta && meta.week_built_through);
       if (fromMeta) return fromMeta;
       // fallback: scan weeks
@@ -40,7 +41,7 @@ const MIN_WEEKS_REQUIRED = 3, SNAP_PCT_MIN = 40;
       if (!weekObj) return false;
       const snap = safeNum(weekObj.snap);
       // If older JSON has no snap field, fall back to "any record exists"
-      if (!snap) return true;
+      if (weekObj.snap == null) return true;
       return snap >= SNAP_PCT_MIN;
     }
 
@@ -93,7 +94,12 @@ const MIN_WEEKS_REQUIRED = 3, SNAP_PCT_MIN = 40;
       }
       return lineup;
     }
-    const api = {safeNum, median, mean, getMaxWeek, pickWindowWeeks, qualifiesWeek, computePlayerRow, bestLineup, POSITIONS};
+    function windowLabel(meta, windowKey='season') {
+      const all=meta?.week_slots;
+      const slots=all?.slice(pickWindowWeeks(windowKey,all.length).start-1);
+      return slots?.length ? `${slots[0].season} Week ${slots[0].week} – ${slots.at(-1).season} Week ${slots.at(-1).week} · Week 18 excluded` : `${meta?.season} season · Through week ${meta?.week_built_through}`;
+    }
+    const api = {safeNum, median, mean, getMaxWeek, pickWindowWeeks, qualifiesWeek, computePlayerRow, bestLineup, POSITIONS, windowLabel};
     if (typeof module !== 'undefined' && module.exports) module.exports=api;
     root.DynastyMedian=api;
 })(globalThis);

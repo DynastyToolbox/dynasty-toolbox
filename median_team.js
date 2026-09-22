@@ -42,7 +42,7 @@
     $('median-roster-title').textContent = teamName(roster) + ' · Roster';
     const scoringName = $('scoringFilter').selectedOptions[0].textContent;
     const windowName = $('windowFilter').selectedOptions[0].textContent;
-    $('median-roster-context').textContent = `${data.meta.season} season · ${scoringName} · ${windowName}. Medians require 3 qualifying games. Search and position filters only affect the rankings list.`;
+    $('median-roster-context').textContent = `${model.windowLabel(data.meta,$('windowFilter').value)} · ${scoringName} · ${windowName}. Medians require 3 qualifying games. Search and position filters only affect the rankings list.`;
     const list = $('median-lineup'); list.replaceChildren();
     const lineup = model.bestLineup(rows, counts);
     if (!lineup.length) list.append(create('li', 'Use the + buttons to build your starting lineup.', 'median-hint'));
