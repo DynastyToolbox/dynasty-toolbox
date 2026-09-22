@@ -6,7 +6,7 @@ const premium={premium:true,features:{tradeFinderTargets:true,tradeLeagueImport:
 const user={id:'11111111-1111-4111-8111-111111111111',email_confirmed_at:'2026-01-01'};
 const rowId='22222222-2222-4222-8222-222222222222';
 const asset=(id,position,value)=>({id,name:id,label:id,position,scores:Object.fromEntries(['overall','competing','tanking'].map(m=>[m,{value,position,ranked:true}]))});
-const fixture=()=>({id:'1318402338695708672',name:'L',teams:[{roster_id:'1',name:'Mine',assets:[asset('pick:2027:1:2','PICK',3000)]},{roster_id:'2',name:'Other',assets:[asset('player:20','WR',3000)]}]});
+const fixture=()=>({id:'1318402338695708672',name:'L',roster_positions:['QB'],teams:[{roster_id:'1',name:'Mine',assets:[asset('pick:2027:1:2','PICK',3000)]},{roster_id:'2',name:'Other',assets:[asset('player:20','WR',3000)]}]});
 const body={league_id:'1318402338695708672',roster_id:'1',partner_id:'2',format:{ppr:'hppr',superflex:true,tePremium:false},send:['pick:2027:1:2'],receive:['player:20']};
 function database(data,error=null){
   const calls=[],result={data,error};const q={then:(resolve,reject)=>Promise.resolve(result).then(resolve,reject)};

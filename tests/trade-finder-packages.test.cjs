@@ -67,7 +67,7 @@ test('calculator handoff totals agree for every package, including asymmetric pr
   }
 });
 test('preference input is validated and premium-gated; neutral rosters can match through player-for-pick value',async()=>{
-  const league={id:'123456789',name:'L',teams:[team('1',[asset('pick:a','PICK',3000)]),team('2',[asset('b','WR',3000)])]};
+  const league={id:'123456789',name:'L',roster_positions:['QB'],teams:[team('1',[asset('pick:a','PICK',3000)]),team('2',[asset('b','WR',3000)])]};
   const body={roster_id:'1',format,preferences:[{roster_id:'1',mode:'overall',pickWeight:'low'},{roster_id:'2',mode:'overall',pickWeight:'high'}]};
   const result=findPartners(league,body,premium);assert.equal(result.matches[0].proposals[0].myNet,600);
   for(const preferences of [[{roster_id:'3',mode:'overall',pickWeight:'low'}],[{roster_id:'1',mode:'bad',pickWeight:'low'}],[{roster_id:'1',mode:'overall',pickWeight:100}],[body.preferences[0],body.preferences[0]]]){

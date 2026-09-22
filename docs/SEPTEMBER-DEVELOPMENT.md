@@ -125,3 +125,13 @@ Browser pin Jake Ferguson /2027 1st(alexyskay) saved, survived page reload, and 
 kept the pin with an outside-limits notice. Production remains unchanged.
 
 Phone verification: saved-trade card fits a 375px viewport (360px content area) without horizontal overflow. The test-created pin was unchecked successfully; the page confirmed Trade unpinned. No production publication or database changes.
+
+## September 22: lineup-aware Trade Finder and persistent preferences
+
+Sleeper roster_positions and scoring settings now travel with the imported league. Finder scoring defaults follow reception scoring, SF/two-QB starters, and TE reception bonus, using the site's existing supported scoring modifiers. Ordinary FLEX is split half RB/WR; SF counts as QB when enabled, or ordinary flex when unchecked. Explicit multi-QB slots remain QB. Receiving flex splits WR/TE. Missing offensive slots have a visibly disclosed default lineup.
+
+Usable-player cutoffs are QB 5000 and RB/WR/TE 3000 in each team's selected rankings; both scores and cutoff receive the same scoring multiplier. These are tunable dynasty-value heuristics, not actual weekly start/sit predictions. Need is count below floor(demand); depth is at least ceil(demand)+1. Both proposed post-trade rosters must avoid increasing positional and shared-flex deficits. Subthreshold players cannot provide a need-fit bonus. Saved pins are also rechecked against the new rules. Matching year/round/tier picks cancel for evaluating whether a trade is just an equivalent pick plus a throw-in; their original-team identities are preserved.
+
+Team approach and pick preference changes autosave to private account+league storage, then reload on league import. A failed read prevents running with silently reset preferences. Failed saves show a retry message; Update matches retries. Untouchable selections remain per visit. Label fallbacks now say None.
+
+Migration 202609220002_finder_preferences.sql applied only to development phkbpputgegvesmpscrx, success confirmed in SQL editor. RLS checks account ownership for reads/inserts/updates/deletes. Production untouched. 86 tests passed including positional/flex protection, equivalent picks, saved settings validation and SQL isolation. Browser confirmed Contending/High preferences returned after reload; QA settings restored to Overall/Neutral. Real-league search with roster checks took about 1.37 seconds for 54 ideas across 9 partners before final need-fit refinement. Phone width 375/360 content fits with no overflow.

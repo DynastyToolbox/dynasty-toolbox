@@ -2,7 +2,7 @@
 (()=>{
   const $=id=>document.getElementById(id),api=(action,body)=>DynastyAccount.request(action,body);
   const modes={overall:'Overall',competing:'Contending',tanking:'Rebuilding'},weights={low:.8,neutral:1,high:1.2},positions=['QB','RB','WR','TE','PICK'];
-  let league=null,rosters=[],excluded=new Set(),preferences=new Map(),busy=false,saving=false,version=0;
+  let league=null,rosters=[],excluded=new Set(),preferences=new Map(),busy=false,saving=false,version=0,prefsDirty=false,prefsTask=null,accountEpoch=0,prefsReady=false;
   const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;if(cls)n.className=cls;return n;};
   const status=(text,error=false)=>{$('finder-status').textContent=text;$('finder-status').dataset.error=String(error);};
   const format=()=>({ppr:$('finder-ppr').value,superflex:$('finder-sf').checked,tePremium:$('finder-te').checked});
@@ -12,17 +12,34 @@
   const tradeKey=p=>JSON.stringify([p.send.map(a=>a.id).sort(),p.receive.map(a=>a.id).sort()]);
   function invalidate(){version++;$('finder-results').replaceChildren();$('finder-summary').replaceChildren();}
   function settingsChanged(){invalidate();exclusions();status('Settings changed. Choose Find partners or Update matches.');}
+  async function savePreferences(){
+    if(prefsTask)return prefsTask;
+    if(!prefsDirty||!league||!prefsReady)return;
+    const epoch=accountEpoch,id=league.id;
+    prefsTask=(async()=>{
+      while(prefsDirty&&epoch===accountEpoch&&league?.id===id){
+        prefsDirty=false;
+        try{await api('finder-save-preferences',{league_id:id,preferences:[...preferences].map(([roster_id,p])=>({roster_id,...p}))});}
+        catch(e){if(epoch===accountEpoch)prefsDirty=true;throw e;}
+      }
+    })();
+    try{await prefsTask;}finally{prefsTask=null;}
+  }
+  function preferenceChanged(){
+    settingsChanged();prefsDirty=true;
+    savePreferences().then(()=>{if(!prefsDirty)status('Team preferences saved. Choose Update matches.');}).catch(e=>status(e.message,true));
+  }
   function teamPreferences(){
     const box=$('team-preferences');box.replaceChildren();
     for(const t of rosters){
       const pref=preferences.get(t.id),row=el('div',null,'finder-preference'),name=el('strong',t.name);
       const label=el('label','Approach'),select=el('select');select.setAttribute('aria-label',t.name+' approach');
       for(const [v,text] of Object.entries(modes))select.add(new Option(text,v));select.value=pref.mode;
-      select.onchange=()=>{pref.mode=select.value;if(t.id===$('finder-team').value)$('finder-mode').value=select.value;settingsChanged();};label.append(select);
+      select.onchange=()=>{pref.mode=select.value;if(t.id===$('finder-team').value)$('finder-mode').value=select.value;preferenceChanged();};label.append(select);
       const field=el('fieldset',null,'finder-pick-weight');field.append(el('legend','Pick preference'));
       for(const [v,text] of [['low','Low −20%'],['neutral','Neutral'],['high','High +20%']]){
         const l=el('label'),input=el('input');input.type='radio';input.name='pick-weight-'+t.id;input.value=v;input.checked=pref.pickWeight===v;input.setAttribute('aria-label',t.name+' picks '+text);
-        input.onchange=()=>{pref.pickWeight=v;settingsChanged();};l.append(input,el('span',text));field.append(l);
+        input.onchange=()=>{pref.pickWeight=v;preferenceChanged();};l.append(input,el('span',text));field.append(l);
       }
       row.append(name,label,field);box.append(row);
     }
@@ -46,25 +63,32 @@
     if(!box.children.length)box.append(el('p','No matching players or picks.'));
   }
   async function load(){
-    if(busy||saving)return;invalidate();const current=version;lock(true);league=null;rosters=[];excluded.clear();preferences.clear();
+    if(busy||saving)return;try{await savePreferences();}catch(e){status(e.message,true);return;}invalidate();const current=version;lock(true);league=null;rosters=[];excluded.clear();preferences.clear();prefsReady=false;
     $('finder-exclusions').hidden=true;$('finder-preferences').hidden=true;$('finder-team').disabled=true;$('finder-team').replaceChildren(new Option('Loading…',''));status('Finding league rosters…');
     try{
       const result=await api('finder-league',{league_id:$('leagueId').value.trim()});if(current!==version)return;
-      league=result.league;$('finder-team').replaceChildren(new Option('Choose your team',''),...league.teams.map(t=>new Option(t.name,t.id)));$('finder-team').disabled=false;
+      league=result.league;
+      $('finder-sf').checked=league.lineup.slots.includes('SUPER_FLEX')||league.lineup.slots.filter(p=>p==='QB').length>1;
+      const reception=Number(league.scoring.rec??.5);$('finder-ppr').value=reception>=1?'ppr':reception>0?'hppr':'std';$('finder-te').checked=Number(league.scoring.bonus_rec_te||0)>0;
+      $('finder-team').replaceChildren(new Option('Choose your team',''),...league.teams.map(t=>new Option(t.name,t.id)));$('finder-team').disabled=false;
       const own=String(window.DynastyLeagues?.teamFor(league.id)||'');if(league.teams.some(t=>t.id===own))$('finder-team').value=own;status(league.name);
       if(result.premium){
         const result=await api('finder-rosters',{league_id:league.id});if(current!==version)return;
-        rosters=result.teams;preferences=new Map(rosters.map(t=>[t.id,{mode:t.id===own?$('finder-mode').value:'overall',pickWeight:'neutral'}]));
+        rosters=result.teams;
+        const saved=await api('finder-preferences',{league_id:league.id});if(current!==version)return;
+        preferences=new Map(rosters.map(t=>[t.id,saved.preferences.find(p=>p.roster_id===t.id)||{mode:'overall',pickWeight:'neutral'}]));
+        prefsReady=true;prefsDirty=false;if(preferences.has(own))$('finder-mode').value=preferences.get(own).mode;
         $('exclude-roster').replaceChildren(...rosters.map(t=>new Option(t.name,t.id)));if(rosters.some(t=>t.id===own))$('exclude-roster').value=own;
         teamPreferences();exclusions();$('finder-exclusions').hidden=false;$('finder-preferences').hidden=false;
       }
-    }catch(e){status(e.message,true);}finally{lock(false);}
+    }catch(e){league=null;prefsReady=false;status(e.message,true);}finally{lock(false);}
     if(current===version&&league&&$('finder-team').value)await find();
   }
   async function find(){
     if(busy||saving||!league)return;if(!$('finder-team').value){status('Choose your team first.',true);return;}
     invalidate();const current=version;lock(true);status('Comparing players, picks and team preferences…');
     try{
+      await savePreferences();if(current!==version)return;
       const body=context(),result=await api('finder-matches',body);
       result.pins=[];
       if(result.premium){try{result.pins=(await api('finder-pins',body)).pins;}catch(e){result.pinsError=e.message;}}
@@ -100,7 +124,8 @@
     return idea;
   }
   function render(result){
-    const summary=$('finder-summary');summary.replaceChildren(el('h2',result.team.name),el('p','Needs: '+(result.team.needs.join(', ')||'No clear positional shortage')),el('p','Depth: '+(result.team.surplus.join(', ')||'No clear positional surplus')));
+    const summary=$('finder-summary');summary.replaceChildren(el('h2',result.team.name),el('p','Needs: '+(result.team.needs.join(', ')||'None')),el('p','Depth: '+(result.team.surplus.join(', ')||'None')));
+    summary.append(el('p',(result.team.requirements.fallback?'Default lineup (Sleeper slots unavailable): ':'Sleeper lineup: ')+result.team.requirements.slots.join(' \u00b7 '),'finder-note'));
     const box=$('finder-results');box.replaceChildren();
     if(result.pinsError)box.append(el('p',result.pinsError,'finder-pin-error'));
     const matches=[...result.matches];
@@ -108,7 +133,7 @@
     if(!matches.length)box.append(el('p','No trade ideas met these settings. Try another approach or adjust team preferences.'));
     for(const m of matches){
       const card=el('article',null,'finder-match');
-      card.append(el('h3',m.name),el('p','Needs: '+(m.needs.join(', ')||'No clear positional shortage')));
+      card.append(el('h3',m.name),el('p','Needs: '+(m.needs.join(', ')||'None')));
       if(!result.premium)card.append(el('p','Premium adds trade ideas, pins and team preferences.'));
       else{
         card.append(el('p',modes[m.preference.mode]+' · '+m.preference.pickWeight+' pick preference','finder-note'));
@@ -126,9 +151,9 @@
   $('loadLeagueBtn').onclick=load;$('leagueId').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();load();}};
   $('find-partners').onclick=find;$('apply-exclusions').onclick=find;$('apply-preferences').onclick=find;$('exclude-roster').onchange=exclusions;$('exclude-search').oninput=exclusions;
   $('finder-team').onchange=()=>{const pref=preferences.get($('finder-team').value);if(pref)$('finder-mode').value=pref.mode;settingsChanged();};
-  $('finder-mode').onchange=()=>{const pref=preferences.get($('finder-team').value);if(pref){pref.mode=$('finder-mode').value;teamPreferences();}settingsChanged();};
+  $('finder-mode').onchange=()=>{const pref=preferences.get($('finder-team').value);if(pref){pref.mode=$('finder-mode').value;teamPreferences();preferenceChanged();}else settingsChanged();};
   for(const id of ['finder-ppr','finder-sf','finder-te'])$(id).onchange=settingsChanged;
-  window.addEventListener('dynasty-account-change',()=>{invalidate();rosters=[];preferences.clear();excluded.clear();$('finder-exclusions').hidden=true;$('finder-preferences').hidden=true;if(league)status('Account changed. Reload your league to refresh access.');});
+  window.addEventListener('dynasty-account-change',()=>{accountEpoch++;prefsDirty=false;prefsReady=false;invalidate();rosters=[];preferences.clear();excluded.clear();$('finder-exclusions').hidden=true;$('finder-preferences').hidden=true;if(league)status('Account changed. Reload your league to refresh access.');});
   window.addEventListener('pageshow',e=>{if(e.persisted)location.reload();});
   fetch('/nav.html').then(r=>r.text()).then(html=>$('nav-placeholder').innerHTML=html).catch(()=>{});
 })();
