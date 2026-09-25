@@ -253,6 +253,9 @@
   </style>
   <script src="/site_sheets.js"></script>
   <script src="/account-session.js"></script>
+  <script src="/membership-navigation.js" defer></script>
+  <link rel="stylesheet" href="/membership.css">
+  <link rel="stylesheet" href="/devy-simulator.css">
 </head>
 <body class="page-simulator">
   <header><div class="header-account"><a href="account.html" data-account-link><span>Account</span></a></div>
@@ -304,6 +307,7 @@ Enable <strong>Include Devy Rankings</strong> to use unique base scores for each
   </div>
   
   <p id="devy-access-note" role="status" style="text-align:center">Checking simulator access…</p>
+  <div class="upgrade-prompt" data-devy-upgrade hidden><p>Want all seven rounds to create your dynasty mock?</p><a class="upgrade-link" data-upgrade-link href="account.html?mode=signup&amp;next=membership">Upgrade</a></div>
   <!-- Finish Draft button -->
   <div style="text-align:center;">
     <button id="finishDraftButton">Finish Draft</button>
@@ -338,6 +342,7 @@ Enable <strong>Include Devy Rankings</strong> to use unique base scores for each
       </table>
     </div>
       <p>(Click on a draft pick row to assign the selected available player.)</p>
+      <div class="upgrade-prompt" data-devy-upgrade hidden><p>Keep building your mock with rounds 3–7.</p><a class="upgrade-link" data-upgrade-link href="account.html?mode=signup&amp;next=membership">Upgrade</a></div>
     </div>
     <!-- Available Players -->
     <div class="available-players" id="availablePlayersPanel">
@@ -389,11 +394,13 @@ Enable <strong>Include Devy Rankings</strong> to use unique base scores for each
     async function loadData(){
       const version=++loadRevision;
       document.getElementById('finishDraftButton').disabled=true;
+      document.querySelectorAll('[data-devy-upgrade]').forEach(el=>{el.hidden=true;});
       try{
         const data=await DynastyAccount.request('devy-config');
         if(version!==loadRevision)return;
         draftPicks=data.picks;availablePlayers=data.players;
-        document.getElementById('devy-access-note').textContent=data.rounds===7?'Premium access · All seven NFL draft rounds.':'Free access · First two NFL draft rounds. Premium includes all seven.';
+        document.querySelectorAll('[data-devy-upgrade]').forEach(el=>{el.hidden=data.rounds===7;});
+        document.getElementById('devy-access-note').textContent=data.rounds===7?'Premium access · All seven NFL draft rounds.':'Free access · First two NFL draft rounds.';
         displayDraftPicks();displayAvailablePlayers();document.getElementById('finishDraftButton').disabled=false;
       }catch(e){if(version===loadRevision)document.getElementById('devy-access-note').textContent=e.message;}
     }

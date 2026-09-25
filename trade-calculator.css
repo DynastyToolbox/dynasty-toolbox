@@ -5,13 +5,19 @@
 .page-trade .trade-league-section button,.page-trade .trade-actions button{background:#004d40;color:white;cursor:pointer}
 .page-trade button:disabled{opacity:.55;cursor:not-allowed}
 .page-trade .trade-team-label{display:block;font-weight:bold}
+.page-trade .trade-team-settings{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:10px;font-size:.88rem}
+.page-trade .trade-team-settings select{font-size:.88rem}
 .page-trade .trade-header{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}
 .page-trade .trade-header>span{min-width:0;overflow-wrap:anywhere}
 .page-trade .trade-header .remove-team-btn{grid-column:1 / -1;justify-self:start;margin-left:0}
 @media(max-width:700px){.page-trade .trade-header{grid-template-columns:minmax(0,1fr)}.page-trade .trade-header .remove-team-btn{justify-self:stretch}}
 .page-trade .trade-team-label select,.page-trade .trade-roster-assets{display:block;width:100%;max-width:100%;box-sizing:border-box;margin:8px 0;padding:10px;font:inherit;color:#004d40;border:1px solid #004d40;border-radius:6px;background:#e0f2f1}
-.page-trade .trade-ranks{background:#f0f5f3;border-left:4px solid #00796b;padding:12px;border-radius:6px;margin:12px 0;overflow-wrap:anywhere}
-.page-trade .trade-ranks p{margin:8px 0 2px}
+.page-trade .trade-summary{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;border-top:1px solid #d2dfd8;padding-top:12px;margin-top:12px}
+.page-trade .trade-summary .trade-totals{flex:1 1 145px}
+.page-trade .trade-summary .trade-totals p{margin:4px 0}
+.page-trade .trade-ranks{display:flex;flex:1 1 115px;flex-wrap:wrap;justify-content:flex-end;gap:2px 10px;font-size:.82rem;line-height:1.5;color:#35584b;text-align:right}
+.page-trade .trade-ranks strong{flex-basis:100%;font-weight:normal}
+.page-trade .trade-ranks>span{white-space:nowrap}
 .page-trade .trade-rank-change{display:inline-block;margin-left:7px;font-family:Arial,sans-serif;font-weight:bold;font-size:1.1em;line-height:1}
 .page-trade .rank-up{color:#087d38}
 .page-trade .rank-down{color:#be2525}
@@ -26,6 +32,22 @@
 .page-trade #trade-message{min-height:1.5em;max-width:940px;margin:12px auto;padding:0 12px;overflow-wrap:anywhere}
 .page-trade #trade-message[data-error=true]{color:#9d2020}
 .page-trade .trade-help{max-width:900px;margin:12px auto;padding:0 16px;font-size:.9em;color:#35584b}
+.page-trade .trade-roster-picker{position:relative;margin:8px 0;color:#004d40}
+.page-trade .trade-roster-picker>summary{box-sizing:border-box;min-height:44px;padding:10px 12px;border:1px solid #799c8e;border-radius:6px;background:#e0f2f1;cursor:pointer}
+.page-trade .trade-roster-picker>summary[aria-disabled=true]{opacity:.55;cursor:not-allowed}
+.page-trade .trade-picker-options{position:absolute;top:100%;left:0;right:0;z-index:20;max-height:360px;max-height:min(360px,55vh);overflow:auto;overscroll-behavior:contain;padding:8px;background:#fff;border:1px solid #799c8e;border-radius:6px;box-shadow:0 8px 20px #003d3026}
+.page-trade .trade-picker-position{padding:8px;margin:0 0 8px;border-radius:6px;background:#f0f5f2}
+.page-trade .trade-picker-position[data-position=QB]{background:#e0f7fa}
+.page-trade .trade-picker-position[data-position=RB]{background:#fff9c4}
+.page-trade .trade-picker-position[data-position=WR]{background:#fce4ec}
+.page-trade .trade-picker-position[data-position=TE]{background:#e8f5e9}
+.page-trade .trade-picker-position[data-position=PICK]{background:#eee7f4}
+.page-trade .trade-picker-position h4{margin:0 0 5px;font-size:.85rem}
+.page-trade .trade-picker-asset{box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:44px;padding:8px;margin:4px 0;border:1px solid transparent;border-radius:4px;background:#ffffff80;color:#173e32;text-align:left;font:inherit;font-size:.9rem;cursor:pointer}
+.page-trade .trade-picker-asset>span:first-child{min-width:0;overflow-wrap:anywhere}
+.page-trade .trade-picker-score{flex-shrink:0;font-size:.8rem;font-variant-numeric:tabular-nums}
+.page-trade .trade-picker-asset:hover{background:#fff;border-color:#799c8e}
+.page-trade .trade-roster-picker :focus-visible{outline:2px solid #00796b;outline-offset:1px}
 @media(max-width:700px){.page-trade .trade-league-section,.page-trade .trade-actions{margin:12px}.page-trade .trade-league-section input{width:100%}}
 .page-trade .trade-balance{width:calc(100% - 24px);max-width:940px;box-sizing:border-box;margin:20px auto 0;padding:18px 24px;border:1px solid #b2cbc4;border-top:3px solid #00796b;border-radius:12px;background:linear-gradient(135deg,#fff,#edf3f0);color:#004d40}
 .page-trade .trade-balance h2{font-size:1.25rem;margin:0 0 4px}

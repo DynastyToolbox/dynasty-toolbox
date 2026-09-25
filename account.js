@@ -1,6 +1,7 @@
 'use strict';
 (() => {
   const $ = id => document.getElementById(id);
+  const entry=DynastyMembershipNavigation.accountRoute(location.search);
   const modes = {
     signin: ['Welcome back', 'Sign in to your Dynasty Toolbox account.', 'Sign in'],
     signup: ['Create your account', 'Start with your email and a unique password.', 'Create account'],
@@ -39,6 +40,7 @@
   function showUser(nextUser) {
     user = nextUser;
     if (!user) return changeMode('signin');
+    if(entry.next){location.replace(entry.next);return;}
     $('signed-in').hidden = false; $('signed-out').hidden = true;
     $('account-heading').textContent = 'Your account'; $('account-intro').textContent = 'Welcome to Dynasty Toolbox.';
     $('account-identity').textContent = user.email; $('account-email').value = user.email;
@@ -96,5 +98,5 @@
     const nav = document.createElement('nav'), home = document.createElement('a'); home.href = '/index.html'; home.textContent = 'Home'; nav.append(home); $('nav-placeholder').append(nav);
   });
   lock(true);
-  window.DynastyAccount.check().then(result => { lock(false); showUser(result.user); }).catch(error => { lock(false); changeMode('signin'); status(error.message, true); });
+  window.DynastyAccount.check().then(result => { lock(false); showUser(result.user); if(!result.user)changeMode(entry.mode); }).catch(error => { lock(false); changeMode(entry.mode); status(error.message, true); });
 })();

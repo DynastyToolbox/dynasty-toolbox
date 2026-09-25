@@ -1,0 +1,17 @@
+/* Restore full-width desktop tables without changing the mobile player drawer. */
+.page-simulator .main-container{box-sizing:border-box;width:100%;max-width:1600px;margin:24px auto;padding:0 20px;gap:24px}
+.page-simulator .draft-board .table-responsive table{display:table;width:100%;min-width:400px}
+.page-simulator .draft-board,.page-simulator .available-players{padding:16px}
+.page-simulator .players-controls{display:flex;flex-wrap:wrap;gap:8px}
+.page-simulator #playerSearch,.page-simulator #playerSort{box-sizing:border-box;min-width:0;max-width:100%;min-height:44px;font:inherit;margin:0 0 8px!important;padding:8px!important}
+.page-simulator #playerSearch{flex:1 1 180px}
+.page-simulator #playerSort{flex:1 1 170px}
+@media(min-width:769px){
+  .page-simulator .main-container{flex-wrap:nowrap}
+  .page-simulator .draft-board{flex:1.2 1 0}
+  .page-simulator .available-players{flex:1 1 0;min-width:0;visibility:visible;transform:none}
+  .page-simulator th,.page-simulator td{padding:9px 7px;font-size:1rem}
+  .page-simulator .draft-board .team-name{display:inline}
+  .page-simulator .draft-board .team-logo{display:none}
+}
+@media(max-width:768px){.page-simulator .main-container{padding:0 12px}.page-simulator .draft-board{padding:10px}.page-simulator .available-players{padding:14px 12px 76px}}

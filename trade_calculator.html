@@ -234,8 +234,12 @@
   </style>
   <script src="/nfl_rankings_data.js"></script>
   <script src="/scoring_formats.js"></script>
+  <script src="/pick_preferences.js"></script>
   <script src="/account-session.js" defer></script>
+  <script src="/membership-navigation.js" defer></script>
+  <link rel="stylesheet" href="/membership.css">
   <link rel="stylesheet" href="/trade-calculator.css">
+  <script src="/trade-roster-picker.js" defer></script>
   <script src="/trade-balance.js" defer></script>
   <script src="/trade-calculator.js" defer></script>
   <script src="/my-leagues.js" defer></script>
@@ -277,6 +281,7 @@
       </div>
     </fieldset>
     <p id="trade-access-note">Checking calculator access…</p>
+    <div id="trade-upgrade" class="upgrade-prompt" hidden><p>Want to add more teams to your trade and input league rosters?</p><a class="upgrade-link" data-upgrade-link href="account.html?mode=signup&amp;next=membership">Upgrade</a></div>
     <section id="trade-league-section" class="trade-league-section" hidden aria-label="League input">
       <h2>Trade with your league</h2>
       <div class="flex-row"><label for="leagueId">Sleeper league ID</label><input id="leagueId" inputmode="numeric" placeholder="Enter league ID"><button id="loadLeagueBtn" disabled>Load league</button><button id="refresh-trade-league" hidden>Refresh & clear trade</button></div>

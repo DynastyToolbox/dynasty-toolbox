@@ -12,7 +12,8 @@
   function updateControls(){
     $('addTeamButton').disabled=loading||!access||teams.length>=access.features.tradeTeams;
     $('trade-league-section').hidden=!access?.features.tradeLeagueImport;
-    $('trade-access-note').textContent=access?.premium?'Premium access · Up to 12 team trades and league input.':'Free access · Two teams. Premium: Up to 12 team trades and league input.';
+    $('trade-access-note').textContent=access?.premium?'Premium access · Up to 12 team trades and league input.':access?'Free access · Two teams.':'Checking calculator access…';
+    $('trade-upgrade').hidden=!access||access.premium;
     $('leave-league').hidden=!league;
     $('loadLeagueBtn').disabled=loading||!access?.features.tradeLeagueImport;
     $('refresh-trade-league').hidden=!league;
@@ -39,13 +40,13 @@
       if(teams.length>2)header.append(button('Remove Team',()=>{teams=teams.filter(t=>t!==team);transfers=transfers.filter(m=>m.from!==team.id&&m.to!==team.id);changed();},'remove-team-btn'));
       box.append(header);
       if(league){
+        const settings=el('div',undefined,'trade-team-settings');
         const label=el('label','League team','trade-team-label'),select=choices([['','Choose a league team'],...league.teams.map(t=>[t.roster_id,`${t.name}${t.manager&&t.name!==t.manager?' — '+t.manager:''}`,teams.some(other=>other!==team&&other.roster_id===t.roster_id)])],team.roster_id,`Team ${team.id} league roster`,value=>{
           team.roster_id=value;transfers=transfers.filter(m=>m.from!==team.id&&m.to!==team.id);changed();
-        });label.append(select);box.append(label);
+        });label.append(select);settings.append(label);
         const pickLabel=el('label','Pick preference','trade-team-label');
         pickLabel.append(choices([['low','Low (−20%)'],['neutral','Neutral'],['high','High (+20%)']],team.pickWeight||'neutral',`Team ${team.id} pick preference`,value=>{team.pickWeight=value;changed();}));
-        box.append(pickLabel);
-        const ranks=el('div','Select a team to see its league ranks.','trade-ranks');ranks.id=`team${team.id}Ranks`;box.append(ranks);
+        settings.append(pickLabel);box.append(settings);
       }
       const sends=el('div',undefined,'trade-sends');sends.append(el('h3','Sends:'));
       if(league){
@@ -54,8 +55,7 @@
           return (order[a.position]??4)-(order[b.position]??4)||(a.position==='PICK'?0:
             DynastyScoring.score(b.scores[team.status].value,b.scores[team.status].position,format())-DynastyScoring.score(a.scores[team.status].value,a.scores[team.status].position,format()));
         });
-        const select=choices([['','Choose a player or pick'],...assets.filter(a=>!transfers.some(m=>m.asset===a.id)).map(a=>[a.id,`${a.label} · ${a.position}${a.scores[team.status].ranked?'':' · Unranked'}`])],'',`Team ${team.id} player or pick`,value=>{if(value)addAsset(team,value);});
-        select.className='trade-roster-assets';select.disabled=!team.roster_id||loading;sends.append(select);
+        sends.append(DynastyTradeRosterPicker.render({team,assets:assets.filter(a=>!transfers.some(m=>m.asset===a.id)),format:format(),disabled:!team.roster_id||loading,onSelect:id=>addAsset(team,id)}));
       }else{
         const input=el('input');input.type='search';input.placeholder='Search for a player or pick';input.className='player-search';input.setAttribute('aria-label',`Team ${team.id} search players and picks`);
         const suggestions=el('div',undefined,'suggestions-box');
@@ -74,7 +74,10 @@
       }
       sends.append(sendList);box.append(sends,el('h3','Receives:'));
       const receives=el('ul',undefined,'trade-list');receives.id=`team${team.id}Receives`;box.append(receives);
-      const totals=el('div','Updating values…','trade-totals');totals.id=`team${team.id}Totals`;box.append(totals);container.append(box);
+      const summary=el('div',undefined,'trade-summary');
+      const totals=el('div','Updating values…','trade-totals');totals.id=`team${team.id}Totals`;summary.append(totals);
+      if(league){const ranks=el('div',team.roster_id?'Updating ranks…':'Choose a team to see ranks.','trade-ranks');ranks.id=`team${team.id}Ranks`;summary.append(ranks);}
+      box.append(summary);container.append(box);
     }
     container.classList.toggle('grid',teams.length>=3);updateControls();
   }
@@ -92,7 +95,7 @@
         const panel=$(`team${team.id}Ranks`);panel.replaceChildren(el('strong','League rank'));
         for(const [type,name] of [['competing','Contending'],['tanking','Rebuilding']]){
           const before=team.ranks.before[type].rank,after=team.ranks.after[type].rank;
-          const row=el('p',`${name}: #${after}`);
+          const row=el('span',`${name}: #${after}`);
           if(before!==after){
             const up=after<before,arrow=el('span',up?'↑':'↓','trade-rank-change '+(up?'rank-up':'rank-down'));
             const description=`${up?'Up':'Down'} ${Math.abs(before-after)} ${Math.abs(before-after)===1?'place':'places'} from the original roster rank`;
