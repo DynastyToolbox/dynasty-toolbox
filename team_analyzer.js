@@ -161,6 +161,10 @@ document.addEventListener("DOMContentLoaded", () => {
         base="K"; allowedPos=[];
       } else if (raw.toUpperCase().includes("SUPER")) {
         base="SF"; allowedPos=["QB","RB","WR","TE"];
+      } else if (raw === "WRRB_FLEX") {
+        base="FLEX"; allowedPos=["RB","WR"];
+      } else if (raw === "REC_FLEX") {
+        base="FLEX"; allowedPos=["WR","TE"];
       } else if (raw.toUpperCase().includes("FLEX")) {
         base="FLEX"; allowedPos=["RB","WR","TE"];
       } else {
@@ -168,11 +172,12 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       counts[base] = (counts[base]||0) + 1;
-      const key = (base==="DEF"||base==="K") ? base : `${base}${counts[base]}`;
+      const key = (base==="DEF"||base==="K") && counts[base]===1 ? base : `${base}${counts[base]}`;
 
       if (base==="DEF"||base==="K") {
-        const entry = roster.players.map(id=>allPlayers[id]).find(p=>p&&p.position===base);
-        slots[key] = { name: entry?(entry.team||base):"N/A", pos:base, score:0 };
+        const entry = roster.players.map(id=>allPlayers[id]).find(p=>p&&p.position===base&&!used.has(p.full_name));
+        slots[key] = { name: entry?`${entry.full_name} (unranked)`:"N/A", pos:base, score:0 };
+        if(entry)used.add(entry.full_name);
       } else {
         const candidates = roster.players
           .map(id=> {
@@ -293,6 +298,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const compRank = rankOf("comp"),
           tankRank = rankOf("tank"),
           N        = rosters.length;
+    const bands = DynastySleeper.leagueRankBands(N);
 
 
     // — New title & description logic —
@@ -302,25 +308,25 @@ document.addEventListener("DOMContentLoaded", () => {
       title = "Dynasty Juggernaut";
       desc  = "You’re sitting atop the league now and have the draft capital, breakout youngsters, and proven veterans to stay there for years. Your depth chart reads like an all-star roster, so don’t hesitate to deal from surplus. Package an extra mid-round pick or borderline starter to upgrade an elite position or scoop up a potential breakout rookie. Keep a close eye on bye-week coverage and injury news, but otherwise lean into your window: swing for impact trades at the deadline, and shore up any thin spots in RB/WR depth. Your job now is to stay ahead of the curve. Anticipate opponents’ moves, diversify your upside, and defend your juggernaut crown.";
     }
-    else if (compRank <= 3 && tankRank <= 3) {
+    else if (compRank <= bands.top && tankRank <= bands.top) {
       title = "Powerhouse Dynasty";
-      desc  = "You’re among the top three today and the top three tomorrow. Your roster combines established stars with high-upside youth, and your draft assets are equally strong. Use our Rankings pages to spot under-the-radar sleepers you can add on the waiver wire, then leverage the trade deadline. When buyers are most aggressive, to turn surplus depth into additional picks. Hold those selections until just before the rookie draft, when demand and value peak, and then reinvest in talent that fits your long-term core. With elite present performance and a stacked pipeline, you’re set up to win now and build sustained success.";
+      desc  = "You’re among the upper tier today and the upper tier tomorrow. Your roster combines established stars with high-upside youth, and your draft assets are equally strong. Use our Rankings pages to spot under-the-radar sleepers you can add on the waiver wire, then leverage the trade deadline. When buyers are most aggressive, to turn surplus depth into additional picks. Hold those selections until just before the rookie draft, when demand and value peak, and then reinvest in talent that fits your long-term core. With elite present performance and a stacked pipeline, you’re set up to win now and build sustained success.";
     }
-    else if (compRank <= 3 && tankRank > 3 && tankRank <= 7) {
+    else if (compRank <= bands.top && tankRank > bands.top && tankRank <= bands.middle) {
       title = "Win-Now Contender";
-      desc  = "You’ve built a lineup that’s firing on all cylinders, a top three contender, but your future stock sits squarely in the middle of the pack. To lean into this window, consider using the trade tool to move a couple of your younger stashes or mid-round picks for a proven veteran who can deliver right now. Keep an eye on the waiver wire for a high-floor streamer to cover any week-to-week gaps, but don’t be afraid to convert some long-term upside into immediate production. This is the season to cash in your future chips for present firepower. Make your moves, set your lineup, and go get that title.";
+      desc  = "You’ve built a lineup that’s firing on all cylinders, a upper tier contender, but your future stock sits squarely in the middle of the pack. To lean into this window, consider using the trade tool to move a couple of your younger stashes or mid-round picks for a proven veteran who can deliver right now. Keep an eye on the waiver wire for a high-floor streamer to cover any week-to-week gaps, but don’t be afraid to convert some long-term upside into immediate production. This is the season to cash in your future chips for present firepower. Make your moves, set your lineup, and go get that title.";
     }
-    else if (compRank > 3 && compRank <= 7 && tankRank <= 3) {
+    else if (compRank > bands.top && compRank <= bands.middle && tankRank <= bands.top) {
       title = "Future Builder";
-      desc  = "You’re sitting in the middle of the pack right now (4th–7th ranked in contending), but your real advantage is your future assets, top three in rebuilding. Harness that strength by using our trade calculator to turn a veteran fringe‐starter or a mid‐round pick into high-upside talent or additional draft capital. Look for second-year players or breakout sleepers on the waiver wire who can develop into your core pieces. Don’t be afraid to package an aging starter for a late-round pick, then reinvest that pick in a lottery ticket with league-winning potential. Your goal is simple: convert today’s depth into tomorrow’s stars so that when your window fully opens, you’ll have the firepower to seize it.";
+      desc  = "You’re sitting in the middle of the pack right now (middle tier in contending), but your real advantage is your future assets, upper tier in rebuilding. Harness that strength by using our trade calculator to turn a veteran fringe‐starter or a mid‐round pick into high-upside talent or additional draft capital. Look for second-year players or breakout sleepers on the waiver wire who can develop into your core pieces. Don’t be afraid to package an aging starter for a late-round pick, then reinvest that pick in a lottery ticket with league-winning potential. Your goal is simple: convert today’s depth into tomorrow’s stars so that when your window fully opens, you’ll have the firepower to seize it.";
     }
     else if (compRank > Math.ceil(N * 0.8) && tankRank > Math.ceil(N * 0.8)) {
       title = "Ground-Up Rebuild";
       desc  = "You’re in the trenches, bottom of the standings today and without much future upside, so it’s time for a full reset. Open up those bench spots and turn any veteran fringe-starter into draft capital via our trade calculator. Target lottery-ticket rookies or unproven youngsters who can blossom next year, even if they carry risk. Scan the waiver wire aggressively for high-ceiling sleepers and stash them before anyone else sees the upside. In every transaction, prioritize picks and upside over immediate production: package aging vets for mid-to-late-round draft assets, and parlay those into rookie-season flyers. This rebuild isn’t about quick fixes, it’s about stocking your farm system with the kinds of lottery tickets that become difference-makers when your window finally arrives. Give yourself time, play the long game, and let the rebuild begin.";
     }
-    else if (tankRank <= 3 && compRank > Math.ceil(N * 0.7)) {
+    else if (tankRank <= bands.top && compRank > Math.ceil(N * 0.7)) {
       title = "Capital Architect";
-      desc  = "You’re sitting near the bottom as a contender but have built a premium war chest for the future, top three in rebuilding value, so your focus is pure asset growth. Leading up to the trade deadline, when contending teams pay top dollar for proven players, consider moving a veteran on your roster to maximize returns. Likewise, picks carry peak value just before and during the rookie draft, so time your pick swaps to when demand is highest. Over the next year, scour the waiver wire for high-upside sleepers and stash them for development, and don’t shy away from packaging aging role-players into additional mid-to-late round selections. Your mission is simple: accumulate as much draft capital and breakout upside as possible now, so when your window finally opens, you’ll have every tool you need to strike";
+      desc  = "You’re sitting near the bottom as a contender but have built a premium war chest for the future, upper tier in rebuilding value, so your focus is pure asset growth. Leading up to the trade deadline, when contending teams pay top dollar for proven players, consider moving a veteran on your roster to maximize returns. Likewise, picks carry peak value just before and during the rookie draft, so time your pick swaps to when demand is highest. Over the next year, scour the waiver wire for high-upside sleepers and stash them for development, and don’t shy away from packaging aging role-players into additional mid-to-late round selections. Your mission is simple: accumulate as much draft capital and breakout upside as possible now, so when your window finally opens, you’ll have every tool you need to strike";
     }
     else if (compRank <= Math.ceil(N * 0.3) && tankRank > Math.ceil(N * 0.7)) {
       title = "Contender with Capital Concerns";
@@ -334,7 +340,7 @@ document.addEventListener("DOMContentLoaded", () => {
  document.getElementById("teamTitle").innerHTML = `
       <div class="title-card">
         <h1>${title}</h1>
-        <div>${owner}</div>
+        <div>${DynastySleeper.escapeHTML(owner)}</div>
         <div>Contending Rank: ${compRank} / ${N}<br>Rebuilding Rank: ${tankRank} / ${N}</div>
         <p>${desc}</p>
       </div>`;
@@ -346,14 +352,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const p=r.Position.toUpperCase();
       if(leaguePos[p]&&leaguePos[p].length<posLimits[p]) leaguePos[p].push(r.Player);
     });
-    const owned=new Set(roster.players.map(id=>normalize(allPlayers[id].full_name)));
+    const owned=new Set(roster.players.map(id=>normalize(allPlayers[id]?.full_name)).filter(Boolean));
     let csHTML=`<h3>Cornerstones</h3><div class="cornerstones-grid">`;
     Object.entries(leaguePos).forEach(([p,list])=>{
       list.forEach(name=>{
         if(owned.has(normalize(name))){
           csHTML+=`
             <div class="cornerstone-bubble cs-${p}">
-              ${name}<span class="cornerstone-pos">(${p})</span>
+              ${DynastySleeper.escapeHTML(name)}<span class="cornerstone-pos">(${p})</span>
             </div>`;
         }
       });
@@ -367,7 +373,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const posKey = slot.match(/^[A-Z]+/)[0];
       lineupHTML += `
         <li class="pos-${posKey}">
-          <strong>${slot}</strong>: ${pl.name}
+          <strong>${DynastySleeper.escapeHTML(slot)}</strong>: ${DynastySleeper.escapeHTML(pl.name)}
         </li>`;
     });
     lineupHTML += `</ul>`;
@@ -514,7 +520,7 @@ gapSlots.forEach(slot => {
       seen.add(pick.name);
       tHTML += `
         <div class="target-bubble tb-${posKey}">
-          <small>${label}</small><br>${pick.name}
+          <small>${label}</small><br>${DynastySleeper.escapeHTML(pick.name)}
         </div>`;
     }
   });
@@ -548,11 +554,11 @@ tradeIdeasDiv.innerHTML = tHTML;
     const groups={QB:[],RB:[],WR:[],TE:[]};
     allP.forEach(x=>groups[x.pos]?.push(x));
 
-    let html=`<div class="depth-team-card"><h3>${owner}</h3><div class="position-breakdown">`;
+    let html=`<div class="depth-team-card"><h3>${DynastySleeper.escapeHTML(owner)}</h3><div class="position-breakdown">`;
     ["QB","RB","WR","TE"].forEach(pos=>{
       if(groups[pos].length){
         html+=`<div class="position-group position-${pos}"><h4>${pos}</h4><ul>`;
-        groups[pos].forEach(pl=>html+=`<li>${pl.name} (${pl.score})</li>`);
+        groups[pos].forEach(pl=>html+=`<li>${DynastySleeper.escapeHTML(pl.name)} (${pl.score})</li>`);
         html+=`</ul></div>`;
       }
     });

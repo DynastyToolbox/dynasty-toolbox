@@ -16,7 +16,7 @@ function buildPlayerIndex(players) {
   if (indexedPlayers === players) return playerIndex;
   const index = { exact: new Map(), base: new Map() };
   for (const [id, player] of Object.entries(players)) {
-    if (!player.full_name) continue;
+    if (!player?.full_name || !DynastySleeper.isDynastyPosition(player.position)) continue;
     const item = { ...player, player_id: player.player_id || id };
     const name = normalizeName(player.full_name);
     const base = name.replace(/\s+(iii|ii|iv|jr|sr)$/, "").trim();

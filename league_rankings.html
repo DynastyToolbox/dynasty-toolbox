@@ -411,7 +411,7 @@
 
         (r.players || []).forEach(pid=>{
           const p = sleeperPlayers[pid];
-          if(!p) return;
+          if(!p || !DynastySleeper.isDynastyPosition(p.position)) return;
           const nm = normalizeName(p.full_name);
           const sc = nflRankings[nm]||0;
           allScores.push(sc);
@@ -493,7 +493,7 @@
       teamScores.forEach(t=>{
         html += `<tr>
           <td>${ordinalSuffix(t.overallRank)}</td>
-          <td>${t.team}</td>`;
+          <td>${DynastySleeper.escapeHTML(t.team)}</td>`;
         ["QB","RB","WR","TE","PICK"].forEach(pos=>{
           const r = t.positionRanks[pos]||"N/A";
           html += `<td>${r==="N/A"?r:ordinalSuffix(r)}</td>`;
@@ -509,7 +509,7 @@
         const card = document.createElement("div");
         card.classList.add("team-card");
 
-        let c = `<h3>${t.team}</h3>
+        let c = `<h3>${DynastySleeper.escapeHTML(t.team)}</h3>
           <p class="overall-score">Overall: ${ordinalSuffix(t.overallRank)}</p>
           <div class="position-breakdown">`;
         ["QB","RB","WR","TE"].forEach(pos=>{
@@ -524,7 +524,7 @@
             c += `<ul>`;
             list.sort((a,b)=>b.score-a.score)
                 .forEach(p=>
-                  c += `<li>${p.name} (${p.score.toFixed(2)})</li>`
+                  c += `<li>${DynastySleeper.escapeHTML(p.name)} (${p.score.toFixed(2)})</li>`
                 );
             c += `</ul>`;
           }
@@ -580,6 +580,7 @@
       const out = rosters.map(r=>{
         let s1=[],s2=[],s3=[];
         (r.players || []).forEach(pid=>{
+          if(!DynastySleeper.isDynastyPosition(sleeperPlayers[pid]?.position)) return;
           const nm = normalizeName(sleeperPlayers[pid]?.full_name||"");
           s1.push(p1[nm]||0);
           s2.push(p2[nm]||0);

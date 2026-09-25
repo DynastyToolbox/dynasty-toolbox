@@ -6,6 +6,25 @@
   let playersPromise;
   let playersUntil = 0;
   const DAY = 24 * 60 * 60 * 1000;
+  const isDynastyPosition = position => ['QB','RB','WR','TE','PICK'].includes(position);
+  function leagueRankBands(size) {
+    const count=Math.max(1,Math.floor(Number(size)||1));
+    const top=Math.max(1,Math.ceil(count*.25));
+    return {top,middle:Math.max(top,Math.floor(count*.65))};
+  }
+  function rosterPlayerIds(roster) {
+    return [...new Set(['players','reserve','taxi'].flatMap(key => Array.isArray(roster[key]) ? roster[key] : [])
+      .filter(id => id !== null && id !== undefined && String(id) !== '' && String(id) !== '0').map(String))];
+  }
+  function playerInfo(id, registry) {
+    const player = registry?.[id] || {};
+    const position = String(player.position || player.fantasy_positions?.[0] || 'Other').toUpperCase();
+    const pos = position === 'DST' ? 'DEF' : position;
+    const name = player.full_name || [player.first_name, player.last_name].filter(Boolean).join(' ') ||
+      (pos === 'DEF' ? `${player.team || id} Defense` : `Unknown player (${id})`);
+    return {...player, player_id:String(player.player_id || id), full_name:name, position:pos};
+  }
+  const playerMap = registry => Object.fromEntries(Object.keys(registry).map(id => [id,playerInfo(id,registry)]));
 
   async function request(path) {
     if (pending.has(path)) return pending.get(path);
@@ -39,7 +58,7 @@
           const data = await saved.json();
           if (data && !Array.isArray(data) && Object.keys(data).length) {
             playersUntil = fetchedAt + DAY;
-            return data;
+            return playerMap(data);
           }
         }
       } catch (_) { /* Private browsing or full storage: use the network. */ }
@@ -50,7 +69,7 @@
           headers: { "content-type": "application/json", "x-dt-fetched-at": String(Date.now()) }
         }));
       } catch (_) { /* Storage is an optional optimization. */ }
-      return data;
+      return playerMap(data);
     })();
     try { return await playersPromise; }
     catch (error) { playersPromise = null; playersUntil = 0; throw error; }
@@ -66,7 +85,7 @@
         ![rosters, users, drafts, traded].every(Array.isArray) || !rosters.length) {
       throw new Error("This tool needs a valid Sleeper NFL league. Check the league ID.");
     }
-    return { id, meta, rosters, users, drafts, traded };
+    return { id, meta, rosters:rosters.map(r=>({...r,players:rosterPlayerIds(r)})), users, drafts, traded };
   }
 
   const normalize = value => String(value).toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -92,7 +111,7 @@
   // not a transaction to replay from previous_owner_id. Never infer its origin
   // from the seller, and never remove every pick of a given season/round.
   function withPicks({ meta, rosters, drafts, traded }) {
-    const result = rosters.map(r => ({ ...r, players: r.players || [], picks: [] }));
+    const result = rosters.map(r => ({ ...r, players: rosterPlayerIds(r), picks: [] }));
     if (Number(meta.settings?.type) !== 2) return result; // Future rookie picks are dynasty assets.
     const season = Number(meta.season), rounds = Number(meta.settings?.draft_rounds);
     if (!Number.isInteger(season) || season < 2000 || !Number.isInteger(rounds) || rounds < 0) {
@@ -133,7 +152,7 @@
     return result;
   }
 
-  const api = { players, league, withPicks, pickLabel, pickScore, originName, escapeHTML };
+  const api = { players, league, withPicks, pickLabel, pickScore, originName, escapeHTML, playerInfo, rosterPlayerIds, isDynastyPosition, leagueRankBands };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.DynastySleeper = api;
 })(globalThis);
