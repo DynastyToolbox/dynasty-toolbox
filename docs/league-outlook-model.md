@@ -55,8 +55,44 @@ Run `node scripts/research_outlook.cjs --league YOUR_LEAGUE_ID --work-dir PATH_O
 
 The work directory contains cached public source data, aggregate `report.json`, and `inputs.json` with the state/scoring snapshot and SHA-256 fingerprints of all inputs. The September 25 working copy is in the workspace's `work/outlook-research` directory, outside the served repository. Re-evaluation of those exact cached files with the recorded scoring and week slots reproduces the numeric report. Do not publish these research files through the development server or add automatic deployment jobs for them.
 
+## Lineup and availability checkpoint — September 25, 2026
+
+Implemented `lib/outlook-lineups.cjs` and the manual `scripts/research_outlook_lineups.cjs` runner. These remain isolated research modules, with no public route or page changes.
+
+- The NFL schedule is validated across all 32 teams: 17 games each over 18 weeks, unique game IDs, no team twice in one week, and 272 non-canceled games. The live feed contained one canceled duplicate, which is ignored. Missing or inconsistent schedules cannot manufacture bye weeks. Team abbreviation aliases are normalized. Postponed/unrecognized game statuses remain unknown.
+- Current fantasy IR and taxi players cannot be auto-started. Their current placement is held fixed for the research scenario; future activation is not assumed. Players without a known NFL team are unresolved rather than assigned a bye or zero.
+- Out, IR, PUP, suspended, inactive and practice-squad designations exclude players from this week's candidates. For future weeks those designations produce an unknown-return flag, not an invented season-long absence or recovery date. Questionable/doubtful/probable players remain conditional, without assigning an arbitrary probability or discount.
+- Missing history, old role history and uncertain QB roles are explicitly unresolved. QBs listed below first on the current depth chart, or without two substantial-snap games among their last four active games, need role review instead of inheriting a former starter's projection. This is a conservative coverage rule, not a new trained injury or depth-chart model.
+- An exact assignment solver fills as many eligible starting slots as possible, then maximizes their expected points. It supports fixed positions, FLEX, SUPER_FLEX, WRRB_FLEX, REC_FLEX and multiple eligible positions. Each player can appear only once. This avoids greedy ordering mistakes between overlapping slots. Unfilled K/DEF/IDP slots remain visible; they do not receive fabricated scores.
+- Current-week optimization after an NFL game has started is flagged: locked fantasy starters are not yet modeled. All output totals are explicitly conditional modeled sums; `projectedTeamPoints` remains null. Future NFL matchups are used for byes/eligibility, not yet defensive matchup adjustments.
+
+### Live league coverage
+
+Checked all 120 team-weeks across the owner's 10-team league in Weeks 3–14. 117 had enough modeled, eligible players to fill every slot; three did not. All 120 had at least one unresolved roster player, often a bench player; filling the slots does not establish that the selected lineup is truly strongest when other player projections are missing.
+
+Unique unresolved player/reason pairs: 16 insufficient-history players, nine uncertain QB roles, three without an NFL team, ten unknown future return dates and one unrecognized status. Counts can overlap for the same player across different future conditions. Across the full set of team-weeks, 237 player-week entries were excluded for byes, 192 for fantasy IR and 564 for taxi placement. These are repeated weekly roster entries, not distinct players.
+
+### Historical team-score check
+
+Evaluated the actual recorded starters from 2025 regular-season Weeks 9–14 in the linked prior-year league, plus completed 2026 Weeks 1–2. Every prediction uses only earlier stats, rescored with that season's league settings. Current injuries/depth charts do not retroactively filter these historical starter forecasts.
+
+Of 80 team-week lineups, 74 had complete forecasts and reconciled individual points against the reported team total. Five were excluded for insufficient player history and one for an empty/duplicate starter. Partial scores and commissioner overrides never enter full-team error.
+
+| Model | Complete team-weeks | Mean absolute error | Root mean square error | Mean forecast minus actual |
+| --- | ---: | ---: | ---: | ---: |
+| Four/sixteen blend | 74 | 20.311 | 26.100 | +2.150 |
+| Previous active game | 74 | 32.775 | 38.981 | +3.846 |
+
+This small, single-league sample tests points **conditional on knowing the actual historical starting lineup**. It does not validate automatic lineup selection, availability forecasts, probability calibration or championship odds. Excluding incomplete cases is a coverage limitation, particularly for rookies.
+
+Ten additional tests cover exact assignment (including comparison with exhaustive search across 60 deterministic small cases), restricted FLEX, negative scores, multiple positions, unknown slots, IR/taxi, uncertain injury duration, incomplete schedules, current-week locks, future-data leakage and complete-team scoring. Together the Outlook suites contain 22 passing tests.
+
+Run `node scripts/research_outlook_lineups.cjs --league YOUR_LEAGUE_ID --work-dir EXISTING_NON_PUBLIC_RESEARCH_DIRECTORY` after the baseline runner. This writes `lineup-snapshot.json`, `lineups-report.json`, previous-league metadata and historical matchup snapshots outside the site. The runner verifies cached stats against baseline fingerprints and checks the season/week cutoff. `--snapshot` reuses the saved snapshot and historical matchup files; it fetches prior-league metadata once if absent, then subsequent complete replays are offline. The output distinguishes source snapshot time from report generation time. The player registry must not be refreshed repeatedly for each team/week.
+
+Sources: [Sleeper's weekly injury-designation explanation](https://support.sleeper.com/en/articles/3570017-injury-statuses-and-ir-eligibility), [documented roster and matchup APIs](https://docs.sleeper.com/), and the directly inspected schedule feed at `https://api.sleeper.app/schedule/nfl/regular/2026`. That schedule endpoint, like raw stats, is outside the documented matchup contract; commercial licensing and schema stability remain dependencies.
+
 ## Next checkpoint
 
-Build the weekly NFL availability/bye layer and eligible starting-lineup selection, with explicit treatment for missing history and roster exclusions. QB/role-change uncertainty and team-level testing must come before actionable weekly win odds. Then build the first League Outlook page using the existing visual style, saved-league picker and secure premium endpoint. Surface actual schedule/coverage first; show predictions only when the required inputs and limitations are understood. No new production publication or payments.
+Handle limited-history players and distinguish a potentially missing starter from an uncertain bench asset. Add current-week locked-lineup handling and explicit availability scenarios before presenting live-week estimates. Build the first League Outlook development page using the existing visual style, saved-league picker and secure premium endpoint, surfacing actual schedule, candidate lineups and coverage first. Team uncertainty/correlations and win-probability calibration remain prerequisites for actionable win/playoff odds. No new production publication or payments.
 
 Sleeper's documented schedule interface: https://docs.sleeper.com/#getting-matchups-in-a-league. Raw stats endpoint is already used by this repository but is not covered by that documented matchup contract; availability and commercial licensing remain dependencies.

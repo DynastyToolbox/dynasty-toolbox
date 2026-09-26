@@ -1,0 +1,89 @@
+'use strict';
+const {test}=require('node:test'),assert=require('node:assert/strict');
+const {SLOTS}=require('../lib/outlook-foundation.cjs');
+const {nflSchedule,availability,bestLineup,playerHistories,projectRoster,evaluateStarterRows}=require('../lib/outlook-lineups.cjs');
+const p=(id,pos,points)=>({id,positions:[pos],points});
+test('optimizer resolves overlapping FLEX and restricted slots without sacrificing a starter',()=>{
+  const result=bestLineup(['FLEX','WRRB_FLEX','TE'],[p('rb','RB',15),p('te1','TE',20),p('te2','TE',18)]);
+  assert.equal(result.modeledPoints,53);assert.equal(result.unfilled.length,0);
+  assert.equal(result.lineup[1].player.id,'rb');assert.equal(new Set(result.lineup.map(s=>s.player.id)).size,3);
+  assert.equal(bestLineup(['QB','SUPER_FLEX'],[p('q','QB',10),p('r','RB',20)]).modeledPoints,30);
+  assert.equal(bestLineup(['REC_FLEX'],[p('r','RB',40),p('w','WR',10)]).modeledPoints,10);
+});
+test('unknown positions, negative scores, empty and multi-position rosters are explicit',()=>{
+  const result=bestLineup(['QB','K','DEF'],[p('q','QB',-2)]);
+  assert.equal(result.modeledPoints,-2);assert.equal(result.unfilled.length,2);
+  assert.equal(bestLineup(['QB'],[]).unfilled.length,1);
+  assert.equal(bestLineup(['TE','QB'],[{id:'dual',positions:['TE','QB'],points:20},p('te','TE',10)]).modeledPoints,30);
+  assert.throws(()=>bestLineup(['QB'],[p('q','QB',10),p('q','QB',20)]),/duplicate/);
+});
+test('exact optimizer agrees with exhaustive legal lineups across deterministic mixed formats',()=>{
+  let seed=17;const rand=n=>{seed=(seed*1664525+1013904223)>>>0;return seed%n;};
+  function brute(slots,players,i=0,used=new Set()){
+    if(i===slots.length)return {count:0,points:0};
+    let best=brute(slots,players,i+1,used);
+    for(const pl of players)if(!used.has(pl.id)&&SLOTS[slots[i]].some(pos=>pl.positions.includes(pos))){
+      used.add(pl.id);const next=brute(slots,players,i+1,used);used.delete(pl.id);
+      const option={count:next.count+1,points:next.points+pl.points};
+      if(option.count>best.count||option.count===best.count&&option.points>best.points)best=option;
+    }return best;
+  }
+  for(let trial=0;trial<60;trial++){
+    const keys=Object.keys(SLOTS),slots=Array.from({length:4},()=>keys[rand(keys.length)]),pos=['QB','RB','WR','TE'];
+    const players=Array.from({length:6},(_,i)=>p(String(i),pos[rand(4)],rand(40)-5));
+    const expected=brute(slots,players),actual=bestLineup(slots,players);
+    assert.equal(actual.modeledPoints,expected.points);assert.equal(slots.length-actual.unfilled.length,expected.count);
+  }
+});
+const healthy={position:'QB',team:'PHI',status:'Active',active:true,injury_status:null};
+const sched={valid:true,games:[{week:3,status:'pre_game'}],byWeek:{3:{PHI:{status:'pre_game'}},4:{PHI:{status:'pre_game'}}}};
+const state=extra=>availability({id:'q',player:healthy,roster:{},week:3,currentWeek:3,schedule:sched,...extra});
+test('fantasy IR/taxi, confirmed byes and incomplete NFL schedules affect eligibility',()=>{
+  assert.equal(state({roster:{reserve:['q']}}).reason,'fantasy_ir');
+  assert.equal(state({roster:{taxi:['q']}}).reason,'fantasy_taxi');
+  assert.equal(state({week:5}).reason,'bye');
+  assert.equal(state({schedule:{valid:false}}).reason,'schedule_unconfirmed');
+  assert.equal(state({week:19}).reason,'invalid_week');
+  assert.equal(state({player:{...healthy,team:null}}).reason,'no_nfl_team');
+});
+test('weekly Out is not carried indefinitely; questionable is conditional without invented odds',()=>{
+  const out={...healthy,injury_status:'Out'};
+  assert.equal(state({player:out}).status,'excluded');assert.equal(state({player:out,week:4}).reason,'return_date_unknown');
+  const questionable=state({player:{...healthy,injury_status:'Questionable'}});
+  assert.equal(questionable.eligible,true);assert.equal(questionable.status,'conditional');assert.equal('probability' in questionable,false);
+  assert.equal(state({player:{...healthy,status:'Practice Squad'}}).eligible,false);
+});
+test('partial/canceled/duplicated NFL schedules cannot silently create bye weeks',()=>{
+  const game={home:'PHI',away:'DAL',game_id:'one',week:3,date:'2026-09-25',status:'pre_game'};
+  const result=nflSchedule([game,{...game,status:'canceled',game_id:'old'}],2026);
+  assert.equal(result.canceled,1);assert.equal(result.games.length,1);assert.equal(result.valid,false);
+  assert.ok(nflSchedule([game,game],2026).issues.some(s=>s.includes('Repeated')));
+});
+const histories={q:Array.from({length:4},()=>({season:2026,week:2,points:15,snap:.9}))};
+test('lineup report cannot silently fill unknown rookies, unsupported slots or live-week locks',()=>{
+  const args={roster:{roster_id:1,players:['q','rookie'],taxi:[]},players:{q:healthy,rookie:{...healthy}},histories,meta:{season:2026,roster_positions:['QB','SUPER_FLEX'],settings:{}},schedule:sched,week:3,currentWeek:3};
+  const result=projectRoster(args);
+  assert.equal(result.unresolved[0].reason,'insufficient_history');assert.equal(result.unfilled.length,1);assert.equal(result.projectedTeamPoints,null);
+  const live=projectRoster({...args,schedule:{...sched,games:[{week:3,status:'complete'}]}});
+  assert.ok(live.warnings.some(w=>w.reason==='week_started_lineup_locks_not_modeled'));
+  const ir=projectRoster({...args,roster:{players:['q'],reserve:['q']}});assert.equal(ir.lineup.every(s=>!s.player),true);
+  const backup=projectRoster({...args,players:{...args.players,q:{...healthy,depth_chart_order:2}}});
+  assert.ok(backup.unresolved.some(p=>p.id==='q'&&p.reason==='qb_role_uncertain'));assert.equal(backup.lineup.some(s=>s.player?.id==='q'),false);
+});
+test('a complete season establishes byes, while a missing or duplicate game invalidates them',()=>{
+  const teams='ARI ATL BAL BUF CAR CHI CIN CLE DAL DEN DET GB HOU IND JAX KC LAC LAR LV MIA MIN NE NO NYG NYJ PHI PIT SEA SF TB TEN WAS'.split(' '),games=[];
+  for(let round=1;round<=17;round++)for(let pair=0;pair<16;pair++)games.push({home:teams[pair*2],away:teams[pair*2+1],game_id:round+'-'+pair,week:round===17&&pair>=8?18:round,date:'2026-10-01',status:'pre_game'});
+  const result=nflSchedule(games,2026);assert.equal(result.valid,true);assert.equal(result.games.length,272);
+  assert.equal(result.byWeek[18].ARI,undefined);assert.ok(result.byWeek[17].ARI);
+  assert.equal(nflSchedule(games.slice(1),2026).valid,false);
+  assert.equal(nflSchedule([...games,{...games[0],game_id:'duplicate'}],2026).valid,false);
+});
+test('historical forecasts ignore target/future stats and do not apply current injuries retroactively',()=>{
+  const args={slots:[{season:2025,week:1},{season:2025,week:2}],weeks:[{q:{gms_active:1,pass_td:1}},{q:{gms_active:1,pass_td:99}}],players:{q:{...healthy,injury_status:'IR'}},scoring:{pass_td:4},season:2025,week:2};
+  const result=playerHistories(args);assert.equal(result.q.length,1);assert.equal(result.q[0].points,4);
+});
+test('team error requires a full lineup and reconciled actual points; recorded zero points count',()=>{
+  const players={q:healthy},slots=['QB'];
+  const result=evaluateStarterRows({players,slots,histories,matchups:[{roster_id:1,starters:['q'],points:0,players_points:{q:0}},{roster_id:2,starters:['rookie'],points:10,players_points:{rookie:10}},{roster_id:3,starters:['q'],points:99,players_points:{q:0}},{roster_id:4,starters:['q'],points:0,players_points:{q:0},custom_points:10}]});
+  assert.equal(result.complete,1);assert.equal(result.metrics.mae,15);assert.equal(result.excludedReasons.team_total_disagreement,1);assert.equal(result.excludedReasons.commissioner_override,1);
+});
