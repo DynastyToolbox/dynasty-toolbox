@@ -65,10 +65,44 @@ test('lineup report cannot silently fill unknown rookies, unsupported slots or l
   const result=projectRoster(args);
   assert.equal(result.unresolved[0].reason,'insufficient_history');assert.equal(result.unfilled.length,1);assert.equal(result.projectedTeamPoints,null);
   const live=projectRoster({...args,schedule:{...sched,games:[{week:3,status:'complete'}]}});
-  assert.ok(live.warnings.some(w=>w.reason==='week_started_lineup_locks_not_modeled'));
+  assert.ok(live.warnings.some(w=>w.reason==='locked_lineup_unavailable'));
   const ir=projectRoster({...args,roster:{players:['q'],reserve:['q']}});assert.equal(ir.lineup.every(s=>!s.player),true);
   const backup=projectRoster({...args,players:{...args.players,q:{...healthy,depth_chart_order:2}}});
   assert.ok(backup.unresolved.some(p=>p.id==='q'&&p.reason==='qb_role_uncertain'));assert.equal(backup.lineup.some(s=>s.player?.id==='q'),false);
+});
+test('short-history estimates are marked, and zero-history players never receive invented points',()=>{
+  const {earlyEstimate}=require('../lib/outlook-research.cjs');
+  assert.deepEqual(earlyEstimate([]),{points:null,games:0,limited:true});
+  assert.deepEqual(earlyEstimate([{points:0},{points:20}]),{points:10,games:2,limited:true});
+  assert.equal(earlyEstimate(histories.q).limited,false);
+  assert.throws(()=>earlyEstimate([{points:NaN}]),/Invalid/);
+});
+function lockFixture(status='complete'){
+  return {roster:{roster_id:1,players:['done','benchDone','next'],starters:['next','done']},players:{done:{...healthy,position:'WR',full_name:'Locked player'},benchDone:{...healthy,position:'WR'},next:{...healthy,position:'WR',team:'DAL'}},histories:Object.fromEntries(['done','benchDone','next'].map((id,i)=>[id,[{points:(i+1)*20,snap:.8,season:2026,week:2}]])),meta:{season:2026,roster_positions:['WR','FLEX'],settings:{}},schedule:{valid:true,games:[{week:3,status}],byWeek:{3:{PHI:{status},DAL:{status:'pre_game'}},4:{PHI:{status:'pre_game'},DAL:{status:'pre_game'}}}},week:3,currentWeek:3,matchup:{starters:['next','done'],players_points:{done:0,benchDone:99}}};
+}
+test('completed starters retain their original slot and real zero; played bench players cannot be added',()=>{
+  const result=projectRoster(lockFixture());
+  assert.equal(result.lineup[1].player.id,'done');assert.equal(result.lineup[1].player.locked,true);assert.equal(result.lineup[1].player.points,0);
+  assert.equal(result.lineup[0].player.id,'next');assert.equal(result.modeledPoints,60);
+  assert.equal(result.excluded.find(p=>p.id==='benchDone').reason,'game_already_started');
+  assert.equal(result.lineup[0].player.limitedHistory,true);
+});
+test('live and missing final points remain unknown in the subtotal; future weeks do not inherit locks',()=>{
+  const args=lockFixture('in_progress');args.matchup.players_points.done=12;
+  const result=projectRoster(args);assert.equal(result.lineup[1].player.points,null);assert.equal(result.lineup[1].player.actualPoints,12);assert.equal(result.pendingResults,1);assert.equal(result.modeledPoints,60);
+  args.schedule.byWeek[3].PHI.status='complete';delete args.matchup.players_points.done;
+  assert.equal(projectRoster(args).pendingResults,1);
+  const future=projectRoster({...args,week:4});assert.equal(future.lockedCount,0);assert.equal(future.modeledPoints,100);
+});
+test('missing or malformed locked lineups cannot be silently rebuilt using hindsight',()=>{
+  const missing=projectRoster({...lockFixture(),matchup:undefined});assert.equal(missing.lineup.every(s=>!s.player),true);
+  const malformed=lockFixture();malformed.matchup.starters=['done','done'];assert.equal(projectRoster(malformed).lineup.every(s=>!s.player),true);
+});
+test('review notes separate selected and reported starters from other roster questions',()=>{
+  const args=lockFixture();args.roster.players.push('unknown');args.players.unknown={...healthy,position:'WR',team:'DAL'};
+  const result=projectRoster(args);assert.ok(result.lineupNotes.some(p=>p.id==='next'&&p.reason==='limited_history'));
+  assert.ok(result.otherNotes.some(p=>p.id==='unknown'));assert.equal(result.possibleStarters.length,0);
+  args.roster.starters[0]='unknown';assert.ok(projectRoster(args).possibleStarters.some(p=>p.id==='unknown'));
 });
 test('a complete season establishes byes, while a missing or duplicate game invalidates them',()=>{
   const teams='ARI ATL BAL BUF CAR CHI CIN CLE DAL DEN DET GB HOU IND JAX KC LAC LAR LV MIA MIN NE NO NYG NYJ PHI PIT SEA SF TB TEN WAS'.split(' '),games=[];

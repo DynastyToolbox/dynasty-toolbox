@@ -2,10 +2,11 @@
 (()=>{
   const $=id=>document.getElementById(id),el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;if(cls)n.className=cls;return n;};
   const reasons={fantasy_ir:'On fantasy IR',fantasy_taxi:'On taxi squad',bye:'NFL bye week',currently_unavailable:'Currently unavailable',return_date_unknown:'Future return date unknown',injury_uncertain:'Availability uncertain',insufficient_history:'Not enough game history',qb_role_uncertain:'Quarterback role needs review',stale_role_history:'Recent role needs review',no_nfl_team:'No confirmed NFL team',unrecognized_status:'Status needs review',missing_player:'Player details missing',unsupported_position:'Position not modeled yet',game_status:'NFL game status uncertain',schedule_unconfirmed:'NFL schedule not confirmed',unsupported_slots:'Some lineup positions are not modeled',best_ball_not_modeled:'Best-ball lineup selection is not modeled yet',week_started_lineup_locks_not_modeled:'This week has started. Locked starters are not reflected in this candidate lineup.'};
+  Object.assign(reasons,{limited_history:'Early estimate from limited game history',locked_lineup_unavailable:'Locked starters could not be confirmed; remaining lineup estimates are withheld',game_already_started:'Game already started; cannot be added to this lineup',commissioner_override:'Commissioner-adjusted team score is not included'});
   let data=null,busy=false,version=0,identity;
   const record=t=>`${t.record.wins}–${t.record.losses}${t.record.ties?'–'+t.record.ties:''}`;
   const status=(message,error=false)=>{$('outlook-status').textContent=message;$('outlook-status').dataset.error=String(error);};
-  function clear(){data=null;version++;$('outlook-content').hidden=true;for(const id of ['league-name','league-context','outlook-summary','outlook-coverage','outlook-schedule','outlook-lineup','outlook-subtotal','review-players','excluded-players','outlook-team','outlook-week'])$(id).replaceChildren();}
+  function clear(){data=null;version++;$('outlook-content').hidden=true;for(const id of ['league-name','league-context','outlook-summary','outlook-coverage','outlook-schedule','outlook-lineup','outlook-subtotal','review-players','other-players','excluded-players','outlook-team','outlook-week'])$(id).replaceChildren();}
   function warning(text){return el('p',text,'outlook-warning');}
   function render(){
     if(!data)return;const team=data.league.teams.find(t=>t.id===$('outlook-team').value),week=Number($('outlook-week').value);if(!team)return;
@@ -20,16 +21,25 @@
     const lineup=data.lineups.find(l=>String(l.rosterId)===team.id&&l.week===week),body=$('outlook-lineup');body.replaceChildren();$('outlook-subtotal').replaceChildren();
     $('lineup-title').textContent=`Week ${week||'—'} candidate lineup`;
     $('lineup-note').textContent=lineup?'From your current roster, using your league’s starting slots.':'Lineup estimates are not available for these settings yet.';
-    const started=lineup?.warnings.some(w=>w.reason==='week_started_lineup_locks_not_modeled');
-    $('lineup-note').className=started||lineup?.unfilled.length?'outlook-warning':'outlook-muted';
-    if(started)$('lineup-note').textContent='This week has already started. This is a hypothetical lineup; locked starters are not reflected.';
+    const started=lineup?.warnings.some(w=>w.reason==='locked_lineup_unavailable');
+    $('lineup-note').className=started||lineup?.unfilled.length||lineup?.pendingResults?'outlook-warning':'outlook-muted';
+    if(started)$('lineup-note').textContent='Locked starters could not be confirmed. Remaining lineup estimates are withheld for this week.';
     else if(lineup?.unfilled.length)$('lineup-note').textContent=`${lineup.unfilled.length} starting spot(s) need more information. The subtotal below is incomplete.`;
+    else if(lineup?.pendingResults)$('lineup-note').textContent=`${lineup.pendingResults} locked player(s) still need a final score. Their live points are shown but excluded from the subtotal.`;
+    else if(lineup?.lockedCount)$('lineup-note').textContent='Completed starters stay locked in their original slots with actual points. Remaining slots use estimated points.';
     const slotNames={SUPER_FLEX:'SFLX',WRRB_FLEX:'RB/WR',REC_FLEX:'WR/TE'};
-    for(const row of lineup?.lineup||[]){const tr=el('tr'),slot=el('td');slot.append(el('span',slotNames[row.slot]||row.slot,'slot '+(row.player?.positions[0]||row.slot)));tr.append(slot,el('td',row.player?.name||'Not enough information'),el('td',row.player?row.player.points.toFixed(1):'—'));body.append(tr);}
-    if(lineup)$('outlook-subtotal').append(el('span',lineup.unfilled.length?'Partial lineup subtotal':'Lineup subtotal'),el('strong',lineup.modeledPoints.toFixed(1)));
-    const review=$('review-players');review.replaceChildren();const items=[...(lineup?.unresolved||[]),...(lineup?.warnings||[])];
+    for(const row of lineup?.lineup||[]){
+      const tr=el('tr'),slot=el('td'),p=row.player,name=el('td',p?.name||'Not enough information');slot.append(el('span',slotNames[row.slot]||row.slot,'slot '+(p?.positions[0]||row.slot)));
+      if(p?.locked)name.append(el('small',p.gameStatus==='complete'?'Locked · final':'Locked · live','outlook-estimate-note'));
+      else if(p?.limitedHistory)name.append(el('small',`Early estimate · ${p.historyGames} game${p.historyGames===1?'':'s'}`,'outlook-estimate-note'));
+      const value=p?.points??(p?.locked?p.actualPoints:null);tr.append(slot,name,el('td',Number.isFinite(value)?value.toFixed(1):'—'));body.append(tr);
+    }
+    if(lineup)$('outlook-subtotal').append(el('span',lineup.unfilled.length||lineup.pendingResults?'Partial lineup subtotal':lineup.lockedCount?'Final points + estimates':'Lineup subtotal'),el('strong',lineup.modeledPoints.toFixed(1)));
+    const review=$('review-players');review.replaceChildren();const items=[...(lineup?.possibleStarters||[]),...(lineup?.lineupNotes||[])];
     for(const item of items)review.append(el('li',(item.name?item.name+' — ':'')+(reasons[item.reason]||'Needs review')));
-    $('review-title').textContent=`Players & availability to review (${items.length})`;$('outlook-review').hidden=!items.length;
+    $('review-title').textContent=`Starting-lineup questions (${items.length})`;$('outlook-review').hidden=!items.length;
+    const others=$('other-players');others.replaceChildren();for(const item of lineup?.otherNotes||[])others.append(el('li',item.name+' — '+(reasons[item.reason]||'Needs review')));
+    $('other-title').textContent=`Other roster notes (${lineup?.otherNotes.length||0})`;$('outlook-other').hidden=!lineup?.otherNotes.length;
     const excluded=$('excluded-players');excluded.replaceChildren();for(const item of lineup?.excluded||[])excluded.append(el('li',item.name+' — '+(reasons[item.reason]||item.reason)));
     $('excluded-title').textContent=`Outside this week’s lineup pool (${lineup?.excluded.length||0})`;$('outlook-excluded').hidden=!lineup?.excluded.length;
   }
