@@ -118,3 +118,31 @@ Starting-lineup questions now show selected-player warnings and unresolved playe
 Validation: 31 Outlook tests pass, including early-history behavior, final zero scores, live/missing results, original-slot locks, exclusion of played bench players, invalid starter records, future-week reset and note grouping. Signed-in browser verification confirmed the owner's Week 3 Bijan Robinson remains in his recorded RB slot with 34.3 final points and a 175.0 final-points-plus-estimates subtotal. Week/team switching and separated starter notes work. The 390-pixel layout has no horizontal overflow. No production publication, billing or permissions changed.
 
 Next: model team-score uncertainty and availability scenarios, then evaluate weekly win probabilities before simulating season records or playoff/championship outcomes. Publishing also still requires prepared hosted data, licensing resolution and a release security review.
+
+## Experimental matchup ranges — September 26, 2026
+
+Added `lib/outlook-uncertainty.cjs` and `scripts/research_outlook_uncertainty.cjs`. The manual runner reads the existing private history and downloads only missing historical league matchup files when explicitly passed `--fetch`. Subsequent runs are offline. Historical stat hashes are verified, matchup fingerprints recorded, and the report remains in `work/outlook-research/uncertainty-report.json`, outside the web root. Previous/current leagues must have matching scoring and starting slots; K/DEF/IDP and best-ball formats cannot enter this experiment.
+
+The four/sixteen point baseline remains fixed. Complete recorded starter totals from 2025 Weeks 1–8 fit residual distributions: 57 of 80 team-weeks and 20 complete head-to-head pairs across eight weeks. A residual is actual points minus the baseline estimate. Team ranges add the empirical 10th/90th residual percentiles to the candidate lineup total. Matchup probabilities use the two residuals from each historical pair together, including both orientations so API roster order cannot favor one side. This preserves aggregate observed opponent dependence, but does not model the specific NFL stacks/correlations in a proposed lineup. A fixed half-observation per decisive outcome prevents empirical 0%/100% certainty. It is regularization, not proof of calibration. These are exact empirical calculations; there is no random simulation or refresh-to-refresh jitter.
+
+The minimum 40 complete teams / 20 pairs / six weeks is an availability guard, not a reliability threshold. Baseline selection and residual fitting share the early eight weeks. Later weeks evaluate the frozen method without adjusting it to improve their results. Current injuries and depth charts are not applied retrospectively to historical starters. Missing, partial, early-history and unreconciled/overridden totals are excluded from complete-team comparisons.
+
+Evaluation on 2025 Weeks 9–14 and completed 2026 Weeks 1–2:
+
+| Measure | Result |
+| --- | ---: |
+| Complete team scores | 74 / 80 |
+| Complete matchups | 34 / 40 |
+| Nominal 80% range coverage | 75.68% |
+| Mean range width | 65.17 points |
+| Paired-error Brier score (lower is better) | 0.2243 |
+| Independent-team-error comparison | 0.2218 |
+| Constant 50% baseline | 0.2500 |
+
+The paired method modestly beat the coin-flip baseline but did not beat the independent-error comparison. The holdout was not used to switch methods. Probability bins include both team perspectives for symmetry; they are dependent views of 34 games, not 68 independent matchups. In the highest probability bin, the mean estimate was 89.79% and the observed win rate was 75% (16 team perspectives). Strong favorites are overconfident in this small sample. Repeated teams and weeks further limit inference. These results do not establish broad calibration, automatic-lineup accuracy or championship odds. Do not translate these percentages directly into launch-ready season forecasts.
+
+The protected local page now includes a **Week N matchup** card with each team's historical scoring range and experimental win chance. It explicitly assumes the displayed candidate lineups play and states the observed test coverage. Comparisons are withheld for live/current weeks, partial lineups, selected players with limited history or uncertain availability, unsupported settings, and absent calibration. Unknown bench projections still limit the optimal-lineup assumption and are disclosed. Calibration is matched to the league ID, scoring/slots and history cutoff. Only derived comparisons and small aggregate test counts reach the browser; raw residuals, prior matchup records, fingerprints and account metadata remain private. The endpoint remains disabled in production.
+
+Validation: 38 Outlook tests pass. New coverage includes future-outcome isolation, minimum data guards, pair symmetry, shared-error dependence, probabilities summing to one, finite/nonzero extreme probabilities, negative point ranges, evaluation-period separation, ties/incomplete pairs, uncertain-starter exclusions and league/format/cutoff isolation. Signed-in browser checks show the owner's Week 4 comparison, opposite-team symmetry (87%/13% reversed consistently), current-week withholding and limited-history/uncertain starter withholding. Desktop and phone layouts were checked at 1440 and 390 CSS pixels with no horizontal overflow; viewport overrides are reset.
+
+Next checkpoint: improve evidence for probability calibration and model explicit player availability scenarios before projecting season records. Investigate additional independent league/history coverage and predeclare the next evaluation period; do not tune repeatedly against this same holdout. Live-game conditioning, season-long roster changes, league-median games, playoff formats/tiebreaks and draft-order rules remain separate work. No production deployment or payment activation.

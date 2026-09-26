@@ -3,6 +3,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const {outlookAction,buildPreview}=require('../lib/league-outlook.cjs');
 const {resolveAccess}=require('../lib/subscription-access.cjs');
 const {createHandler}=require('../lib/account-server.cjs');
+const {formatKey,fit}=require('../lib/outlook-uncertainty.cjs');
 const id='11111111-1111-4111-8111-111111111111';
 const grant={user_id:id,plan:'premium',starts_at:'2026-01-01',expires_at:null,revoked_at:null};
 const premium=resolveAccess(id,null,[grant]);
@@ -22,6 +23,14 @@ test('premium preview returns actual records and coverage, never invented odds o
 test('unsupported scoring loads schedule and coverage without misleading partial point forecasts',()=>{
   const input=fixture();input.meta.scoring_settings.bonus_rec_te=1;
   const result=buildPreview(input);assert.deepEqual(result.coverage.scoring,['bonus_rec_te']);assert.equal(result.lineups.length,0);assert.equal(result.schedule.length,2);
+});
+test('uncertainty stays league/format/cutoff-specific and never exposes raw calibration data',()=>{
+  const input=fixture(),model=fit(Array.from({length:8},(_,i)=>Array.from({length:6},(_,j)=>({season:2025,week:i+1,rosterId:j,matchupId:Math.floor(j/2),predicted:100,actual:100+i-j}))).flat(),{before:202509});
+  const report={leagueId:input.meta.league_id,format:formatKey(input.meta),historyThrough:{season:2026,week:2},model,evaluation:{matchups:{n:34},teamRanges:{coverage:.7568}}};
+  input.uncertainty=report;let result=buildPreview(input);assert.equal(result.uncertainty.testMatchups,34);assert.equal(JSON.stringify(result).includes('residuals'),false);assert.equal(JSON.stringify(result).includes('calibrationThrough'),false);
+  for(const change of [{leagueId:'9876543210987654321'},{format:formatKey({...input.meta,roster_positions:['QB','QB']})},{historyThrough:{season:2026,week:1}},{model:{...model,before:202604}}]){
+    input.uncertainty={...report,...change};assert.equal(buildPreview(input).uncertainty,null);
+  }
 });
 test('HTTP gate defaults off, stays off in production, authenticates, and disregards browser entitlement fields',async()=>{
   async function run(env,authenticated,body={action:'outlook-league',league_id:'1234567890123456789',premium:true}){

@@ -6,12 +6,24 @@
   let data=null,busy=false,version=0,identity;
   const record=t=>`${t.record.wins}–${t.record.losses}${t.record.ties?'–'+t.record.ties:''}`;
   const status=(message,error=false)=>{$('outlook-status').textContent=message;$('outlook-status').dataset.error=String(error);};
-  function clear(){data=null;version++;$('outlook-content').hidden=true;for(const id of ['league-name','league-context','outlook-summary','outlook-coverage','outlook-schedule','outlook-lineup','outlook-subtotal','review-players','other-players','excluded-players','outlook-team','outlook-week'])$(id).replaceChildren();}
+  function clear(){data=null;version++;$('outlook-content').hidden=true;for(const id of ['league-name','league-context','outlook-summary','outlook-matchup','outlook-coverage','outlook-schedule','outlook-lineup','outlook-subtotal','review-players','other-players','excluded-players','outlook-team','outlook-week'])$(id).replaceChildren();}
   function warning(text){return el('p',text,'outlook-warning');}
   function render(){
     if(!data)return;const team=data.league.teams.find(t=>t.id===$('outlook-team').value),week=Number($('outlook-week').value);if(!team)return;
     const summary=$('outlook-summary');summary.replaceChildren();
     for(const [value,label]of [[record(team),'Current record'],[team.pointsFor.toFixed(1),'Points scored'],[data.schedule.length,'Regular-season weeks left']]){const card=el('div',null,'outlook-stat');card.append(el('strong',value),el('span',label));summary.append(card);}
+    const comparison=data.comparisons?.find(c=>c.week===week&&c.teams.includes(team.id)),matchup=$('outlook-matchup');matchup.replaceChildren();$('matchup-title').textContent=`Week ${week||'—'} matchup`;
+    if(comparison?.available){
+      const side=comparison.teams.indexOf(team.id),ids=side?[...comparison.teams].reverse():comparison.teams,ranges=side?[comparison.b,comparison.a]:[comparison.a,comparison.b],chances=side?[comparison.probability.loss,comparison.probability.win]:[comparison.probability.win,comparison.probability.loss];
+      matchup.append(el('p','EXPERIMENTAL · IF THESE LINEUPS PLAY','outlook-kicker'));
+      const grid=el('div',null,'outlook-matchup-teams');
+      ids.forEach((id,index)=>{const card=el('div',null,'outlook-matchup-team');card.append(el('h3',data.league.teams.find(t=>t.id===id)?.name||'Team'),el('strong',Math.round(chances[index]*100)+'%','outlook-chance'),el('span','Estimated win chance'),el('p',`${Math.round(ranges[index].low)}–${Math.round(ranges[index].high)} points`),el('small','Historical scoring range'));grid.append(card);});
+      matchup.append(grid,el('p',`This first model was checked against ${data.uncertainty.testMatchups} past matchups in this league. The ranges aim to cover 80% of scores; they covered ${Math.round(data.uncertainty.rangeCoverage*100)}% in testing. Injuries, roster changes and missing player estimates can change the result.`,'outlook-muted'));
+      if(comparison.probability.tie>0)matchup.append(el('p','A tie is also possible; win chances may not add to 100%.','outlook-muted'));
+    }else{
+      const messages={live_week:'This week is underway. Live-game win chances are not modeled yet; completed points remain in the lineup below.',incomplete_lineup:'One or both teams have an incomplete lineup estimate. Review the team lineups before comparing them.',uncertain_starter:'One or both lineups include a player whose availability or early estimate needs review. A win chance is withheld for this matchup.',calibration_unavailable:'Scoring ranges and win chances are not ready for this league’s settings yet.',missing_lineup:'Both team lineups are needed for a matchup estimate.'};
+      matchup.append(el('p',messages[comparison?.reason]||'An opponent could not be confirmed for this week.','outlook-muted'));
+    }
     const schedule=$('outlook-schedule');schedule.replaceChildren();
     for(const row of data.schedule){
       const pair=row.pairs.find(p=>p.includes(team.id)),opponent=data.league.teams.find(t=>t.id===pair?.find(id=>id!==team.id)),tr=el('tr',null,row.week===week?'selected':'');
