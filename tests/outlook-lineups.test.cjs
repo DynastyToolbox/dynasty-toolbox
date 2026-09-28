@@ -60,6 +60,18 @@ test('partial/canceled/duplicated NFL schedules cannot silently create bye weeks
   assert.ok(nflSchedule([game,game],2026).issues.some(s=>s.includes('Repeated')));
 });
 const histories={q:Array.from({length:4},()=>({season:2026,week:2,points:15,snap:.9}))};
+test('replacement scenarios reoptimize FLEX and exclude every uncertain candidate without promoting IR or taxi',()=>{
+  const players=Object.fromEntries([['a','WR','Questionable'],['b','WR','Doubtful'],['c','TE',null],['d','RB',null],['e','WR',null],['ir','RB',null],['taxi','WR',null],['out','WR','Out']].map(([id,position,injury_status])=>[id,{...healthy,position,injury_status,full_name:id}]));
+  const scores={a:30,b:25,c:20,d:15,e:10,ir:100,taxi:100,out:100};
+  const args={players,roster:{roster_id:1,players:Object.keys(players),reserve:['ir'],taxi:['taxi']},histories:Object.fromEntries(Object.entries(scores).map(([id,points])=>[id,Array.from({length:4},()=>({season:2026,week:2,points,snap:.9}))])),meta:{season:2026,roster_positions:['WR','TE','FLEX'],settings:{}},week:4,currentWeek:3,schedule:sched};
+  const before=JSON.stringify(args),base=projectRoster(args),alternative=projectRoster({...args,excludeConditional:true});
+  assert.equal(base.modeledPoints,75);assert.equal(alternative.modeledPoints,45);
+  assert.deepEqual(new Set(alternative.lineup.map(r=>r.player.id)),new Set(['c','d','e']));
+  assert.equal(alternative.excluded.filter(p=>p.reason==='scenario_unavailable').length,2);
+  assert.ok(alternative.unresolved.some(p=>p.id==='out'&&p.reason==='return_date_unknown'));
+  assert.equal(JSON.stringify(args),before);assert.throws(()=>projectRoster({...args,week:3,excludeConditional:true}),/future/);
+  const partial=projectRoster({...args,roster:{...args.roster,players:args.roster.players.filter(id=>id!=='e')},excludeConditional:true});assert.ok(partial.unfilled.length);
+});
 test('lineup report cannot silently fill unknown rookies, unsupported slots or live-week locks',()=>{
   const args={roster:{roster_id:1,players:['q','rookie'],taxi:[]},players:{q:healthy,rookie:{...healthy}},histories,meta:{season:2026,roster_positions:['QB','SUPER_FLEX'],settings:{}},schedule:sched,week:3,currentWeek:3};
   const result=projectRoster(args);

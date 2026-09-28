@@ -38,3 +38,9 @@ test('format identity is insensitive to scoring key order but detects lineup and
   const meta={roster_positions:['QB','FLEX','BN'],scoring_settings:{rec:.5,pass_td:4}},same={roster_positions:['QB','FLEX','BN','BN'],scoring_settings:{pass_td:4,rec:.5,unused:0}};
   assert.equal(formatKey(meta),formatKey(same));assert.notEqual(formatKey(meta),formatKey({...meta,scoring_settings:{...meta.scoring_settings,rec:1}}));assert.notEqual(formatKey(meta),formatKey({...meta,roster_positions:['QB','SUPER_FLEX']}));
 });
+test('availability assumptions must be explicit and never bypass early-history or unsupported-slot guards',()=>{
+  const a={lineup:[{player:{id:'a',points:20,conditional:true}}],modeledPoints:20,unfilled:[],lineupNotes:[{reason:'injury_uncertain'}]},opts={week:4,currentWeek:3};
+  assert.equal(compareLineups(model(),a,a,opts).available,false);
+  const assumed=compareLineups(model(),a,a,{...opts,assumeConditionalActive:true});assert.equal(assumed.available,true);assert.equal(assumed.assumesUncertainPlayersActive,true);
+  for(const reason of ['limited_history','unsupported_slots','best_ball_not_modeled'])assert.equal(compareLineups(model(),{...a,lineupNotes:[{reason}]},a,{...opts,assumeConditionalActive:true}).available,false);
+});
