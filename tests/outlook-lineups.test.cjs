@@ -71,6 +71,12 @@ test('partial/canceled/duplicated NFL schedules cannot silently create bye weeks
   assert.ok(nflSchedule([game,game],2026).issues.some(s=>s.includes('Repeated')));
 });
 const histories={q:Array.from({length:4},()=>({season:2026,week:2,points:15,snap:.9}))};
+test('season preview can estimate a listed starting QB with thin role history but never promotes a backup',()=>{
+  const args={roster:{roster_id:1,players:['q']},players:{q:{...healthy,depth_chart_order:1}},histories:{q:[{season:2026,week:2,points:3,snap:.1}]},meta:{season:2026,roster_positions:['QB'],settings:{}},schedule:sched,week:4,currentWeek:3};
+  assert.equal(projectRoster(args).unfilled.length,1);
+  const preview=projectRoster({...args,allowThinHistory:true});assert.equal(preview.lineup[0].player.points,3);assert.equal(preview.lineup[0].player.roleUncertain,true);
+  assert.equal(projectRoster({...args,allowThinHistory:true,players:{q:{...args.players.q,depth_chart_order:2}}}).unfilled.length,1);
+});
 test('replacement scenarios reoptimize FLEX and exclude every uncertain candidate without promoting IR or taxi',()=>{
   const players=Object.fromEntries([['a','WR','Questionable'],['b','WR','Doubtful'],['c','TE',null],['d','RB',null],['e','WR',null],['ir','RB',null],['taxi','WR',null],['out','WR','Out']].map(([id,position,injury_status])=>[id,{...healthy,position,injury_status,full_name:id}]));
   const scores={a:30,b:25,c:20,d:15,e:10,ir:100,taxi:100,out:5};

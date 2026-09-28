@@ -2,32 +2,42 @@
 (()=>{
   const $=id=>document.getElementById(id),el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;if(cls)n.className=cls;return n;};
   let data=null,busy=false,version=0,identity;
-  const record=t=>`${t.record.wins}–${t.record.losses}${t.record.ties?'–'+t.record.ties:''}`;
+  const percent=p=>p<.005?'<1%':p>.995?'>99%':Math.round(p*100)+'%';
+  const expectedRecord=r=>r.wins.toFixed(1)+'–'+r.losses.toFixed(1)+(r.ties>=.05?'–'+r.ties.toFixed(1):'');
+  const record=t=>t.record.wins==null||t.record.losses==null||t.record.ties==null?'—':`${t.record.wins}–${t.record.losses}${t.record.ties?'–'+t.record.ties:''}`;
   const status=(message,error=false)=>{$('outlook-status').textContent=message;$('outlook-status').dataset.error=String(error);};
   const comparisonFor=(id,week)=>data.comparisons?.find(c=>c.week===week&&c.teams.includes(id)&&c.scenario==='play');
   const chanceFor=(c,id)=>c?.available?(c.teams[0]===id?c.probability.win:c.probability.loss):null;
   const unavailable=c=>({live_week:'Live-game win chances are not available for this week yet.',incomplete_lineup:'There is not enough player data to estimate this matchup yet.',uncertain_starter:'Some player estimates need more history before this matchup can be projected.',calibration_unavailable:'Win chances and scoring ranges are not ready for this league’s settings yet.',missing_lineup:'Both teams need sufficient player data for a matchup estimate.'}[c?.reason]||'An opponent or matchup estimate could not be confirmed for this week.');
-  function clear(){data=null;version++;$('outlook-content').hidden=true;for(const id of ['league-name','league-context','outlook-summary','outlook-matchup','outlook-coverage','outlook-schedule','outlook-team','outlook-week'])$(id).replaceChildren();}
+  function clear(){data=null;version++;$('outlook-content').hidden=true;for(const id of ['league-name','league-context','outlook-summary','outlook-matchup','outlook-coverage','outlook-schedule','outlook-team','outlook-week','outlook-standings','standings-note'])$(id).replaceChildren();}
   function warning(text){return el('p',text,'outlook-warning');}
   function render(){
     if(!data)return;const team=data.league.teams.find(t=>t.id===$('outlook-team').value),week=Number($('outlook-week').value);if(!team)return;
     const summary=$('outlook-summary');summary.replaceChildren();
-    for(const [value,label]of [[record(team),'Current record'],[team.pointsFor.toFixed(1),'Points scored'],[data.schedule.length,'Regular-season weeks left']]){const card=el('div',null,'outlook-stat');card.append(el('strong',value),el('span',label));summary.append(card);}
+    const projected=data.standings?.teams.find(t=>t.id===team.id);
+    const stats=projected?[[record(team),'Current record'],[expectedRecord(projected.expected),'Projected final record'],[projected.winRange.low+'–'+projected.winRange.high,'Likely final wins'],['#'+projected.rankRange.low+'–#'+projected.rankRange.high,'Likely standings range']]:[[record(team),'Current record'],[Number.isFinite(team.pointsFor)?team.pointsFor.toFixed(1):'—','Points scored'],[data.schedule.length,'Regular-season weeks left']];
+    summary.classList.toggle('outlook-stats-four',!!projected);
+    for(const [value,label]of stats){const card=el('div',null,'outlook-stat');card.append(el('strong',value),el('span',label));summary.append(card);}
+    const standings=$('outlook-standings');standings.replaceChildren();
+    $('standings-note').textContent=data.standings?.available?'Projected records are averages across 5,000 simulated seasons. Ranges show the middle 80% of those outcomes, not a guarantee.':'Full-season projections are unavailable: '+(data.standings?.reason||'League data needs review.');
+    $('standings-table').hidden=!data.standings?.available;
+    for(const row of data.standings?.teams||[]){const t=data.league.teams.find(t=>t.id===row.id),tr=el('tr',null,row.id===team.id?'selected':'');if(row.id===team.id)tr.setAttribute('aria-current','true');tr.append(el('td','#'+row.place),el('th',t?.name||'Team'),el('td',record(t)),el('td',expectedRecord(row.expected)),el('td',row.winRange.low+'–'+row.winRange.high),el('td','#'+row.rankRange.low+'–#'+row.rankRange.high));tr.querySelector('th').scope='row';standings.append(tr);}
     const comparison=comparisonFor(team.id,week),matchup=$('outlook-matchup');matchup.replaceChildren();$('matchup-title').textContent=`Week ${week||'—'} matchup`;
     if(comparison?.available){
       const side=comparison.teams.indexOf(team.id),ids=side?[...comparison.teams].reverse():comparison.teams,ranges=side?[comparison.b,comparison.a]:[comparison.a,comparison.b];
       matchup.append(el('p','EXPERIMENTAL ESTIMATE','outlook-kicker'));
       const grid=el('div',null,'outlook-matchup-teams');
-      ids.forEach((id,index)=>{const card=el('div',null,'outlook-matchup-team');card.append(el('h3',data.league.teams.find(t=>t.id===id)?.name||'Team'),el('strong',Math.round(chanceFor(comparison,id)*100)+'%','outlook-chance'),el('span','Estimated win chance'),el('p',`${Math.round(ranges[index].low)}–${Math.round(ranges[index].high)} points`),el('small','Projected scoring range'));grid.append(card);});
-      matchup.append(grid,el('p','Early estimates based on past production. Scoring ranges are not minimums or maximums; actual results can fall outside them.','outlook-muted'));
-      if(comparison.probability.tie>0)matchup.append(el('p','A tie is also possible; win chances may not add to 100%.','outlook-muted'));
+      ids.forEach((id,index)=>{const card=el('div',null,'outlook-matchup-team');card.append(el('h3',data.league.teams.find(t=>t.id===id)?.name||'Team'),el('strong',percent(chanceFor(comparison,id)),'outlook-chance'),el('span','Estimated win chance'),el('p',`${Math.round(ranges[index].low)}–${Math.round(ranges[index].high)} points`),el('small','Projected scoring range'));if(ranges[index].limitedPlayers)card.append(el('p','Limited history · wider range','outlook-range-note'));if(ranges[index].unfilledSlots?.length)card.append(el('p','Uncovered starting spots: '+ranges[index].unfilledSlots.join(', '),'outlook-range-note'));grid.append(card);});
+      matchup.append(grid,el('p','Wider ranges reflect more uncertainty. Actual scores can fall outside these ranges.','outlook-muted'));
+      if(comparison.fullGameEstimate)matchup.append(el('p','Current-week percentages use full-game estimates and do not include live results.','outlook-muted'));
+      if(comparison.probability.tie>=.005)matchup.append(el('p','A tie is also possible; win chances may not add to 100%.','outlook-muted'));
     }else matchup.append(el('p',unavailable(comparison),'outlook-muted'));
     const schedule=$('outlook-schedule');schedule.replaceChildren();
     for(const row of data.schedule){
       const pair=row.pairs.find(p=>p.includes(team.id)),opponent=data.league.teams.find(t=>t.id===pair?.find(id=>id!==team.id)),tr=el('tr',null,row.week===week?'selected':'');
       const cell=el('td'),button=el('button',`Week ${row.week}`,'week-button');button.type='button';button.setAttribute('aria-pressed',String(row.week===week));button.setAttribute('aria-controls','matchup-details');
       button.onclick=()=>{$('outlook-week').value=String(row.week);render();$('matchup-title').focus({preventScroll:true});if(matchMedia('(max-width:850px)').matches)$('matchup-details').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});};cell.append(button);
-      const c=comparisonFor(team.id,row.week),chance=chanceFor(c,team.id),chanceCell=el('td',chance===null?'—':Math.round(chance*100)+'%','outlook-schedule-chance');if(chance===null)chanceCell.title=unavailable(c);
+      const c=comparisonFor(team.id,row.week),chance=chanceFor(c,team.id),chanceCell=el('td',chance===null?'—':percent(chance),'outlook-schedule-chance');if(chance===null)chanceCell.title=unavailable(c);
       tr.append(cell,el('td',row.issues.length?'Matchup needs review':opponent?.name||'Opponent unavailable'),el('td',opponent?record(opponent):'—'),chanceCell);schedule.append(tr);
     }
   }
