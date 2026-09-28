@@ -16,7 +16,7 @@ test('Outlook rejects free/expired/forged access before data loading',async()=>{
 });
 test('premium preview returns actual records and coverage, never invented odds or private account metadata',async()=>{
   const result=await outlookAction({league_id:'1234567890123456789'},premium,{load:async()=>fixture()});
-  assert.equal(result.league.teams[0].pointsFor,100.25);assert.equal(result.lineups.length,2);
+  assert.equal(result.league.teams[0].pointsFor,100.25);assert.equal(result.lineups.filter(l=>l.week<5).length,2);
   assert.ok(result.coverage.nflSchedule.length);assert.equal(result.lineups[0].projectedTeamPoints,null);
   assert.equal('owner_id' in result.league.teams[0],false);assert.equal('winProbability' in result,false);
 });

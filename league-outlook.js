@@ -1,7 +1,7 @@
 'use strict';
 (()=>{
   const $=id=>document.getElementById(id),el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;if(cls)n.className=cls;return n;};
-  let data=null,busy=false,version=0,identity;
+  let data=null,busy=false,version=0,identity,scenarioField=null,scenarioReseed=true,scenarioLength='one';
   const percent=p=>p<.005?'<1%':p>.995?'>99%':Math.round(p*100)+'%';
   const expectedRecord=r=>r.wins+'–'+r.losses+(r.ties?'–'+r.ties:'');
   const record=t=>t.record.wins==null||t.record.losses==null||t.record.ties==null?'—':`${t.record.wins}–${t.record.losses}${t.record.ties?'–'+t.record.ties:''}`;
@@ -9,7 +9,7 @@
   const comparisonFor=(id,week)=>data.comparisons?.find(c=>c.week===week&&c.teams.includes(id)&&c.scenario==='play');
   const chanceFor=(c,id)=>c?.available?(c.teams[0]===id?c.probability.win:c.probability.loss):null;
   const unavailable=c=>({live_week:'Live-game win chances are not available for this week yet.',incomplete_lineup:'There is not enough player data to estimate this matchup yet.',uncertain_starter:'Some player estimates need more history before this matchup can be projected.',calibration_unavailable:'Win chances and scoring ranges are not ready for this league’s settings yet.',missing_lineup:'Both teams need sufficient player data for a matchup estimate.'}[c?.reason]||'An opponent or matchup estimate could not be confirmed for this week.');
-  function clear(){data=null;version++;$('outlook-content').hidden=true;for(const id of ['league-name','league-context','outlook-summary','outlook-matchup','outlook-coverage','outlook-schedule','outlook-team','outlook-week','outlook-standings','standings-note','outlook-playoffs','playoff-format'])$(id).replaceChildren();}
+  function clear(){data=null;scenarioField=null;version++;$('outlook-content').hidden=true;for(const id of ['league-name','league-context','outlook-summary','outlook-matchup','outlook-coverage','outlook-schedule','outlook-team','outlook-week','outlook-standings','standings-note','outlook-playoffs','playoff-format','outlook-sandbox'])$(id).replaceChildren();}
   function warning(text){return el('p',text,'outlook-warning');}
   function render(){
     if(!data)return;const team=data.league.teams.find(t=>t.id===$('outlook-team').value),week=Number($('outlook-week').value);if(!team)return;
@@ -22,21 +22,29 @@
     $('standings-note').textContent=data.standings?.available?'':'Full-season projections are unavailable: '+(data.standings?.reason||'League data needs review.');
     $('standings-table').hidden=!data.standings?.available;
     $('standings-note').hidden=!!data.standings?.available;
-    for(const row of data.standings?.teams||[]){const t=data.league.teams.find(t=>t.id===row.id),tr=el('tr',null,row.id===team.id?'selected':'');if(row.id===team.id)tr.setAttribute('aria-current','true');tr.append(el('td','#'+row.place),el('th',t?.name||'Team'),el('td',record(t)),el('td',expectedRecord(row.displayRecord)),el('td',row.winRange.low+'–'+row.winRange.high),el('td','#'+row.rankRange.low+'–#'+row.rankRange.high),el('td',row.playoffs?percent(row.playoffs.chance):'—'),el('td',row.playoffs?(data.standings.playoffs.byes?percent(row.playoffs.byeChance):'—'):'—'));tr.querySelector('th').scope='row';standings.append(tr);}
+    for(const row of data.standings?.teams||[]){const t=data.league.teams.find(t=>t.id===row.id),tr=el('tr',null,row.id===team.id?'selected':'');if(row.id===team.id)tr.setAttribute('aria-current','true');tr.append(el('td','#'+row.place),el('th',t?.name||'Team'),el('td',record(t)),el('td',expectedRecord(row.displayRecord)),el('td',row.winRange.low+'–'+row.winRange.high),el('td','#'+row.rankRange.low+'–#'+row.rankRange.high),el('td',row.playoffs?percent(row.playoffs.chance):'—'),el('td',row.playoffs?(data.standings.playoffs.byes?percent(row.playoffs.byeChance):'—'):'—'));tr.append(el('td',row.playoffs?.titleChance!=null?percent(row.playoffs.titleChance):'\u2014'));tr.querySelector('th').scope='row';standings.append(tr);}
 
-    const playoff=data.standings?.playoffs,panel=$('outlook-playoffs');panel.replaceChildren();
+    const playoff=data.standings?.playoffs,panel=$('outlook-playoffs');panel.replaceChildren();$('seed-sandbox').hidden=!playoff?.available;
     $('playoff-format').textContent=playoff?.available?playoff.count+' teams · Starts Week '+playoff.start:'';
     if(playoff?.available){
       const own=projected?.playoffs,fieldEntry=playoff.field.find(t=>t.id===team.id);
       const overview=el('div',null,'outlook-playoff-summary');
-      for(const [value,label]of [[own?percent(own.chance):'—','Make playoffs'],[own&&playoff.byes?percent(own.byeChance):'—','First-round bye'],[fieldEntry?'#'+fieldEntry.seed:'Outside field','Projected seed']]){const card=el('div',null,'outlook-stat');card.append(el('strong',value),el('span',label));overview.append(card);}panel.append(overview);
+      for(const [value,label]of [[own?percent(own.chance):'—','Make playoffs'],[own&&playoff.byes?percent(own.byeChance):'—','First-round bye'],[fieldEntry?'#'+fieldEntry.seed:'Outside field','Projected seed'],[own?.finalChance!=null?percent(own.finalChance):'—','Reach final'],[own?.titleChance!=null?percent(own.titleChance):'—','Win championship']]){const card=el('div',null,'outlook-stat');card.append(el('strong',value),el('span',label));overview.append(card);}panel.append(overview);
       const name=entry=>'#'+entry.seed+' '+(data.league.teams.find(t=>t.id===entry.id)?.name||'Team');
       const byes=playoff.field.filter(t=>t.bye);if(byes.length){const strip=el('div',null,'outlook-byes');strip.append(el('strong','First-round byes'));for(const entry of byes)strip.append(el('span',name(entry)));panel.append(strip);}
-      panel.append(el('h3','Projected opening round'));
-      const matches=el('div',null,'outlook-playoff-matches');
-      for(const game of playoff.openingRound){const card=el('div',null,'outlook-playoff-game');for(const entry of [game.a,game.b]){const line=el('p',name(entry),entry.id===team.id?'own-team':'');card.append(line);}matches.append(card);}panel.append(matches);
+      if(playoff.path){
+        const favorite=[...data.standings.teams].sort((a,b)=>b.playoffs.titleChance-a.playoffs.titleChance)[0];
+        panel.append(el('p','Championship favorite: '+teamName(favorite.id)+' · '+percent(favorite.playoffs.titleChance),'outlook-favorite'));
+        panel.append(el('h3','Projected playoff path'),pathView(playoff.path,team.id,playoff.forecasts));
+      }else{
+        panel.append(el('h3','Projected opening round'));
+        const matches=el('div',null,'outlook-playoff-matches');
+        for(const game of playoff.openingRound){const card=el('div',null,'outlook-playoff-game');for(const entry of [game.a,game.b])card.append(el('p',name(entry),entry.id===team.id?'own-team':''));matches.append(card);}panel.append(matches);
+        panel.append(el('p',playoff.bracketReason,'outlook-muted'));
+      }
+      renderSandbox(team.id);
       if(playoff.divisions.length)panel.append(el('p','Division winners receive the top seeds.','outlook-muted'));
-    }else panel.append(el('p',playoff?.reason||'Playoff projections need a complete season outlook.','outlook-muted'));
+    }else{panel.append(el('p',playoff?.reason||'Playoff projections need a complete season outlook.','outlook-muted'));$('outlook-sandbox').replaceChildren();}
 
     const comparison=comparisonFor(team.id,week),matchup=$('outlook-matchup');matchup.replaceChildren();$('matchup-title').textContent=`Week ${week||'—'} matchup`;
     if(comparison?.available){
@@ -57,10 +65,44 @@
       tr.append(cell,el('td',row.issues.length?'Matchup needs review':opponent?.name||'Opponent unavailable'),el('td',opponent?record(opponent):'—'),chanceCell);schedule.append(tr);
     }
   }
+  const teamName=id=>data.league.teams.find(t=>t.id===id)?.name||'Team';
+  function pathView(path,own,forecasts){
+    const grid=el('div',null,'outlook-bracket');
+    path.rounds.forEach((round,i)=>{
+      const column=el('section',null,'outlook-bracket-round'),title=i===path.rounds.length-1?'Championship':i===path.rounds.length-2?'Semifinals':'Opening round';
+      column.append(el('h4',title),el('p','Week '+round.weeks.join('–'),'outlook-muted'));
+      for(const game of round.games){const card=el('div',null,'outlook-playoff-game');
+        const chance=OutlookBracket.gameChance(game.a,game.b,round.weeks,forecasts);
+        [game.a,game.b].forEach((entry,index)=>{const line=el('p',null,entry.id===own?'own-team':'');line.append(el('span','#'+entry.seed+' '+teamName(entry.id)),el('strong',percent(index?1-chance:chance)));if(entry.id===game.winner.id)line.classList.add('projected-winner');card.append(line);});column.append(card);
+      }grid.append(column);
+    });return grid;
+  }
+  function renderSandbox(own){
+    const host=$('outlook-sandbox');host.replaceChildren();const playoff=data.standings.playoffs;
+    if(!scenarioField)scenarioField=playoff.field.map(t=>({...t}));
+    const controls=el('div',null,'outlook-seed-controls');
+    const reseedLabel=el('label','Bracket format'),reseed=el('select');reseed.setAttribute('aria-label','Scenario bracket format');reseed.append(new Option('Reseed each round','reseed'),new Option('Fixed bracket','fixed'));reseed.value=scenarioReseed?'reseed':'fixed';reseedLabel.append(reseed);
+    const lengthLabel=el('label','Round length'),length=el('select');length.setAttribute('aria-label','Scenario round length');length.append(new Option('One week per round','one'),new Option('Two-week championship','final-two'),new Option('Two weeks per round','all-two'));length.value=scenarioLength;lengthLabel.append(length);controls.append(reseedLabel,lengthLabel);
+    const seeds=el('div',null,'outlook-seed-grid');
+    for(const entry of scenarioField){const label=el('label','Seed '+entry.seed),select=el('select');select.setAttribute('aria-label','Team at seed '+entry.seed);select.append(...data.league.teams.map(t=>new Option(t.name,t.id)));select.value=entry.id;label.append(select);seeds.append(label);
+      select.onchange=()=>{const other=scenarioField.find(t=>t.id===select.value),old=entry.id;entry.id=select.value;if(other&&other!==entry)other.id=old;renderSandbox(own);host.querySelector('[aria-label="Team at seed '+entry.seed+'"]')?.focus({preventScroll:true});};
+    }
+    const reset=el('button','Reset to projected seeds');reset.type='button';reset.onclick=()=>{scenarioField=playoff.field.map(t=>({...t}));scenarioReseed=playoff.bracket?.reseed??true;scenarioLength='one';renderSandbox(own);host.querySelector('button')?.focus({preventScroll:true});};
+    reseed.onchange=()=>{scenarioReseed=reseed.value==='reseed';renderSandbox(own);host.querySelector('[aria-label="Scenario bracket format"]')?.focus({preventScroll:true});};
+    length.onchange=()=>{scenarioLength=length.value;renderSandbox(own);host.querySelector('[aria-label="Scenario round length"]')?.focus({preventScroll:true});};
+    host.append(controls,seeds,reset);const result=el('div',null,'outlook-scenario-results');result.setAttribute('aria-live','polite');host.append(result);
+    try{
+      const n=playoff.count===4?2:3,lengths=Array(n).fill(scenarioLength==='all-two'?2:1);if(scenarioLength==='final-two')lengths[n-1]=2;
+      const rounds=OutlookBracket.roundWeeks(playoff.count,playoff.start,lengths),scenario=OutlookBracket.scenario(scenarioField,rounds,playoff.forecasts,{reseed:scenarioReseed,seed:data.league.id+':scenario'});
+      result.append(el('h3','With these seeds'),pathView(scenario.path,own,playoff.forecasts));
+      const chances=el('div',null,'outlook-scenario-odds');
+      for(const t of [...scenario.teams].sort((a,b)=>b.titleChance-a.titleChance||a.seed-b.seed)){const item=el('p',null,t.id===own?'own-team':'');item.append(el('span',teamName(t.id)),el('strong',percent(t.titleChance)));chances.append(item);}result.append(el('h4','Championship chances · selected field'),chances);
+    }catch(error){result.append(warning(error.message));}
+  }
   async function load(){
     if(busy)return;clear();const current=version;busy=true;$('loadLeagueBtn').disabled=true;$('outlook-gate').hidden=true;status('Loading your league’s schedule and matchup estimates…');
     try{
-      const result=await DynastyAccount.request('outlook-league',{league_id:$('leagueId').value.trim()});if(version!==current)return;data=result;
+      const result=await DynastyAccount.request('outlook-league',{league_id:$('leagueId').value.trim()});if(version!==current)return;data=result;scenarioReseed=data.standings?.playoffs?.bracket?.reseed??true;scenarioLength='one';
       $('league-name').textContent=data.league.name;$('league-context').textContent=`${data.league.season} · ${data.league.teams.length} teams`;
       $('outlook-team').replaceChildren(...data.league.teams.map(t=>new Option(t.name,t.id)));
       const own=String(window.DynastyLeagues?.teamFor(data.league.id)||'');if(data.league.teams.some(t=>t.id===own))$('outlook-team').value=own;
