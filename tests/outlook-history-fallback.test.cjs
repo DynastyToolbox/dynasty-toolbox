@@ -58,3 +58,19 @@ test('missing history remains a genuine data error, not a fabricated forecast',a
   const f=await setup(t,{empty:true});
   await assert.rejects(()=>loadInputs(f.id,f),/Player history is not available/);
 });
+
+test('K/DEF/IDP leagues preserve offensive forecasts, actual records and full-season totals',async t=>{
+  const f=await setup(t),input=await loadInputs(f.id,f),baseline=buildPreview(input);
+  input.meta.roster_positions=['K','QB','DEF','LB','DL','DB','IDP_FLEX','BN'];
+  Object.assign(input.meta.scoring_settings,{fgm_50p:50,def_td:60,idp_tkl:20});
+  input.uncertainty.format=formatKey(input.meta);
+  input.rosters.forEach(roster=>roster.players.push('k','ARI','idp'));
+  Object.assign(input.players,{k:{position:'K'},ARI:{position:'DEF'},idp:{position:'LB'}});
+  const result=buildPreview(input);
+  assert.deepEqual(result.coverage.scoring,[]);assert.deepEqual(result.coverage.slots,[]);
+  assert.deepEqual(result.coverage.excludedSlots,['K','DEF','LB','DL','DB','IDP_FLEX']);
+  assert.deepEqual(result.league.slots,['QB']);
+  assert.deepEqual(result.league.teams,baseline.league.teams);
+  assert.deepEqual(result.comparisons,baseline.comparisons);
+  assert.deepEqual(result.standings,baseline.standings);
+});

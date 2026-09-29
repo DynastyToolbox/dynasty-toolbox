@@ -18,5 +18,20 @@ test('a newly loaded league fits only its own completed matching-format games',a
 test('changed formats cannot borrow prior league errors and thin calibration stays unavailable',async()=>{
  const input=fixture(),original=input.source;input.source=async endpoint=>endpoint.includes('matchups')?original(endpoint):{...await original(endpoint),roster_positions:['QB','QB']};
  const report=await calibrateLeague(input);assert.equal(report.model.available,false);assert.equal(report.model.teamCount,12);assert.equal(input.calls.some(p=>p.includes(input.meta.previous_league_id+'/matchups')),false);
- input.meta.roster_positions.push('K');assert.equal(await calibrateLeague(input),null);
+ input.meta.roster_positions=['K','DEF'];assert.equal(await calibrateLeague(input),null);
+});
+
+
+test('K/DEF/IDP historical points never affect offensive calibration and starter indices stay aligned',async()=>{
+ const baseline=await calibrateLeague(fixture()),input=fixture(),source=input.source;
+ input.meta.roster_positions=['K','QB','DEF','LB','BN'];
+ input.meta.scoring_settings={pass_td:4,fgm_50p:500,def_td:900,idp_tkl:200,tkl_solo:50};
+ input.source=async endpoint=>{
+  const value=await source(endpoint);if(!Array.isArray(value))return value;
+  return value.map(row=>({...row,starters:['k',...row.starters,'def','lb'],players_points:{...row.players_points,k:500,def:900,lb:200},points:row.points+1600}));
+ };
+ const report=await calibrateLeague(input);
+ assert.equal(report.model.available,true);
+ assert.deepEqual(report.model.residuals,baseline.model.residuals);
+ assert.equal(report.model.teamCount,baseline.model.teamCount);
 });

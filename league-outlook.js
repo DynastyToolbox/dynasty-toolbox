@@ -52,7 +52,7 @@
       const side=comparison.teams.indexOf(team.id),ids=side?[...comparison.teams].reverse():comparison.teams,ranges=side?[comparison.b,comparison.a]:[comparison.a,comparison.b];
 
       const grid=el('div',null,'outlook-matchup-teams');
-      ids.forEach((id,index)=>{const card=el('div',null,'outlook-matchup-team');card.append(el('h3',data.league.teams.find(t=>t.id===id)?.name||'Team'),el('strong',percent(chanceFor(comparison,id)),'outlook-chance'),el('span','Estimated win chance'),el('p',`${Math.round(ranges[index].low)}–${Math.round(ranges[index].high)} points`),el('small','Projected scoring range'));if(ranges[index].limitedPlayers)card.append(el('p','Limited history · wider range','outlook-range-note'));if(ranges[index].unfilledSlots?.length)card.append(el('p','Uncovered starting spots: '+ranges[index].unfilledSlots.join(', '),'outlook-range-note'));grid.append(card);});
+      ids.forEach((id,index)=>{const card=el('div',null,'outlook-matchup-team');card.append(el('h3',data.league.teams.find(t=>t.id===id)?.name||'Team'),el('strong',percent(chanceFor(comparison,id)),'outlook-chance'),el('span','Estimated win chance'),el('p',`${Math.round(ranges[index].low)}–${Math.round(ranges[index].high)} points`),el('small',data.coverage.excludedSlots?.length?'Offensive scoring range':'Projected scoring range'));if(ranges[index].limitedPlayers)card.append(el('p','Limited history · wider range','outlook-range-note'));if(ranges[index].unfilledSlots?.length)card.append(el('p','Uncovered starting spots: '+ranges[index].unfilledSlots.join(', '),'outlook-range-note'));grid.append(card);});
       matchup.append(grid);
       if(comparison.fullGameEstimate)matchup.append(el('p','Current-week percentages use full-game estimates and do not include live results.','outlook-muted'));
       if(comparison.probability.tie>=.005)matchup.append(el('p','A tie is also possible; win chances may not add to 100%.','outlook-muted'));
@@ -79,7 +79,7 @@
     });return grid;
   }
   function renderDraft(own){
-    const host=$('outlook-draft'),draft=data.draft;host.replaceChildren();$('draft-year').textContent=draft?.season?String(draft.season):'';
+    const host=$('outlook-draft'),draft=data.draft;host.replaceChildren();$('outlook-draft-section').hidden=draft?.applicable===false;$('draft-year').textContent=draft?.season?String(draft.season):'';
     if(!draft?.available){host.append(el('p',draft?.reason||'Draft picks are unavailable.','outlook-muted'));return;}
     const owned=draft.picks.filter(p=>p.ownerId===own).sort((a,b)=>a.round-b.round||a.originalId.localeCompare(b.originalId));
     const holdings=el('div',null,'outlook-draft-holdings');holdings.append(el('h3','Your '+draft.season+' picks'));
@@ -142,7 +142,7 @@
     if(busy)return;clear();const current=version;busy=true;$('loadLeagueBtn').disabled=true;$('outlook-gate').hidden=true;status('Loading your league’s schedule and matchup estimates…');
     try{
       const result=await DynastyAccount.request('outlook-league',{league_id:$('leagueId').value.trim()});if(version!==current)return;data=result;
-      $('league-name').textContent=data.league.name;$('league-context').textContent=`${data.league.season} · ${data.league.teams.length} teams`;
+      $('league-name').textContent=data.league.name;$('league-context').textContent=`${data.league.season} · ${data.league.teams.length} teams`+(data.coverage.excludedSlots?.length?' · QB/RB/WR/TE projections':'');
       $('outlook-team').replaceChildren(...data.league.teams.map(t=>new Option(t.name,t.id)));
       const own=String(window.DynastyLeagues?.teamFor(data.league.id)||'');if(data.league.teams.some(t=>t.id===own))$('outlook-team').value=own;
       $('outlook-week').replaceChildren(...data.schedule.map(s=>new Option(String(s.week),String(s.week))));
