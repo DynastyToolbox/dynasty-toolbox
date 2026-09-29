@@ -259,3 +259,14 @@ Each regular-season simulation now counts final W/L/T frequencies conditional on
 Live verification exposed Sleeper's schedule status in_game during the September 28 PHI/CHI game. It is now normalized to the existing in_progress handling before availability/locked-starter logic. This prevents an NFL game starting from disabling season forecasts while preserving actual starter locks and the existing full-game (not live-odds) projection policy.
 
 Validation: 70 Outlook tests pass. New tests cover seed shifts and outside-field insertion without mutation, exact probability conservation and comparison with sampled brackets across 4/6/8 fields with and without reseeding, weak-team potential paths without forced-win championship odds, bye benefits, conditional modal records and completed ties, sparse-sample withholding, per-seed count reconciliation and in_game starter locking. Signed-in checks confirm the team-specific selector, changing opponent paths/odds/remaining records, recommendation action, outside-field and rare-seed states, unchanged main forecasts, and responsive layouts. Development only; no publication or saved-league changes.
+
+
+## Keep season outlook available between history updates - September 29, 2026
+
+Removed the requirement that stored weekly player history end exactly in the previous NFL week. The loader now uses the latest available completed history, sorted chronologically, excluding Week 18 and current/future-week observations. Missing history is still a genuine error. Live league records, rosters, schedule and NFL availability continue to load independently; no completed results are replaced by older standings. Calibration remains specific to the league, scoring format and actual stored history cutoff.
+
+Season-preview lineup selection explicitly permits older player histories instead of excluding every player more than four weeks after their last stored game. Historical research callers retain the existing default age check. IR, taxi, suspension/DNR, current-week Out, bye weeks, starting positions and QB role checks remain intact. The existing collapsed assumptions briefly describes use of latest available history; there is no new blocking message or prominent freshness warning.
+
+Regression coverage includes Week 4 and Week 10 with history through Week 2, an opening-week forecast using the previous season, current-week/Week 18 exclusion, preserved current records, finite matchup and championship probabilities, complete 14-game projected records, and missing-history handling.
+
+Validation: 96 Outlook and account checks pass. Signed-in verification confirms both TDL and DYNA load current Week 4 records, standings and championship projections using stored player history through Week 2. Development only; no data refresh or production publication was needed.
