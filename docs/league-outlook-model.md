@@ -270,3 +270,8 @@ Season-preview lineup selection explicitly permits older player histories instea
 Regression coverage includes Week 4 and Week 10 with history through Week 2, an opening-week forecast using the previous season, current-week/Week 18 exclusion, preserved current records, finite matchup and championship probabilities, complete 14-game projected records, and missing-history handling.
 
 Validation: 96 Outlook and account checks pass. Signed-in verification confirms both TDL and DYNA load current Week 4 records, standings and championship projections using stored player history through Week 2. Development only; no data refresh or production publication was needed.
+
+
+## Lower-seed recommendations only - September 29, 2026
+
+The My playoff path tip and action now consider only numerically larger (lower) seeds than both the projected seed and the currently selected scenario. A recommendation must improve championship probability by at least one percentage point over both paths and retain the existing record-sample requirement. Teams outside the projected field receive no drop-seed recommendation. The full seed dropdown and its path, odds and record comparisons remain available.

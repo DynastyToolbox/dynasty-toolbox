@@ -101,7 +101,10 @@
         else card.append(el('p','#'+round.opponent.seed+' '+teamName(round.opponent.id)),el('strong',percent(round.winChance)+' win chance'));
         path.append(card);
       });result.append(path);
-      const best=scenarios.filter(s=>records[s.seed-1]?.available).sort((a,b)=>b.titleChance-a.titleChance||a.seed-b.seed)[0];
+      // Suggest only a drop below the projected and currently explored seeds.
+      // Higher seeds remain available in the dropdown for manual comparison.
+      const baseline=scenarios[defaultSeed-1];
+      const best=scenarios.filter(s=>s.seed>Math.max(defaultSeed,chosen)&&records[s.seed-1]?.available&&s.titleChance-baseline.titleChance>=.01).sort((a,b)=>b.titleChance-a.titleChance||a.seed-b.seed)[0];
       if(best&&best.seed!==chosen&&best.titleChance-scenario.titleChance>=.01){const tip=el('p',null,'outlook-seed-tip');tip.append(el('span','Seed #'+best.seed+' offers a better modeled path: '+percent(best.titleChance)+' championship chance. '));const button=el('button','Try seed #'+best.seed);button.type='button';button.onclick=()=>{scenarioChoices.set(own,best.seed);renderSandbox(own);$('my-playoff-seed').focus({preventScroll:true});};tip.append(button);result.append(tip);}
       const outside=!playoff.field.some(t=>t.id===own);
       result.append(el('p',(outside?'Assumes you take a playoff place. ':'Assumes you qualify at this seed. ')+'Later rounds assume you advance; the record target depends on other teams’ results.','outlook-muted'));
