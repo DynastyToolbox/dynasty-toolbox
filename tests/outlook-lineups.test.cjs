@@ -3,6 +3,12 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const {SLOTS}=require('../lib/outlook-foundation.cjs');
 const {nflSchedule,availability,bestLineup,playerHistories,projectRoster,evaluateStarterRows}=require('../lib/outlook-lineups.cjs');
 const p=(id,pos,points)=>({id,positions:[pos],points});
+test('Sleeper in_game status uses the same live starter locks as in_progress',()=>{
+  const parsed=nflSchedule([{home:'PHI',away:'CHI',week:3,date:'2026-09-28',game_id:'live',status:'in_game'}],2026);
+  assert.equal(parsed.byWeek[3].PHI.status,'in_progress');
+  const args=lockFixture(parsed.byWeek[3].PHI.status),result=projectRoster(args);
+  assert.equal(result.lockedCount,1);assert.equal(result.lineup[1].player.id,'done');
+});
 test('optimizer resolves overlapping FLEX and restricted slots without sacrificing a starter',()=>{
   const result=bestLineup(['FLEX','WRRB_FLEX','TE'],[p('rb','RB',15),p('te1','TE',20),p('te2','TE',18)]);
   assert.equal(result.modeledPoints,53);assert.equal(result.unfilled.length,0);

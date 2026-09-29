@@ -52,3 +52,25 @@ test('a known free agent cannot block a genuine vacant starting spot, but an unk
  assert.equal(distribution(model,lineup,{}, {f:{position:'RB',team:'BUF'}}).available,false);
  assert.equal(distribution(model,lineup,{}, {}).available,false);
 });
+test('moving one team shifts intervening seeds and outside teams replace the last qualifier',()=>{
+ const original=field(6),copy=structuredClone(original);
+ assert.deepEqual(B.moveTeam(original,'1',3).map(t=>t.id),['2','3','1','4','5','6']);
+ assert.deepEqual(B.moveTeam(original,'6',2).map(t=>t.id),['1','6','2','3','4','5']);
+ const outside=B.moveTeam(original,'outside',2);assert.deepEqual(outside.map(t=>t.id),['1','outside','2','3','4','5']);assert.equal(outside.filter(t=>t.bye).length,2);
+ assert.deepEqual(original,copy);assert.throws(()=>B.moveTeam(original,'1',0),/seed/);
+});
+test('enumerated seed odds conserve probabilities and agree with sampled brackets',()=>{
+ for(const count of [4,6,8])for(const reseed of [true,false]){
+  const f=forecasts(count),rounds=B.roundWeeks(count,15,Array(count===4?2:3).fill(1));f['15:1'].mean=115;
+  const exact=B.exactScenario(field(count),rounds,f,{reseed}),sample=B.scenario(field(count),rounds,f,{reseed,iterations:5000});
+  assert.ok(Math.abs(exact.reduce((s,t)=>s+t.titleChance,0)-1)<1e-9);assert.ok(Math.abs(exact.reduce((s,t)=>s+t.finalChance,0)-2)<1e-9);
+  for(const t of exact)assert.ok(Math.abs(t.titleChance-sample.teams.find(s=>s.id===t.id).titleChance)<.035);
+ }
+});
+test('team path includes all rounds even for an underdog without pretending it wins the title',()=>{
+ const f=forecasts(6,0),rounds=B.roundWeeks(6,15,[1,1,1]);for(const w of [15,16,17])f[w+':6'].mean=1;
+ const scenario=B.teamScenario(field(6),'6',6,rounds,f,{reseed:true});
+ assert.equal(scenario.titleChance,0);assert.equal(scenario.path.length,3);assert.ok(scenario.path.every(r=>r.opponent&&r.opponent.id!=='6'));assert.ok(scenario.path.every(r=>r.winChance===0));
+ assert.equal(B.teamScenario(field(6),'6',1,rounds,f,{reseed:true}).path[0].bye,true);
+ const equal=forecasts(6);const bye=B.teamScenario(field(6),'6',2,rounds,equal,{reseed:true}),noBye=B.teamScenario(field(6),'6',6,rounds,equal,{reseed:true});assert.ok(bye.titleChance>noBye.titleChance+.1);
+});

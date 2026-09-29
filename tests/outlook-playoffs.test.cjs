@@ -1,6 +1,6 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const {playoffConfig,seedField,openingRound,roundedRecord}=require('../lib/outlook-playoffs.cjs');
+const {playoffConfig,seedField,openingRound,roundedRecord,seedRecordSummary}=require('../lib/outlook-playoffs.cjs');
 const {simulateSeason}=require('../lib/outlook-season.cjs');
 const teams=Array.from({length:10},(_,i)=>({id:String(i+1),division:null,record:{wins:0,losses:0,ties:0},pointsFor:0,pointsAgainst:0}));
 const config=(count=6,ts=teams)=>playoffConfig({settings:{playoff_teams:count,playoff_week_start:15}},ts);
@@ -13,6 +13,11 @@ test('standard 4/6/8 fields have unique qualifiers, correct byes and opening opp
   assert.equal(playing.length+field.filter(t=>t.bye).length,count);
  }
  assert.deepEqual(openingRound(seedField(teams,config()),config()).map(g=>[g.a.seed,g.b.seed]),[[3,6],[4,5]]);
+});
+test('record targets are conditional modal finishes, preserve completed ties and withhold thin samples',()=>{
+ const current={wins:2,losses:1,ties:1},counts=new Map([['9:4:1',40],['10:3:1',30],['8:5:1',10]]);
+ const r=seedRecordSummary(counts,current);assert.deepEqual(r.final,{wins:9,losses:4,ties:1});assert.deepEqual(r.remaining,{wins:7,losses:3,ties:0});assert.equal(r.samples,80);
+ assert.equal(seedRecordSummary(new Map([['9:4:1',29]]),current).available,false);assert.equal(seedRecordSummary(new Map(),current).available,false);
 });
 test('division winners qualify above a stronger wildcard and incomplete divisions fail visibly',()=>{
  const ts=teams.map((t,i)=>({...t,division:i<8?1:2})),c=config(6,ts),field=seedField(ts,c);
@@ -37,7 +42,6 @@ test('playoff chances sum to exactly the field size, seed chances reconcile and 
  assert.ok(Math.abs(p.teams.reduce((s,t)=>s+t.playoffs.chance,0)-6)<1e-10);
  assert.ok(Math.abs(p.teams.reduce((s,t)=>s+t.playoffs.byeChance,0)-2)<1e-10);
  for(let seed=0;seed<6;seed++)assert.ok(Math.abs(p.teams.reduce((s,t)=>s+t.playoffs.seedChances[seed],0)-1)<1e-10);
- for(const t of p.teams){assert.deepEqual(t.expected,baseline.teams.find(x=>x.id===t.id).expected);assert.equal(t.displayRecord.wins+t.displayRecord.losses+t.displayRecord.ties,1);assert.ok(t.playoffs.byeChance<=t.playoffs.chance);}
+ for(const t of p.teams){assert.deepEqual(t.expected,baseline.teams.find(x=>x.id===t.id).expected);assert.equal(t.displayRecord.wins+t.displayRecord.losses+t.displayRecord.ties,1);assert.ok(t.playoffs.byeChance<=t.playoffs.chance);for(const [i,target]of t.playoffs.seedRecords.entries()){assert.ok(Math.abs(target.samples-t.playoffs.seedChances[i]*args.iterations)<1e-8);if(target.available){assert.equal(Object.values(target.final).reduce((a,b)=>a+b,0),1);assert.deepEqual(target.remaining,target.final);}}}
  const invalid=simulateSeason({...args,playoffConfig:config(12)});assert.equal(invalid.available,true);assert.equal(invalid.playoffs.available,false);assert.ok(invalid.teams.every(t=>t.playoffs===null));
 });
-
