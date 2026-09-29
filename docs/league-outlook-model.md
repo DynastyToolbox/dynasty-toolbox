@@ -289,3 +289,14 @@ Added next-season rookie pick inventory from Sleeper league drafts and traded_pi
 The shared outlook-draft.js board builder accepts an explicit unique original-team order, supports linear and ordinary snake rounds, and maps each original-round asset to its current owner. It rejects missing, repeated, conflicting and unknown pick ownership. The UI renderer uses textContent, highlights the selected team's owned picks and confines a wide board to a keyboard-focusable scrolling region. It will display the full board once confirmed order logic supplies draft.order; no board is claimed complete at this checkpoint.
 
 Validation: 77 Outlook checks pass, including origin/current-owner separation after chained trades, linear versus snake ownership, missing picks and invalid orders. Awaiting owner confirmation of non-playoff order, playoff placement/consolation rules, and round counts before the projection step. Development only.
+
+
+## Projected rookie draft order - September 29, 2026
+
+Owner selected reverse regular-season finish for non-playoff teams, followed by reverse playoff finish, without consolation brackets. The board now derives a unique original-team order from the main projected standings and projected mean-score playoff path. Teams eliminated in the same round are ordered by reverse regular-season finish; the runner-up picks next to last and the champion last. Non-playoff standings use underlying unrounded projected records and existing tiebreak ordering. This is a point projected order, not draft-position probabilities, a Max PF model, or Sleeper's confirmed future draft order. Seed what-if controls do not change it.
+
+The full next-year board repeats this order for every rookie round and shows current pick owners, original team names for traded picks, selected-team ownership highlights, and the projected 1.01 owner. This preview follows the owner's linear reverse-finish convention. The actual next draft can still be changed by commissioners. Missing supported playoff results withholds slots but preserves known pick holdings and the other outlook sections.
+
+Validation: 79 Outlook tests pass. New coverage checks the exact non-playoff/elimination-group/runner-up/champion ordering, four-, six- and eight-team playoffs, traded first-overall ownership, original-team uniqueness, repeat-round consistency, malformed bracket handling and input isolation.
+
+Signed-in browser verification: TDL renders five rounds/50 picks and highlights its four owned picks; DYNA renders four rounds/40 picks and correctly shows Street Rats owning projected 1.01 from BrodyBrr. Desktop 1440 and mobile 390 layouts have no page overflow; the board scrolls within its labeled region. Viewport restored. No publication or account changes. Draft source modules added to future audit fingerprints; existing frozen reports were not modified.

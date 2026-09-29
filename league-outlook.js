@@ -87,9 +87,11 @@
     const chips=el('div',null,'outlook-pick-chips');
     for(const pick of owned)chips.append(el('span','Round '+pick.round+' ('+teamName(pick.originalId)+')'));
     holdings.append(chips);host.append(holdings);
-    if(!draft.order){host.append(el('p','Pick ownership is loaded. Draft slots will appear once the league’s draft-order rules are confirmed.','outlook-muted'));return;}
+    if(!draft.order){host.append(el('p',draft.orderReason||'Projected draft slots are not available yet.','outlook-muted'));return;}
     try{
       const rounds=OutlookDraft.board(draft.order,draft,{type:draft.type||'linear'});
+      const first=rounds[0][0];
+      host.append(el('p','Projected 1.01: '+teamName(first.ownerId)+(first.ownerId!==first.originalId?' ('+teamName(first.originalId)+')':''),'outlook-favorite'));
       host.append(el('p',draft.orderLabel,'outlook-muted'));
       const wrap=el('div',null,'outlook-table-wrap');wrap.tabIndex=0;wrap.setAttribute('role','region');wrap.setAttribute('aria-label','Projected rookie draft board');
       const table=el('table',null,'outlook-table outlook-draft-board'),head=el('thead'),headRow=el('tr');

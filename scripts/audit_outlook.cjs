@@ -14,7 +14,7 @@ async function main(){
   if(mode==='capture'){
     // Freeze one predeclared protocol; do not overwrite snapshots or silently
     // mix changed algorithms into an existing prospective evaluation.
-    const sourceFiles=['outlook-foundation.cjs','outlook-research.cjs','outlook-lineups.cjs','outlook-uncertainty.cjs','outlook-season.cjs','outlook-playoffs.cjs','outlook-calibration.cjs','../outlook-bracket.js','league-outlook.cjs'];
+    const sourceFiles=['outlook-foundation.cjs','outlook-research.cjs','outlook-lineups.cjs','outlook-uncertainty.cjs','outlook-season.cjs','outlook-playoffs.cjs','outlook-calibration.cjs','../outlook-bracket.js','outlook-draft.cjs','../outlook-draft.js','league-outlook.cjs'];
     const sources=await Promise.all(sourceFiles.map(async name=>({name,sha256:hash(await fs.readFile(path.join(repo,'lib',name)))})));
     const uncertainty=await read(path.join(root,'uncertainty-report.json'));
     const protocol={schema:1,leagueId:id,season:2026,weeks:[4,5,6,7,8],sources,modelHash:hash(JSON.stringify(uncertainty.model)),primary:'Brier score against 50% and nominal 80% interval coverage, reported for each scenario separately; no selection of the better scenario after outcomes.',secondary:'Team point error, starter agreement and exclusion counts; early-history cases reported separately.',limits:'Small single-league test; no launch-readiness claim. Dates and predictions must be captured before play. No existing holdout retuning.'};
