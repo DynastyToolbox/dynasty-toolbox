@@ -82,6 +82,22 @@ test('sign-in returns only email and stores tokens in secure HttpOnly host cooki
   assert.match(r.headers['Cache-Control'],/no-store/);
   assert.ok(!JSON.stringify(r.body).includes('private-'));
 });
+test('sign-in distinguishes provider outages, invalid credentials and rate limits without exposing details',async()=>{
+  for(const [error,status] of [
+    [{name:'AuthRetryableFetchError',status:0},503],
+    [{status:503},503],
+    [{status:400,code:'invalid_credentials'},401],
+    [{status:429},429],
+  ]){
+    const r=await fixture({signInWithPassword:async()=>({data:null,error:{...error,message:'private-provider-detail'}})}).run({action:'signin',email:user.email,password:'long-enough-password'});
+    assert.equal(r.status,status);
+    assert.equal(r.headers['Set-Cookie'],undefined);
+    assert.ok(!JSON.stringify(r.body).includes('private-provider-detail'));
+    if(status===503)assert.match(r.body.error,/could not reach the sign-in service/);
+    if(status===401)assert.match(r.body.error,/Check your details/);
+  }
+});
+
 test('verification checks email OTP with provider and returns no code or token',async()=>{
   const f=fixture();const r=await f.run({action:'verify',email:user.email,code:'12345678',role:'admin'});
   assert.equal(r.status,200);assert.deepEqual(f.calls[0].args,{email:user.email,token:'12345678',type:'email'});
