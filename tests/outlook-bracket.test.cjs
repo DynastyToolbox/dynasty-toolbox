@@ -5,6 +5,34 @@ const {simulateSeason,distribution}=require('../lib/outlook-season.cjs');
 const {playoffConfig}=require('../lib/outlook-playoffs.cjs');
 const field=n=>Array.from({length:n},(_,i)=>({id:String(i+1),seed:i+1}));
 const forecasts=(n,sd=10)=>Object.fromEntries([15,16,17,18].flatMap(w=>field(n).map(t=>[w+':'+t.id,{mean:100,sd}])));
+
+test('all Sleeper round lengths and seeding options project titles and selected-team paths',()=>{
+ for(const count of [4,6,8])for(const seedType of [0,1])for(const roundType of [0,1,2]){
+  const teams=field(8).map(t=>({...t,record:{wins:0,losses:0,ties:0},pointsFor:0,pointsAgainst:0}));
+  const settings={playoff_teams:count,playoff_week_start:13,playoff_seed_type:seedType,playoff_round_type:roundType};
+  const config=playoffConfig({settings},teams),lengths=Array(count===4?2:3).fill(roundType===2?2:1);
+  if(roundType===1)lengths[lengths.length-1]=2;
+  assert.deepEqual(config.bracket,{reseed:seedType===1,lengths});
+  for(const lowerBracket of [0,1])assert.deepEqual(playoffConfig({settings:{...settings,playoff_type:lowerBracket}},teams),config);
+  const all=new Map(Array.from({length:7},(_,i)=>i+12).flatMap(w=>teams.map(t=>[w+':'+t.id,{available:true,mean:100+Number(t.id),sd:15}])));
+  const result=simulateSeason({teams,schedule:[{week:12,pairs:[['1','2'],['3','4'],['5','6'],['7','8']],issues:[]}],forecasts:all,playoffConfig:config,iterations:100});
+  const p=result.playoffs;
+  assert.deepEqual(p.rounds.map(r=>r.length),lengths);assert.equal(p.bracketReason,null);
+  assert.ok(Math.abs(result.teams.reduce((s,t)=>s+t.playoffs.titleChance,0)-1)<1e-9);
+  assert.ok(Math.abs(result.teams.reduce((s,t)=>s+t.playoffs.finalChance,0)-2)<1e-9);
+  assert.equal(p.path.rounds.reduce((sum,r)=>sum+r.games.length,0),count-1);
+  for(let seed=1;seed<=count;seed++){
+   const scenario=B.teamScenario(p.field,p.field[0].id,seed,p.rounds,p.forecasts,{reseed:p.bracket.reseed});
+   assert.equal(scenario.path.length,lengths.length);assert.ok(scenario.titleChance>=0&&scenario.titleChance<=1);
+  }
+ }
+});
+
+test('missing Sleeper setting codes use NFL defaults while unknown codes do not invent a bracket',()=>{
+ const settings={playoff_teams:6,playoff_week_start:15};
+ assert.deepEqual(playoffConfig({settings},field(8)).bracket,{reseed:false,lengths:[1,1,1]});
+ for(const setting of ['playoff_seed_type','playoff_round_type'])assert.equal(playoffConfig({settings:{...settings,[setting]:99}},field(8)).bracket,null);
+});
 test('four six and eight team brackets eliminate once, obey byes and crown one champion',()=>{
  for(const count of [4,6,8]){const rounds=B.roundWeeks(count,15,Array(count===4?2:3).fill(1)),f=forecasts(count,0),path=B.play(field(count),rounds,f);
   assert.equal(path.champion.seed,1);assert.equal(path.rounds.reduce((n,r)=>n+r.games.length,0),count-1);
