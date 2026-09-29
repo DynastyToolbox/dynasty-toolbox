@@ -275,3 +275,8 @@ Validation: 96 Outlook and account checks pass. Signed-in verification confirms 
 ## Lower-seed recommendations only - September 29, 2026
 
 The My playoff path tip and action now consider only numerically larger (lower) seeds than both the projected seed and the currently selected scenario. A recommendation must improve championship probability by at least one percentage point over both paths and retain the existing record-sample requirement. Teams outside the projected field receive no drop-seed recommendation. The full seed dropdown and its path, odds and record comparisons remain available.
+
+
+## Earliest remaining matchup by default - September 29, 2026
+
+The matchup selector now starts at the lowest week in the returned remaining schedule, including the current/in-progress week, instead of explicitly skipping to a week after currentWeek. Completed-week removal continues to use the existing league schedule logic. Manual week selection is unchanged.

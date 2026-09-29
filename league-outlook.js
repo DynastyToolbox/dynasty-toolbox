@@ -118,7 +118,7 @@
       $('outlook-team').replaceChildren(...data.league.teams.map(t=>new Option(t.name,t.id)));
       const own=String(window.DynastyLeagues?.teamFor(data.league.id)||'');if(data.league.teams.some(t=>t.id===own))$('outlook-team').value=own;
       $('outlook-week').replaceChildren(...data.schedule.map(s=>new Option(String(s.week),String(s.week))));
-      const next=data.schedule.find(s=>s.week>data.currentWeek);if(next)$('outlook-week').value=String(next.week);
+      if(data.schedule.length)$('outlook-week').value=String(Math.min(...data.schedule.map(s=>s.week)));
       const coverage=$('outlook-coverage');coverage.replaceChildren();
       if(data.coverage.scoring.length)coverage.append(warning('This league uses scoring rules that the projection model does not yet support. You can still review its schedule.'));
       if(data.coverage.slots.length)coverage.append(warning('Some starting positions are not modeled yet: '+data.coverage.slots.join(', ')+'. Matchup estimates may be unavailable.'));
