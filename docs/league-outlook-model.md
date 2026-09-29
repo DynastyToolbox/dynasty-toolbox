@@ -280,3 +280,12 @@ The My playoff path tip and action now consider only numerically larger (lower) 
 ## Earliest remaining matchup by default - September 29, 2026
 
 The matchup selector now starts at the lowest week in the returned remaining schedule, including the current/in-progress week, instead of explicitly skipping to a week after currentWeek. Completed-week removal continues to use the existing league schedule logic. Manual week selection is unchanged.
+
+
+## Rookie draft inventory and board foundation - September 29, 2026
+
+Added next-season rookie pick inventory from Sleeper league drafts and traded_picks, using the shared withPicks origin/current-owner logic. Independent pick-fetch failure leaves the season outlook available. The page shows selected-team holdings, including origin names, and keeps projected slots pending confirmed league draft-order rules. TDL currently reports five rounds and DYNA four; each has ten teams. No reverse-record or Max PF ordering has been assumed.
+
+The shared outlook-draft.js board builder accepts an explicit unique original-team order, supports linear and ordinary snake rounds, and maps each original-round asset to its current owner. It rejects missing, repeated, conflicting and unknown pick ownership. The UI renderer uses textContent, highlights the selected team's owned picks and confines a wide board to a keyboard-focusable scrolling region. It will display the full board once confirmed order logic supplies draft.order; no board is claimed complete at this checkpoint.
+
+Validation: 77 Outlook checks pass, including origin/current-owner separation after chained trades, linear versus snake ownership, missing picks and invalid orders. Awaiting owner confirmation of non-playoff order, playoff placement/consolation rules, and round counts before the projection step. Development only.

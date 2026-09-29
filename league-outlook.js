@@ -9,7 +9,7 @@
   const comparisonFor=(id,week)=>data.comparisons?.find(c=>c.week===week&&c.teams.includes(id)&&c.scenario==='play');
   const chanceFor=(c,id)=>c?.available?(c.teams[0]===id?c.probability.win:c.probability.loss):null;
   const unavailable=c=>({live_week:'Live-game win chances are not available for this week yet.',incomplete_lineup:'There is not enough player data to estimate this matchup yet.',uncertain_starter:'Some player estimates need more history before this matchup can be projected.',calibration_unavailable:'Win chances and scoring ranges are not ready for this league’s settings yet.',missing_lineup:'Both teams need sufficient player data for a matchup estimate.'}[c?.reason]||'An opponent or matchup estimate could not be confirmed for this week.');
-  function clear(){data=null;scenarioChoices.clear();scenarioCache.clear();version++;$('outlook-content').hidden=true;for(const id of ['league-name','league-context','outlook-summary','outlook-matchup','outlook-coverage','outlook-schedule','outlook-team','outlook-week','outlook-standings','standings-note','outlook-playoffs','playoff-format','outlook-sandbox'])$(id).replaceChildren();}
+  function clear(){data=null;scenarioChoices.clear();scenarioCache.clear();version++;$('outlook-content').hidden=true;for(const id of ['league-name','league-context','outlook-summary','outlook-matchup','outlook-coverage','outlook-schedule','outlook-team','outlook-week','outlook-standings','standings-note','outlook-playoffs','playoff-format','outlook-sandbox','outlook-draft','draft-year'])$(id).replaceChildren();}
   function warning(text){return el('p',text,'outlook-warning');}
   function render(){
     if(!data)return;const team=data.league.teams.find(t=>t.id===$('outlook-team').value),week=Number($('outlook-week').value);if(!team)return;
@@ -46,6 +46,7 @@
       if(playoff.divisions.length)panel.append(el('p','Division winners receive the top seeds.','outlook-muted'));
     }else{panel.append(el('p',playoff?.reason||'Playoff projections need a complete season outlook.','outlook-muted'));$('outlook-sandbox').replaceChildren();}
 
+    renderDraft(team.id);
     const comparison=comparisonFor(team.id,week),matchup=$('outlook-matchup');matchup.replaceChildren();$('matchup-title').textContent=`Week ${week||'—'} matchup`;
     if(comparison?.available){
       const side=comparison.teams.indexOf(team.id),ids=side?[...comparison.teams].reverse():comparison.teams,ranges=side?[comparison.b,comparison.a]:[comparison.a,comparison.b];
@@ -76,6 +77,31 @@
         [game.a,game.b].forEach((entry,index)=>{const line=el('p',null,entry.id===own?'own-team':'');line.append(el('span','#'+entry.seed+' '+teamName(entry.id)),el('strong',percent(index?1-chance:chance)));if(entry.id===game.winner.id)line.classList.add('projected-winner');card.append(line);});column.append(card);
       }grid.append(column);
     });return grid;
+  }
+  function renderDraft(own){
+    const host=$('outlook-draft'),draft=data.draft;host.replaceChildren();$('draft-year').textContent=draft?.season?String(draft.season):'';
+    if(!draft?.available){host.append(el('p',draft?.reason||'Draft picks are unavailable.','outlook-muted'));return;}
+    const owned=draft.picks.filter(p=>p.ownerId===own).sort((a,b)=>a.round-b.round||a.originalId.localeCompare(b.originalId));
+    const holdings=el('div',null,'outlook-draft-holdings');holdings.append(el('h3','Your '+draft.season+' picks'));
+    if(!owned.length)holdings.append(el('p','No picks owned in this draft.','outlook-muted'));
+    const chips=el('div',null,'outlook-pick-chips');
+    for(const pick of owned)chips.append(el('span','Round '+pick.round+' ('+teamName(pick.originalId)+')'));
+    holdings.append(chips);host.append(holdings);
+    if(!draft.order){host.append(el('p','Pick ownership is loaded. Draft slots will appear once the league’s draft-order rules are confirmed.','outlook-muted'));return;}
+    try{
+      const rounds=OutlookDraft.board(draft.order,draft,{type:draft.type||'linear'});
+      host.append(el('p',draft.orderLabel,'outlook-muted'));
+      const wrap=el('div',null,'outlook-table-wrap');wrap.tabIndex=0;wrap.setAttribute('role','region');wrap.setAttribute('aria-label','Projected rookie draft board');
+      const table=el('table',null,'outlook-table outlook-draft-board'),head=el('thead'),headRow=el('tr');
+      const corner=el('th','Round');corner.scope='col';headRow.append(corner);
+      for(let slot=1;slot<=draft.order.length;slot++){const th=el('th','Pick '+slot);th.scope='col';headRow.append(th);}head.append(headRow);table.append(head);
+      const body=el('tbody');
+      for(const picks of rounds){const row=el('tr'),th=el('th','Round '+picks[0].round);th.scope='row';row.append(th);
+        for(const pick of picks){const cell=el('td',null,pick.ownerId===own?'owned-pick':'');cell.append(el('strong',pick.label),el('span',teamName(pick.ownerId)));
+          if(pick.ownerId!==pick.originalId)cell.append(el('small','('+teamName(pick.originalId)+')'));row.append(cell);
+        }body.append(row);
+      }table.append(body);wrap.append(table);host.append(wrap);
+    }catch(error){host.append(el('p',error.message,'outlook-muted'));}
   }
   function renderSandbox(own){
     const host=$('outlook-sandbox');host.replaceChildren();const playoff=data.standings.playoffs;
