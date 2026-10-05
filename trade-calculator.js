@@ -44,8 +44,13 @@
         const label=el('label','League team','trade-team-label'),select=choices([['','Choose a league team'],...league.teams.map(t=>[t.roster_id,`${t.name}${t.manager&&t.name!==t.manager?' — '+t.manager:''}`,teams.some(other=>other!==team&&other.roster_id===t.roster_id)])],team.roster_id,`Team ${team.id} league roster`,value=>{
           team.roster_id=value;transfers=transfers.filter(m=>m.from!==team.id&&m.to!==team.id);changed();
         });label.append(select);settings.append(label);
-        const pickLabel=el('label','Pick preference','trade-team-label');
-        pickLabel.append(choices([['low','Low (−20%)'],['neutral','Neutral'],['high','High (+20%)']],team.pickWeight||'neutral',`Team ${team.id} pick preference`,value=>{team.pickWeight=value;changed();}));
+        const pickLabel=el('label',undefined,'trade-team-label trade-pick-slider'),heading=el('span','Pick preference'),input=el('input'),output=el('output');
+        input.type='range';input.min='-20';input.max='20';input.step='1';input.value=DynastyPickPreferences.percent(team.pickWeight??'neutral');
+        input.id=`team${team.id}PickWeight`;input.setAttribute('aria-label',`Team ${team.id} pick preference`);output.htmlFor=input.id;
+        const update=()=>{const n=Number(input.value);output.textContent=(n>0?'+':'')+n+'%';input.setAttribute('aria-valuetext',output.textContent+' '+DynastyPickPreferences.label(n)+' pick preference');};
+        update();input.oninput=update;
+        input.onchange=()=>{const focused=document.activeElement===input;team.pickWeight=Number(input.value);changed();if(focused)$(input.id)?.focus({preventScroll:true});};
+        heading.append(output);const ends=el('span',undefined,'trade-slider-ends');ends.append(el('span','−20%'),el('span','0%'),el('span','+20%'));pickLabel.append(heading,input,ends);
         settings.append(pickLabel);box.append(settings);
       }
       const sends=el('div',undefined,'trade-sends');sends.append(el('h3','Sends:'));
