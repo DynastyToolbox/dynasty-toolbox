@@ -23,9 +23,20 @@
       <h2 id="membership-heading">More tools for your league</h2>
       <p class="membership-notice">Subscriptions aren’t open yet. We’re putting the finishing touches on premium access before launch.</p>
       <p id="membership-status" role="status">Checking your access…</p>
+      <section id="test-billing" hidden aria-labelledby="test-billing-title">
+        <h3 id="test-billing-title">Test membership</h3>
+        <p>Development checkout only. Use Stripe test card details; no real payments.</p>
+        <div class="billing-actions">
+          <button class="upgrade-link" id="test-checkout" type="button">Start monthly test checkout</button>
+          <button class="upgrade-link" id="test-portal" type="button">Manage test subscription</button>
+          <button class="upgrade-link" id="test-refresh" type="button">Refresh payment status</button>
+        </div>
+        <p id="test-billing-message" role="status"></p>
+      </section>
       <ul class="membership-features">
         <li><strong>Trade Calculator</strong><p>Up to 12 teams, league rosters, and updated contending and rebuilding ranks as you build a trade.</p></li>
         <li><strong>Devy Mock Simulator</strong><p>All seven NFL draft rounds to build your dynasty mock.</p></li>
+        <li><strong>League Outlook</strong><p>Projected records, playoff paths, championship chances, and a draft board with traded picks.</p></li>
         <li><strong>Trade Finder</strong><p>Trade ideas shaped around your league, team needs, and player and pick preferences.</p></li>
         <li><strong>Median Rankings &amp; Best Available</strong><p>More ways to evaluate your roster and find players for your league.</p></li>
       </ul>

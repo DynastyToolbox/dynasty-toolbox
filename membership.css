@@ -11,4 +11,9 @@
 .membership-features p{margin:0;font-size:.95rem}
 .membership-notice{padding:14px 18px;background:#edf3f0;border-left:3px solid #00796b;border-radius:4px}
 #membership-status[data-error=true]{color:#9d2020}
+.billing-actions{display:flex;flex-wrap:wrap;gap:10px}
+.billing-actions button{white-space:normal;border:0;cursor:pointer;max-width:100%}
+.billing-actions button:disabled{opacity:.6;cursor:wait}
+#test-billing{border:1px solid #a8bcb5;border-radius:8px;padding:16px;margin:16px 0}
+#test-billing[hidden]{display:none}
 @media(max-width:600px){.upgrade-prompt{margin:16px 12px;padding:14px}.draft-board .upgrade-prompt{margin:16px 0}.page-membership .membership-features{grid-template-columns:minmax(0,1fr)}}
