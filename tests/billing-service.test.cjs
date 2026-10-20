@@ -89,6 +89,27 @@ test('an active or incomplete subscription prevents another checkout',async()=>{
   assert.equal(f.state.creates,0);
  }
 });
+test('a declined payment can resume its existing open checkout without creating another subscription',async()=>{
+ const f=fixture();const input={action:'billing-checkout',plan:'monthly'};
+ const original=await f.service.action(input.action,input,user);
+ f.state.subscriptions=[{...clone(sub),status:'incomplete'}];
+ assert.deepEqual(await f.service.action(input.action,input,user),original);
+ assert.equal(f.state.creates,1);assert.equal(f.state.commits.length,0);
+});
+test('checkout recovery rejects paid, foreign, multiple or closed incomplete subscriptions',async()=>{
+ for(const subscriptions of [[clone(sub)],[{...clone(sub),status:'incomplete',metadata:{}}],
+  [{...clone(sub),status:'incomplete'},{...clone(sub),id:'sub_second',status:'incomplete'}]]){
+  const f=fixture();const input={action:'billing-checkout',plan:'monthly'};
+  await f.service.action(input.action,input,user);f.state.subscriptions=subscriptions;
+  await assert.rejects(()=>f.service.action(input.action,input,user),{status:409});assert.equal(f.state.creates,1);
+ }
+ for(const status of ['complete','expired']){
+  const f=fixture();const input={action:'billing-checkout',plan:'monthly'};
+  await f.service.action(input.action,input,user);
+  f.state.subscriptions=[{...clone(sub),status:'incomplete'}];f.state.session.status=status;
+  await assert.rejects(()=>f.service.action(input.action,input,user),{status:409});assert.equal(f.state.creates,1);
+ }
+});
 test('ownership and browser overrides are rejected for checkout and portal',async()=>{
  const f=fixture();
  for(const extra of [{customer:'cus_other'},{price:'price_other'},{user_id:'other'},{success_url:'https://evil.test'}])
