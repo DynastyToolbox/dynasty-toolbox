@@ -18,6 +18,11 @@
 .page-members dialog::backdrop { background:#0009; }
 .page-members dialog h2 { font-size:1.5rem; }
 .page-members #change-account,.page-members #history-account { overflow-wrap:anywhere; }
+.page-members #billing-check-account,.page-members #billing-check-result { overflow-wrap:anywhere; }
+.billing-check-comparison { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.billing-check-comparison section { padding:12px; border:1px solid #cbd8d3; border-radius:8px; }
+.billing-check-comparison h3 { margin-top:0; }
+@media(max-width:450px) { .billing-check-comparison { grid-template-columns:minmax(0,1fr); } }
 .page-members #enrollment-qr { max-width:240px; width:100%; background:white; }
 .page-members #owner-verification { max-width:440px; }
 .page-members #history-events article { border-top:1px solid #cbd8d3; padding:12px 0; overflow-wrap:anywhere; }

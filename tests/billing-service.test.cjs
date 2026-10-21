@@ -3,6 +3,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const {Readable}=require('node:stream');
 const Stripe=require('stripe');
 const {createBillingService,paidCoverage}=require('../lib/billing-service.cjs');
+const {resolveAccess}=require('../lib/subscription-access.cjs');
 const {createWebhookHandler}=require('../lib/billing-webhook.cjs');
 const {createHandler}=require('../lib/account-server.cjs');
 const user={id:'11111111-1111-4111-8111-111111111111',email_confirmed_at:'2026-10-01'};
@@ -54,6 +55,21 @@ function fixture(changes={}){
  },from:()=>({select:()=>({eq:(_column,customer)=>({maybeSingle:async()=>({data:customer==='cus_fixture'?{user_id:user.id}:null})})})})};
  return {state,stripe,db,service:createBillingService({env,stripe,db,now:()=>now})};
 }
+test('owner comparison uses verified Stripe coverage without creating or changing records',async()=>{
+ const f=fixture({subscriptions:[clone(sub)]});
+ const stored={user_id:user.id,plan:'premium',stripe_subscription_id:sub.id,status:'active',paid_through:new Date(end*1000).toISOString(),cancel_at_period_end:false};
+ f.db.from=table=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:clone(table==='billing_environment'?{project_ref:ref,stripe_account_id:'acct_fixture'}:table==='billing_accounts'?{user_id:user.id,stripe_customer_id:'cus_fixture'}:stored)})})})});
+ f.db.rpc=async()=>{assert.fail('Comparison must never write or acquire a billing lease');};
+ f.stripe.customers.create=async()=>{assert.fail('Comparison must never create a customer');};
+ const result=await f.service.checkRecords(user.id);
+ assert.equal(result.state,'matched');assert.equal(result.stripe.paidThrough,stored.paid_through);
+ f.state.charge.amount_refunded=1000;
+ assert.equal((await f.service.checkRecords(user.id)).state,'mismatch');
+ f.stripe.customers.retrieve=async()=>({livemode:false,metadata:{...sub.metadata,user_id:'other'}});
+ await assert.rejects(()=>f.service.checkRecords(user.id),/ownership/);
+ assert.equal(f.state.creates,0);assert.equal(f.state.commits.length,0);
+});
+
 test('only paid, matching, unrefunded coverage grants access; weak or future evidence does not',()=>{
  assert.equal(paidCoverage(invoice,charge,sub,price,now/1000),new Date(end*1000).toISOString());
  for(const mutation of [{status:'open'},{paid:false},{paid_out_of_band:true},{livemode:true},{customer:'cus_other'},
@@ -145,6 +161,80 @@ test('failed renewal retains only existing paid coverage; refund and dispute rem
  f.state.charge.amount_refunded=0;f.state.charge.disputed=true;
  await f.service.action('billing-refresh',{action:'billing-refresh'},user);assert.equal(f.state.commits.at(-1).paid_through,null);
 });
+
+test('a disputed renewal removes only its coverage and the prior paid period still expires',async()=>{
+ const earlier=clone(invoice),later=clone(invoice);
+ later.id='in_later';later.charge='ch_later';later.lines.data[0].period.end=end+86400;
+ const earlierCharge=clone(charge),laterCharge={...clone(charge),id:'ch_later',invoice:'in_later'};
+ const f=fixture({subscriptions:[clone(sub)],invoices:[later,earlier]});
+ f.stripe.charges.retrieve=async id=>id==='ch_later'?laterCharge:earlierCharge;
+ await f.service.action('billing-refresh',{action:'billing-refresh'},user);
+ assert.equal(f.state.commits.at(-1).paid_through,new Date((end+86400)*1000).toISOString());
+ laterCharge.disputed=true;
+ await f.service.event({id:'evt_disputed',type:'charge.dispute.created',livemode:false,data:{object:{charge:'ch_later'}}});
+ assert.equal(f.state.commits.at(-1).paid_through,new Date(end*1000).toISOString());
+ const atExpiry=createBillingService({...f,env,now:()=>end*1000});
+ await atExpiry.action('billing-refresh',{action:'billing-refresh'},user);
+ assert.equal(f.state.commits.at(-1).paid_through,null);
+});
+test('monthly renewal starts at its period boundary and grants only the paid month',async()=>{
+ const renewal=clone(invoice),renewalEnd=end+30*86400;
+ renewal.id='in_renewal';renewal.charge='ch_renewal';
+ renewal.lines.data[0].period={start:end,end:renewalEnd};
+ const f=fixture({subscriptions:[clone(sub)],invoices:[renewal,clone(invoice)]});
+ f.stripe.charges.retrieve=async id=>id==='ch_renewal'?{...clone(charge),id,invoice:renewal.id}:clone(charge);
+ let time=end*1000-1;
+ const service=createBillingService({...f,env,now:()=>time});
+ const access=()=>resolveAccess(user.id,{user_id:user.id,plan:'premium',...f.state.commits.at(-1)},[],time);
+ await service.action('billing-refresh',{action:'billing-refresh'},user);
+ assert.equal(f.state.commits.at(-1).paid_through,new Date(end*1000).toISOString());
+ assert.equal(access().premium,true);
+ time=end*1000;
+ await service.event({id:'evt_renewal',type:'invoice.paid',livemode:false,data:{object:{customer:'cus_fixture'}}});
+ assert.equal(f.state.commits.at(-1).paid_through,new Date(renewalEnd*1000).toISOString());
+ assert.equal(access().premium,true);
+ time=renewalEnd*1000;
+ // Access must expire even if no webhook or reconciliation has run since payment.
+ assert.equal(access().premium,false);
+});
+
+test('declined renewal expires without a webhook and later payment restores the same subscription',async()=>{
+ const renewal=clone(invoice),renewalEnd=end+30*86400;
+ renewal.id='in_renewal';renewal.charge='ch_renewal';renewal.status='open';renewal.paid=false;renewal.amount_paid=0;renewal.amount_remaining=1000;
+ renewal.lines.data[0].period={start:end,end:renewalEnd};
+ const renewalCharge={...clone(charge),id:'ch_renewal',invoice:renewal.id,paid:false,captured:false,status:'failed'};
+ const f=fixture({subscriptions:[{...clone(sub),status:'past_due'}],invoices:[renewal,clone(invoice)]});
+ f.stripe.charges.retrieve=async id=>id==='ch_renewal'?renewalCharge:clone(charge);
+ let time=end*1000-1;
+ const service=createBillingService({...f,env,now:()=>time});
+ const access=()=>resolveAccess(user.id,{user_id:user.id,plan:'premium',...f.state.commits.at(-1)},[],time);
+ await service.event({id:'evt_declined',type:'invoice.payment_failed',livemode:false,data:{object:{customer:'cus_fixture'}}});
+ assert.equal(access().premium,true);
+ time=end*1000;
+ assert.equal(access().premium,false);
+ await service.action('billing-refresh',{action:'billing-refresh'},user);
+ assert.equal(f.state.commits.at(-1).paid_through,null);
+ Object.assign(renewal,{status:'paid',paid:true,amount_paid:1000,amount_remaining:0});
+ Object.assign(renewalCharge,{paid:true,captured:true,status:'succeeded'});
+ f.state.subscriptions[0].status='active';
+ time+=3600000;
+ await service.event({id:'evt_recovered',type:'invoice.paid',livemode:false,data:{object:{customer:'cus_fixture'}}});
+ assert.equal(f.state.commits.at(-1).id,sub.id);
+ assert.equal(f.state.commits.at(-1).paid_through,new Date(renewalEnd*1000).toISOString());
+ assert.equal(access().premium,true);
+ assert.equal(f.state.creates,0);
+});
+
+test('closing a lost or won dispute does not trust its payload to restore disputed coverage',async()=>{
+ const f=fixture({subscriptions:[clone(sub)]});f.state.charge.disputed=true;
+ for(const status of ['lost','won']){
+  await f.service.event({id:`evt_${status}`,type:'charge.dispute.closed',livemode:false,data:{object:{charge:charge.id,status}}});
+  assert.equal(f.state.commits.at(-1).paid_through,null);
+ }
+ await f.service.event({id:'evt_delayedPaid',type:'invoice.paid',livemode:false,data:{object:{customer:'cus_fixture',paid:true}}});
+ assert.equal(f.state.commits.at(-1).paid_through,null);
+});
+
 test('checkout stays closed until notification readiness, and DB errors do not acknowledge events',async()=>{
  const f=fixture();const service=createBillingService({...f,env:{...env,BILLING_WEBHOOK_READY:'false'},now:()=>now});
  await assert.rejects(()=>service.action('billing-checkout',{action:'billing-checkout',plan:'monthly'},user),/still being connected/);

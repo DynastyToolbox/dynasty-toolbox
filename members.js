@@ -3,16 +3,17 @@
   const $=id=>document.getElementById(id), api=window.DynastyAccount;
   const node=(tag,text,cls)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(cls)el.className=cls;return el;};
   const date=value=>value ? new Date(value).toLocaleString() : 'No expiry';
-  let offset=0,hasMore=false,busy=false,pendingChange=null,searchVersion=0,identity=api.user?.email;
+  let offset=0,hasMore=false,busy=false,pendingChange=null,searchVersion=0,identity=api.user?.email,billingChecks=false;
   const status=(text,error=false)=>{$('member-status').textContent=text;$('member-status').dataset.error=String(error);};
   function lock(value){busy=value;document.querySelectorAll('button').forEach(b=>b.disabled=value);if(!value){$('members-previous').disabled=offset===0;$('members-next').disabled=!hasMore;}}
-  function wipe(){searchVersion++;$('member-results').replaceChildren();$('history-events').replaceChildren();$('history-account').textContent='';$('change-account').textContent='';$('grant-reason').value='';$('owner-code').value='';$('member-directory').hidden=true;$('owner-verification').hidden=true;$('membership-change').close();$('membership-history').close();$('enrollment-qr').removeAttribute('src');$('enrollment').hidden=true;pendingChange=null;}
+  function wipe(){searchVersion++;$('member-results').replaceChildren();$('history-events').replaceChildren();$('history-account').textContent='';$('change-account').textContent='';$('grant-reason').value='';$('owner-code').value='';$('member-directory').hidden=true;$('owner-verification').hidden=true;$('membership-change').close();$('membership-history').close();$('billing-check').close();$('billing-check-account').textContent='';$('billing-check-result').replaceChildren();$('enrollment-qr').removeAttribute('src');$('enrollment').hidden=true;pendingChange=null;}
   async function checkOwner(){
     wipe();lock(true);
     try {
       const session=await api.check();
       if(!session.user){status('Sign in through My account to continue.');return;}
       const owner=await api.request('admin-status');
+      billingChecks=owner.environment==='development';
       if(owner.mfa){$('member-directory').hidden=false;await loadMembers();}
       else {
         $('owner-verification').hidden=false;status('Authenticator verification is required.');
@@ -42,7 +43,9 @@
         const actions=node('div',undefined,'member-actions');
         const add=node('button','Grant complimentary access');add.type='button';add.onclick=()=>openChange('grant',member);if(!member.email_confirmed_at){add.hidden=true;}
         const history=node('button','Access history');history.type='button';history.onclick=()=>showHistory(member);
-        actions.append(add,history);card.append(actions);$('member-results').append(card);
+        actions.append(add,history);
+        if(billingChecks){const check=node('button','Check payment records');check.type='button';check.onclick=()=>showBillingCheck(member);actions.append(check);}
+        card.append(actions);$('member-results').append(card);
       }
       if(!result.members.length)$('member-results').append(node('p','No accounts match these filters.'));
       $('members-page').textContent=result.members.length?`Showing ${offset+1}–${offset+result.members.length}`:'No results';status('Memberships are up to date.');
@@ -85,6 +88,34 @@
     try{const result=await api.request('admin-audit',{userId:member.id});if(version!==searchVersion)return;$('history-events').replaceChildren();for(const event of result.events){const row=node('article');row.append(node('strong',event.action==='grant'?'Access granted':'Access revoked'),node('p',date(event.created_at)),node('p',event.reason));$('history-events').append(row);}if(!result.events.length)$('history-events').append(node('p','No access changes recorded.'));}
     catch(e){$('history-events').replaceChildren(node('p',e.message));}finally{lock(false);}
   }
+  async function showBillingCheck(member){
+    if(busy)return;const version=searchVersion;lock(true);
+    $('billing-check-account').textContent=member.email;
+    $('billing-check-result').replaceChildren(node('p','Comparing Stripe and website payment records…'));
+    $('billing-check').showModal();
+    try{
+      const {billingCheck:check}=await api.request('admin-billing-check',{userId:member.id});
+      if(version!==searchVersion)return;
+      const result=$('billing-check-result');result.replaceChildren();
+      if(check.state==='changed'){
+        result.append(node('p','These records changed during the check. Close this window and check again.'));return;
+      }
+      result.append(node('strong',check.state==='matched'?'Payment records match.':'Payment records need attention.'));
+      result.append(node('p','Checked '+date(check.checkedAt)));
+      const comparison=node('div',undefined,'billing-check-comparison');
+      const labels={none:'No current subscription',active:'Active',past_due:'Past due',incomplete:'Payment incomplete',trialing:'Trial',unpaid:'Unpaid',paused:'Paused'};
+      for(const [title,record] of [['Stripe',check.stripe],['Website',check.website]]){
+        const section=node('section');section.append(node('h3',title),node('p',labels[record.status]||'Needs review'),
+          node('p',record.paidThrough?'Paid coverage through '+date(record.paidThrough):'No current paid coverage'));
+        if(record.cancelAtPeriodEnd)section.append(node('p','Cancels at period end'));
+        comparison.append(section);
+      }
+      result.append(comparison,node('p','This checks paid subscriptions only. Complimentary access is separate. No payments or access were changed.'));
+      if(check.state==='mismatch')result.append(node('p','If a payment just changed, wait briefly and check again. If the difference remains, review the subscription and notification delivery in Stripe. Do not collect another payment or grant complimentary access to hide the difference.'));
+    }catch(e){if(version===searchVersion)$('billing-check-result').replaceChildren(node('p',e.message));}
+    finally{if(version===searchVersion)lock(false);}
+  }
+  $('close-billing-check').onclick=()=>$('billing-check').close();
   $('close-membership-history').onclick=()=>$('membership-history').close();
   $('member-search').onsubmit=e=>{e.preventDefault();if(!busy){offset=0;loadMembers();}};
   $('members-previous').onclick=()=>{offset=Math.max(0,offset-50);loadMembers();};$('members-next').onclick=()=>{offset+=50;loadMembers();};
