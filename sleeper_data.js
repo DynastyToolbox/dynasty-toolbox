@@ -70,11 +70,6 @@
           candidates=[{id:alias[1],player:target}];method='alias';
         }
       }
-      // Preserve a unique exact identity after a position change; report the
-      // discrepancy for the sheet owner without dropping an existing player.
-      if (!candidates.length && exact.get(key)?.length === 1 && rows.filter(r=>playerNameKey(r.Player)===key).length === 1) {
-        candidates=exact.get(key);method='position-mismatch';
-      }
       if (!candidates.length) {
         method = 'suffix';
         candidates = (base.get(baseKey) || []).filter(e => compatible(pos,e.player.position));
@@ -84,6 +79,11 @@
           report.push({name:row.Player,position:pos,status:'ambiguous',candidates:candidates.map(e=>e.player.full_name)});
           continue;
         }
+      }
+      // Preserve a unique exact identity after a position change; report the
+      // discrepancy for the sheet owner without dropping an existing player.
+      if (!candidates.length && exact.get(key)?.length === 1 && rows.filter(r=>playerNameKey(r.Player)===key).length === 1) {
+        candidates=exact.get(key);method='position-mismatch';
       }
       if (candidates.length !== 1) {
         report.push({name:row.Player,position:pos,status:candidates.length ? 'ambiguous' : (exact.has(key) ? 'position-mismatch' : 'unmatched'),candidates:(candidates.length ? candidates : exact.get(key) || []).map(e=>e.player.full_name+' ('+e.player.position+')')});

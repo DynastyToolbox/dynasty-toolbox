@@ -68,3 +68,10 @@ test('reviewed nickname IDs and dual-position eligibility preserve identity',()=
  // A recycled/wrong ID must not inherit the reviewed alias.
  assert.equal(S.matchRankings([row('KENNETH GAINWELL','RB')],{'7567':player('Somebody Else','RB')}).byId.size,0);
 });
+
+test('position-compatible suffix beats an exact name belonging to another position',()=>{
+ const registry={old:player('Kenneth Walker','WR'),current:player('Kenneth Walker III','RB')};
+ const result=S.matchRankings([row('KENNETH WALKER','RB')],registry);
+ assert.equal(result.byId.has('old'),false);assert.equal(result.byId.has('current'),true);
+ assert.equal(result.report[0].status,'suffix');
+});
