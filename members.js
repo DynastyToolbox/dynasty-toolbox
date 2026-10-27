@@ -122,7 +122,7 @@
     let after=null,checked=0,issues=0,complete=false;
     try{
       do{
-        message.textContent=`Reviewing payment accounts… ${checked} checked.`;
+        message.textContent=`Reviewing payment accountsâ€¦ ${checked} checked.`;
         const {billingMonitor:page}=await api.request('admin-billing-monitor',{after});
         if(version!==searchVersion)return;
         if(page.record){
@@ -130,7 +130,7 @@
           if(page.record.state!=='matched'){
             issues++;
             const labels={mismatch:'Payment and website records differ',payment_attention:'Payment needs attention',retry:'Records changed; check again',unavailable:'Could not check payment records'};
-            const row=node('li');row.append(node('span',`${labels[page.record.state]||'Review needed'} · Account ${page.record.userId}`));
+            const row=node('li');row.append(node('span',`${labels[page.record.state]||'Review needed'} Â· Account ${page.record.userId}`));
             const button=node('button','Inspect account');button.type='button';button.onclick=()=>showBillingCheck({id:page.record.userId,email:'Account '+page.record.userId});row.append(button);output.append(row);
           }
         }
@@ -144,7 +144,7 @@
   };
   $('test-notification-protection').onclick=async()=>{
     if(busy||!billingChecks)return;const version=searchVersion;lock(true);
-    const message=$('notification-test-status');message.textContent='Checking unsigned and invalid notifications…';
+    const message=$('notification-test-status');message.textContent='Checking unsigned and invalid notificationsâ€¦';
     try{
       const signatures=[null,`t=${Math.floor(Date.now()/1000)},v1=${'0'.repeat(64)}`,`t=1,v1=${'0'.repeat(64)}`];
       for(const signature of signatures){
