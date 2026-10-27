@@ -268,3 +268,71 @@ test('account route applies origin, authentication and production gates before b
  const prod=createHandler(()=>client,{...env,VERCEL_ENV:'production',ACCOUNT_PUBLIC_ENABLED:'true',ACCOUNT_ALLOWED_ORIGINS:'http://localhost:8773'},{billingRuntime:runtime});
  assert.equal((await req(headers,undefined,prod)).statusCode,503);assert.equal(calls,1);
 });
+
+test('authenticated tools enforce expiration and recovery with the same signed-in session',async t=>{
+ const renewal=clone(invoice),renewalEnd=end+30*86400;
+ renewal.id='in_http_renewal';renewal.charge='ch_http_renewal';
+ Object.assign(renewal,{status:'open',paid:false,amount_paid:0,amount_remaining:1000});
+ renewal.lines.data[0].period={start:end,end:renewalEnd};
+ const renewalCharge={...clone(charge),id:renewal.charge,invoice:renewal.id,paid:false,captured:false,status:'failed'};
+ const f=fixture({subscriptions:[{...clone(sub),status:'past_due'}],invoices:[renewal,clone(invoice)]});
+ f.stripe.charges.retrieve=async id=>id===renewal.charge?renewalCharge:clone(charge);
+ t.mock.timers.enable({apis:['Date'],now:end*1000-1});
+ const service=createBillingService({...f,env,now:()=>Date.now()});
+ const client={auth:{getUser:async()=>({data:{user},error:null})},from(table){
+  assert.ok(['membership_subscriptions','access_grants'].includes(table));
+  return {select(){return {eq(column,value){
+   assert.equal(column,'user_id');assert.equal(value,user.id);
+   const result={data:table==='access_grants'?[]:{user_id:user.id,plan:'premium',...f.state.commits.at(-1)},error:null};
+   return {...result,maybeSingle:async()=>result};
+  }};}};
+ }};
+ const handler=createHandler(()=>client,{ACCOUNT_ALLOWED_ORIGINS:'http://localhost:8773',SUBSCRIPTION_ACCESS_ENABLED:'true'});
+ async function request(body){
+  const res=response();await handler({method:'POST',headers:{origin:'http://localhost:8773','content-type':'application/json',cookie:'dt-dev-access=fixture'},body},res);return res;
+ }
+ async function check(premium){
+  const access=await request({action:'access',premium:true,paid_through:'2099-01-01'});
+  assert.equal(access.statusCode,200);assert.equal(access.body.access.premium,premium);
+  assert.match(access.headers['Cache-Control'],/no-store/);
+  assert.equal(access.body.access.features.tradeTeams,premium?12:2);
+  assert.equal(access.body.access.features.leagueOutlook,premium);
+  const trade=await request({action:'trade-evaluate',premium:true,teams:[1,2,3].map(id=>({id,status:'overall'})),transfers:[],format:{ppr:'hppr',superflex:true,tePremium:false}});
+  assert.equal(trade.statusCode,premium?200:403);
+ }
+ const event=(id,type)=>({id,type,livemode:false,data:{object:{customer:'cus_fixture'}}});
+ await service.event(event('evt_httpFailure','invoice.payment_failed'));await check(true);
+ const before=f.state.commits.length;
+ t.mock.timers.setTime(end*1000);await check(false);
+ assert.equal(f.state.commits.length,before); // No webhook, refresh, or DB change at expiry.
+ await service.event(event('evt_httpFalseSuccess','invoice.paid'));await check(false);
+ Object.assign(renewal,{status:'paid',paid:true,amount_paid:1000,amount_remaining:0});
+ Object.assign(renewalCharge,{paid:true,captured:true,status:'succeeded'});f.state.subscriptions[0].status='active';
+ await service.event(event('evt_httpRecovered','invoice.paid'));await check(true);
+ assert.equal(f.state.commits.at(-1).paid_through,new Date(renewalEnd*1000).toISOString());
+ await service.event(event('evt_httpLateFailure','invoice.payment_failed'));await check(true);
+ f.state.subscriptions[0].cancel_at_period_end=true;
+ await service.event(event('evt_httpCancelScheduled','customer.subscription.updated'));
+ t.mock.timers.setTime(renewalEnd*1000-1);await check(true);
+ t.mock.timers.setTime(renewalEnd*1000);await check(false);
+ assert.equal(f.state.creates,0);
+});
+
+test('monitor verifies environment before enumeration and never mutates billing',async()=>{
+ const f=fixture();let listed=0;
+ f.db.from=table=>({select(){return {eq(){return {maybeSingle:async()=>({data:{project_ref:ref,stripe_account_id:'acct_wrong'}})};},order(){listed++;assert.fail('Wrong environment must not enumerate accounts');}};}});
+ await assert.rejects(()=>f.service.monitor(),/environment/);assert.equal(listed,0);
+ f.db.from=table=>({select(){return table==='billing_environment'?{eq(){return {maybeSingle:async()=>({data:{project_ref:ref,stripe_account_id:'acct_fixture'}})};}}:{order(){return {limit:async()=>({data:[]})};}};}});
+ f.db.rpc=async()=>assert.fail('Monitor must never write');
+ const result=await f.service.monitor();assert.equal(result.record,null);assert.equal(result.next,null);
+});
+
+test('only verified notification-processing failures emit the fixed monitoring signal',async()=>{
+ const stripe=new Stripe('sk_test_fixture'),secret='whsec_fixture';let signals=0;
+ const handler=createWebhookHandler(()=>({stripe,service:{event:async()=>{throw new Error('private key and customer');}}}),{STRIPE_TEST_WEBHOOK_SECRET:secret},(...args)=>{assert.deepEqual(args,[]);signals++;});
+ const payload=JSON.stringify({id:'evt_fixture',livemode:false,type:'invoice.paid'});
+ async function request(signature){const req=Readable.from([Buffer.from(payload)]);req.method='POST';req.headers=signature?{'stripe-signature':signature}:{};const res=response();await handler(req,res);return res;}
+ assert.equal((await request()).statusCode,400);assert.equal(signals,0);
+ assert.equal((await request('bad')).statusCode,400);assert.equal(signals,0);
+ const res=await request(stripe.webhooks.generateTestHeaderString({payload,secret}));assert.equal(res.statusCode,503);assert.equal(signals,1);assert.doesNotMatch(JSON.stringify(res.body),/private key|customer/);
+});

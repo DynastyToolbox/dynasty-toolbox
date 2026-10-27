@@ -6,7 +6,7 @@
   let offset=0,hasMore=false,busy=false,pendingChange=null,searchVersion=0,identity=api.user?.email,billingChecks=false;
   const status=(text,error=false)=>{$('member-status').textContent=text;$('member-status').dataset.error=String(error);};
   function lock(value){busy=value;document.querySelectorAll('button').forEach(b=>b.disabled=value);if(!value){$('members-previous').disabled=offset===0;$('members-next').disabled=!hasMore;}}
-  function wipe(){searchVersion++;$('member-results').replaceChildren();$('history-events').replaceChildren();$('history-account').textContent='';$('change-account').textContent='';$('grant-reason').value='';$('owner-code').value='';$('member-directory').hidden=true;$('owner-verification').hidden=true;$('membership-change').close();$('membership-history').close();$('billing-check').close();$('billing-check-account').textContent='';$('billing-check-result').replaceChildren();$('enrollment-qr').removeAttribute('src');$('enrollment').hidden=true;pendingChange=null;}
+  function wipe(){searchVersion++;$('billing-monitor').hidden=true;$('billing-monitor-results').replaceChildren();$('billing-monitor-status').textContent='No review run in this visit. Background monitoring is not enabled.';$('notification-test-status').textContent='';$('member-results').replaceChildren();$('history-events').replaceChildren();$('history-account').textContent='';$('change-account').textContent='';$('grant-reason').value='';$('owner-code').value='';$('member-directory').hidden=true;$('owner-verification').hidden=true;$('membership-change').close();$('membership-history').close();$('billing-check').close();$('billing-check-account').textContent='';$('billing-check-result').replaceChildren();$('enrollment-qr').removeAttribute('src');$('enrollment').hidden=true;pendingChange=null;}
   async function checkOwner(){
     wipe();lock(true);
     try {
@@ -14,7 +14,7 @@
       if(!session.user){status('Sign in through My account to continue.');return;}
       const owner=await api.request('admin-status');
       billingChecks=owner.environment==='development';
-      if(owner.mfa){$('member-directory').hidden=false;await loadMembers();}
+      if(owner.mfa){$('billing-monitor').hidden=!billingChecks;$('member-directory').hidden=false;await loadMembers();}
       else {
         $('owner-verification').hidden=false;status('Authenticator verification is required.');
         $('owner-factor').replaceChildren(...owner.factors.map(f=>new Option(f.name,f.id)));
@@ -115,6 +115,50 @@
     }catch(e){if(version===searchVersion)$('billing-check-result').replaceChildren(node('p',e.message));}
     finally{if(version===searchVersion)lock(false);}
   }
+  $('run-billing-monitor').onclick=async()=>{
+    if(busy||!billingChecks)return;
+    const version=searchVersion;lock(true);
+    const output=$('billing-monitor-results'),message=$('billing-monitor-status');output.replaceChildren();
+    let after=null,checked=0,issues=0,complete=false;
+    try{
+      do{
+        message.textContent=`Reviewing payment accounts… ${checked} checked.`;
+        const {billingMonitor:page}=await api.request('admin-billing-monitor',{after});
+        if(version!==searchVersion)return;
+        if(page.record){
+          checked++;
+          if(page.record.state!=='matched'){
+            issues++;
+            const labels={mismatch:'Payment and website records differ',payment_attention:'Payment needs attention',retry:'Records changed; check again',unavailable:'Could not check payment records'};
+            const row=node('li');row.append(node('span',`${labels[page.record.state]||'Review needed'} · Account ${page.record.userId}`));
+            const button=node('button','Inspect account');button.type='button';button.onclick=()=>showBillingCheck({id:page.record.userId,email:'Account '+page.record.userId});row.append(button);output.append(row);
+          }
+        }
+        if(page.next===null){complete=true;break;}
+        if(!page.record||page.next!==page.record.userId||(after&&page.next<=after))throw new Error('The review could not continue.');
+        after=page.next;
+      }while(checked<1000);
+      message.textContent=`${complete?'Review finished':'Review incomplete (account limit reached)'}: ${checked} checked, ${issues} need attention. ${new Date().toLocaleString()}. Background monitoring is not enabled.`;
+    }catch(e){if(version===searchVersion)message.textContent=`Review incomplete: ${checked} checked, ${issues} need attention. ${e.message}`;}
+    finally{if(version===searchVersion)lock(false);}
+  };
+  $('test-notification-protection').onclick=async()=>{
+    if(busy||!billingChecks)return;const version=searchVersion;lock(true);
+    const message=$('notification-test-status');message.textContent='Checking unsigned and invalid notifications…';
+    try{
+      const signatures=[null,`t=${Math.floor(Date.now()/1000)},v1=${'0'.repeat(64)}`,`t=1,v1=${'0'.repeat(64)}`];
+      for(const signature of signatures){
+        const headers={'Content-Type':'application/json'};if(signature)headers['stripe-signature']=signature;
+        const response=await fetch('/api/stripe-webhook',{method:'POST',credentials:'same-origin',cache:'no-store',redirect:'error',headers,
+          body:JSON.stringify({id:'evt_securityProbe',type:'invoice.paid',livemode:false,data:{object:{}}})});
+        const body=await response.json();
+        if(version!==searchVersion)return;
+        if(response.status!==400||body.error!=='Invalid payment notification.')throw new Error('The expected rejection was not confirmed. Check deployment protection and payment configuration.');
+      }
+      message.textContent='Passed: unsigned, forged-signature and old invalid-signature requests were rejected by the payment endpoint. '+new Date().toLocaleString();
+    }catch(e){if(version===searchVersion)message.textContent='Notification protection check incomplete. '+e.message;}
+    finally{if(version===searchVersion)lock(false);}
+  };
   $('close-billing-check').onclick=()=>$('billing-check').close();
   $('close-membership-history').onclick=()=>$('membership-history').close();
   $('member-search').onsubmit=e=>{e.preventDefault();if(!busy){offset=0;loadMembers();}};

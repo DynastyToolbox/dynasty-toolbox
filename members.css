@@ -27,3 +27,9 @@
 .page-members #owner-verification { max-width:440px; }
 .page-members #history-events article { border-top:1px solid #cbd8d3; padding:12px 0; overflow-wrap:anywhere; }
 @media(max-width:650px) { .member-search { grid-template-columns:minmax(0,1fr); gap:8px; } .member-card { padding:14px; } .page-members dialog { padding:18px; } .member-grant button { display:block; margin:8px 0 0; } }
+
+.billing-monitor { padding:18px; margin:18px 0; border:1px solid #799c8e; border-radius:12px; background:#edf3f0; }
+.billing-monitor h3 { margin-top:0; }
+.billing-monitor li { margin:12px 0; overflow-wrap:anywhere; }
+.billing-monitor li button { display:block; margin-top:8px; }
+.billing-monitor .member-actions button { white-space:normal; }

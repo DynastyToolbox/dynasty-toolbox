@@ -26,6 +26,14 @@
         </form>
       </section>
       <section id="member-directory" hidden>
+        <section id="billing-monitor" class="billing-monitor" hidden aria-labelledby="billing-monitor-title">
+          <h3 id="billing-monitor-title">Payment health</h3>
+          <p>Review all website-linked payment accounts for missing updates and payments that need attention. This review does not change access or charge anyone.</p>
+          <div class="member-actions"><button id="run-billing-monitor" type="button">Review payment accounts</button><button id="test-notification-protection" type="button">Test notification protection</button></div>
+          <p id="billing-monitor-status" role="status" aria-live="polite">No review run in this visit. Background monitoring is not enabled.</p>
+          <ul id="billing-monitor-results"></ul>
+          <p id="notification-test-status" role="status" aria-live="polite"></p>
+        </section>
         <form id="member-search" class="member-search">
           <div><label for="member-query">Search account email</label><input id="member-query" type="search" maxlength="254" placeholder="Search members"></div>
           <div><label for="member-filter">Show</label><select id="member-filter"><option value="all">All accounts</option><option value="paid">Paid subscribers</option><option value="complimentary">Complimentary access</option><option value="free">Free accounts</option></select></div>
