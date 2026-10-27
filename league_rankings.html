@@ -388,10 +388,7 @@
     async function loadNFLRankings(type) {
       nflRankings = {};
       const rows = await DynastyRankings.getRows(type);
-      rows.forEach(r => {
-        const nm = normalizeName(r["Player"]||"");
-        nflRankings[nm] = parseFloat(r["Score"])||0;
-      });
+      nflRankings = DynastySleeper.rankingScoreMap(rows, sleeperPlayers);
     }
 
     let sleeperPlayers = {};
@@ -412,7 +409,7 @@
         (r.players || []).forEach(pid=>{
           const p = sleeperPlayers[pid];
           if(!p || !DynastySleeper.isDynastyPosition(p.position)) return;
-          const nm = normalizeName(p.full_name);
+          const nm = "player:"+pid;
           const sc = nflRankings[nm]||0;
           allScores.push(sc);
           const pos = p.position.toUpperCase();
@@ -555,11 +552,7 @@
     async function loadProjectionRankings(url) {
       try {
         const data = parseCSV(await DynastySheets.csv(url));
-        const lookup = {};
-        data.forEach(r=>{
-          lookup[ normalizeName(r["Player"]) ] = parseFloat(r["Score"])||0;
-        });
-        return lookup;
+        return DynastySleeper.rankingScoreMap(data, sleeperPlayers);
       } catch (error) {
         DynastySheets.showError(error);
         throw error;
@@ -581,7 +574,7 @@
         let s1=[],s2=[],s3=[];
         (r.players || []).forEach(pid=>{
           if(!DynastySleeper.isDynastyPosition(sleeperPlayers[pid]?.position)) return;
-          const nm = normalizeName(sleeperPlayers[pid]?.full_name||"");
+          const nm = "player:"+pid;
           s1.push(p1[nm]||0);
           s2.push(p2[nm]||0);
           s3.push(p3[nm]||0);

@@ -61,7 +61,7 @@ check('Analyzer counts a valued pick in its top-15 average', () => {
   const fn=script.slice(script.indexOf('  function getTop15Avg('),script.indexOf('  function getStarters('));
   const context=vm.createContext({DynastySleeper:api, allPlayers:{p:{full_name:'Player',position:'QB'}},normalize:s=>s.toLowerCase().replace(/[^a-z0-9]/g,'')});
   vm.runInContext(fn,context);
-  assert.equal(context.getTop15Avg({players:['p'],picks:[pick(1,1)]},{player:100,'20271stround':300}),200);
+  assert.equal(context.getTop15Avg({players:['p'],picks:[pick(1,1)]},{'player:p':100,'20271stround':300}),200);
 });
 let calls=0;
 const cacheData=new Map();
@@ -90,14 +90,10 @@ client=runtime({fetch:async url=>{
 }});
 await Promise.all([client.league('1'),client.league('1')]);assert.equal(leagueCalls,5);
 await client.league('1');assert.equal(leagueCalls,10);tests++;console.log('PASS concurrent league imports deduplicate; next load requests fresh ownership');
-check('Best Available index separates positions and normalizes suffixes', () => {
-  const script=fs.readFileSync(path.join(__dirname,'../best_available.js'),'utf8');
-  const fn=script.slice(script.indexOf('function buildPlayerIndex('),script.indexOf('async function loadLeague('));
-  const context=vm.createContext({indexedPlayers:null,playerIndex:null,normalizeName:s=>s.toLowerCase().replace(/[.']/g,'').trim()});
-  vm.runInContext(fn,context);
-  const index=context.buildPlayerIndex({a:{full_name:'John Smith Jr.',position:'WR'},b:{full_name:'John Smith',position:'LB'}});
-  assert.equal(index.exact.get('john smith jr')[0].player_id,'a');
-  assert.equal(index.base.get('john smith').length,2);
+check('Best Available matching separates positions and normalizes suffixes', () => {
+  const result=api.matchRankings([{Player:'John Smith',Position:'WR',Score:'100'}],{a:{full_name:'John Smith Jr.',position:'WR'},b:{full_name:'John Smith',position:'LB'}});
+  assert.equal(result.byId.get('a').Score,'100');
+  assert.equal(result.byId.has('b'),false);
 });
 console.log(`${tests} checks passed`);
 })().catch(error=>{console.error(error);process.exitCode=1;});

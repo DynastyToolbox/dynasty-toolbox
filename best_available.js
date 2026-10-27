@@ -9,27 +9,6 @@ function normalizeId(v){
 
 let availableLeague = null;
 let availableLoading = false;
-let playerIndex = null;
-let indexedPlayers = null;
-
-function buildPlayerIndex(players) {
-  if (indexedPlayers === players) return playerIndex;
-  const index = { exact: new Map(), base: new Map() };
-  for (const [id, player] of Object.entries(players)) {
-    if (!player?.full_name || !DynastySleeper.isDynastyPosition(player.position)) continue;
-    const item = { ...player, player_id: player.player_id || id };
-    const name = normalizeName(player.full_name);
-    const base = name.replace(/\s+(iii|ii|iv|jr|sr)$/, "").trim();
-    for (const [map, key] of [[index.exact, name], [index.base, base]]) {
-      if (!map.has(key)) map.set(key, []);
-      map.get(key).push(item);
-    }
-  }
-  indexedPlayers = players;
-  playerIndex = index;
-  return index;
-}
-
 async function loadLeague(refresh = true) {
   const leagueId = document.getElementById("leagueInput").value.trim();
   if (!leagueId || availableLoading) return;
@@ -51,16 +30,11 @@ async function loadLeague(refresh = true) {
         if (Array.isArray(r[key])) r[key].forEach(id => owned.add(normalizeId(id)));
       });
     });
-    const index = buildPlayerIndex(sleeperPlayers);
+    const rows = Object.values(rankingMap).map(r=>({Player:r.name,Position:r.pos,ranked:r}));
     const freeAgents = [];
-    for (const ranked of Object.values(rankingMap)) {
-      const key = normalizeName(ranked.name);
-      const matchPosition = list => (list || []).filter(p => !ranked.pos || p.position === ranked.pos);
-      let candidates = matchPosition(index.exact.get(key));
-      if (!candidates.length) candidates = matchPosition(index.base.get(key.replace(/\s+(iii|ii|iv|jr|sr)$/, "").trim()));
-      // Ambiguous names must not mark a rostered player as available.
-      if (candidates.length !== 1) continue;
-      const sleeper = candidates[0];
+    for (const [id,row] of DynastySleeper.matchRankings(rows,sleeperPlayers).byId) {
+      const ranked = row.ranked;
+      const sleeper = DynastySleeper.playerInfo(id,sleeperPlayers);
       if (owned.has(normalizeId(sleeper.player_id))) continue;
       freeAgents.push({ id: sleeper.player_id, name: ranked.name, pos: sleeper.position,
         team: sleeper.team || ranked.team || "-", age: sleeper.age || ranked.age || "?", score: Number(ranked.score) });

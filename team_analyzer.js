@@ -115,11 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function mapScores(arr) {
-    const m = {};
-    arr.forEach(r=>{
-      if (r.Player && r.Score) m[normalize(r.Player)] = parseFloat(r.Score);
-    });
-    return m;
+    return DynastySleeper.rankingScoreMap(arr, allPlayers);
   }
 
   function getTop15Avg(roster, scoreMap) {
@@ -127,7 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
     roster.players.forEach(pid => {
       const p = allPlayers[pid];
       if (!p) return;
-      const sc = scoreMap[normalize(p.full_name)]||0;
+      const sc = scoreMap["player:"+pid]||0;
       if (sc>0) items.push({pos:p.position,score:sc});
     });
     roster.picks.forEach(pk => {
@@ -185,7 +181,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return p ? {
               name:  p.full_name,
               pos:   p.position,
-              score: scoreMap[normalize(p.full_name)]||0
+              score: scoreMap["player:"+id]||0
             } : null;
           })
           .filter(p=>p && allowedPos.includes(p.pos) && !used.has(p.name))
@@ -352,7 +348,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const p=r.Position.toUpperCase();
       if(leaguePos[p]&&leaguePos[p].length<posLimits[p]) leaguePos[p].push(r.Player);
     });
-    const owned=new Set(roster.players.map(id=>normalize(allPlayers[id]?.full_name)).filter(Boolean));
+    const ownedIds=new Set(roster.players.map(String));
+    const owned=new Set(Object.values(rankings).flatMap(rows=>[...DynastySleeper.matchRankings(rows,allPlayers).byId].filter(([id])=>ownedIds.has(id)).map(([,r])=>normalize(r.Player))));
     let csHTML=`<h3>Cornerstones</h3><div class="cornerstones-grid">`;
     Object.entries(leaguePos).forEach(([p,list])=>{
       list.forEach(name=>{
@@ -510,9 +507,7 @@ gapSlots.forEach(slot => {
     let pool = (bucketsMap[key][pickSlot] || [])
       .filter(p => p.score > (myMap[slot]?.score||0))
       .filter(p => !seen.has(p.name) &&
-                   !roster.players.some(pid =>
-                     normalize(allPlayers[pid]?.full_name) === normalize(p.name)
-                   ));
+                   !owned.has(normalize(p.name)));
 
     if (pool.length) {
        // pick a random candidate out of the pool
@@ -545,7 +540,7 @@ tradeIdeasDiv.innerHTML = tHTML;
     const map = type==="competing"?cMap:type==="tanking"?tMap:oMap;
     const allP = roster.players.map(id=>{
       const p=allPlayers[id]; if(!p)return null;
-      const sc=map[normalize(p.full_name)]||0;
+      const sc=map["player:"+id]||0;
       return sc>0?{name:p.full_name,pos:p.position,score:sc}:null;
     }).filter(Boolean).sort((a,b)=>{
       const o={QB:1,RB:2,WR:3,TE:4};

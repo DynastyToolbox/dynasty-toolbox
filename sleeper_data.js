@@ -19,12 +19,97 @@
   function playerInfo(id, registry) {
     const player = registry?.[id] || {};
     const position = String(player.position || player.fantasy_positions?.[0] || 'Other').toUpperCase();
-    const pos = position === 'DST' ? 'DEF' : position;
+    const pos = position === 'DST' ? 'DEF' : (['QB','RB','WR','TE'].includes(position) ? position : player.fantasy_positions?.find(p=>['QB','RB','WR','TE'].includes(p)) || position);
     const name = player.full_name || [player.first_name, player.last_name].filter(Boolean).join(' ') ||
       (pos === 'DEF' ? `${player.team || id} Defense` : `Unknown player (${id})`);
     return {...player, player_id:String(player.player_id || id), full_name:name, position:pos};
   }
   const playerMap = registry => Object.fromEntries(Object.keys(registry).map(id => [id,playerInfo(id,registry)]));
+
+
+  // Match names once, then use Sleeper IDs for roster ownership and scoring.
+  const playerNameKey = name => String(name || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  const playerSuffix = name => String(name || '').match(/(?:[\s,]+)(jr|sr|ii|iii|iv|v)\.?\s*$/i)?.[1].toLowerCase() || '';
+  const playerBaseKey = name => playerNameKey(String(name || '').replace(/(?:[\s,]+)(?:jr|sr|ii|iii|iv|v)\.?\s*$/i,''));
+  // Reviewed against Sleeper's public registry on 2026-10-27. Explicit IDs handle
+  // nicknames/typos and the active Kyle Williams without fuzzy name guesses.
+  const rankingAliases = [
+    ['LEJOHNTAY WESTER','12699','LaJohntay Wester','WR'],
+    ['KENNETH GAINWELL','7567','Kenny Gainwell','RB'],
+    ['MATTHEW HIBNER','13324','Matt Hibner','TE'],
+    ['HOLLYWOOD BROWN','5848','Marquise Brown','WR'],
+    ['EMARI DEMARCADO','11199','Emari Demercado','RB'],
+    ['JONATHON MINGO','10225','Jonathan Mingo','WR'],
+    ['TYQUON THORNTON','8188','Tyquan Thornton','WR'],
+    ['KYLE WILLIAMS','12547','Kyle Williams','WR']
+  ];
+  function matchRankings(rows, registry) {
+    const exact = new Map(), base = new Map(), rankedBase = new Map();
+    const add = (map, key, item) => { if (key) { if (!map.has(key)) map.set(key, []); map.get(key).push(item); } };
+    const position = value => String(value || '').trim().toUpperCase();
+    const compatible = (a,b) => !a || !b || a === b;
+    for (const id of Object.keys(registry)) {
+      const player = playerInfo(id, registry);
+      if (!['QB','RB','WR','TE'].includes(player.position)) continue;
+      const entry = {id:String(id), player};
+      add(exact, playerNameKey(player.full_name), entry);
+      add(base, playerBaseKey(player.full_name), entry);
+    }
+    for (const row of rows) if (!/^PICKS?$/.test(position(row.Position))) add(rankedBase, playerBaseKey(row.Player), row);
+    const byId = new Map(), report = [];
+    for (const row of rows) {
+      const pos = position(row.Position);
+      if (/^PICKS?$/.test(pos) || !row.Player) continue;
+      const key = playerNameKey(row.Player), baseKey = playerBaseKey(row.Player);
+      let candidates = (exact.get(key) || []).filter(e => compatible(pos,e.player.position));
+      let method = 'exact';
+      const alias = rankingAliases.find(([name,,,aliasPos])=>playerNameKey(name)===key && compatible(pos,aliasPos));
+      if (alias && registry[alias[1]]) {
+        const target = playerInfo(alias[1],registry);
+        if (playerNameKey(target.full_name)===playerNameKey(alias[2]) && target.position===alias[3]) {
+          candidates=[{id:alias[1],player:target}];method='alias';
+        }
+      }
+      // Preserve a unique exact identity after a position change; report the
+      // discrepancy for the sheet owner without dropping an existing player.
+      if (!candidates.length && exact.get(key)?.length === 1 && rows.filter(r=>playerNameKey(r.Player)===key).length === 1) {
+        candidates=exact.get(key);method='position-mismatch';
+      }
+      if (!candidates.length) {
+        method = 'suffix';
+        candidates = (base.get(baseKey) || []).filter(e => compatible(pos,e.player.position));
+        if (playerSuffix(row.Player)) candidates = candidates.filter(e => !playerSuffix(e.player.full_name) || playerSuffix(row.Player) === playerSuffix(e.player.full_name));
+        // Both sides must be unique: never guess between father/son or duplicate ranking rows.
+        if (candidates.length && (rankedBase.get(baseKey) || []).filter(r => compatible(position(r.Position),candidates[0].player.position)).length !== 1) {
+          report.push({name:row.Player,position:pos,status:'ambiguous',candidates:candidates.map(e=>e.player.full_name)});
+          continue;
+        }
+      }
+      if (candidates.length !== 1) {
+        report.push({name:row.Player,position:pos,status:candidates.length ? 'ambiguous' : (exact.has(key) ? 'position-mismatch' : 'unmatched'),candidates:(candidates.length ? candidates : exact.get(key) || []).map(e=>e.player.full_name+' ('+e.player.position+')')});
+        continue;
+      }
+      const entry = candidates[0];
+      const previous = report.find(r=>r.playerId===entry.id);
+      if (previous) {
+        byId.delete(entry.id);
+        previous.status = 'ambiguous';
+        previous.candidates = [entry.player.full_name];
+        report.push({name:row.Player,position:pos,status:'ambiguous',playerId:entry.id,candidates:[entry.player.full_name]});
+        continue;
+      }
+      byId.set(entry.id,row);
+      report.push({name:row.Player,position:pos,status:method,playerId:entry.id,sleeperName:entry.player.full_name,...(method==='position-mismatch'?{candidates:[entry.player.full_name+' ('+entry.player.position+')']}: {})});
+    }
+    return {byId,report};
+  }
+  function rankingScoreMap(rows, registry) {
+    const scores = Object.create(null);
+    // Keep pick lookup keys unchanged. Player lookups always use their stable ID.
+    for (const row of rows) if (/^PICKS?$/.test(String(row.Position).toUpperCase())) scores[playerNameKey(row.Player)] = parseFloat(row.Score) || 0;
+    for (const [id,row] of matchRankings(rows,registry).byId) scores['player:'+id] = parseFloat(row.Score) || 0;
+    return scores;
+  }
 
   async function request(path) {
     if (pending.has(path)) return pending.get(path);
@@ -152,7 +237,7 @@
     return result;
   }
 
-  const api = { players, league, withPicks, pickLabel, pickScore, originName, escapeHTML, playerInfo, rosterPlayerIds, isDynastyPosition, leagueRankBands };
+  const api = { matchRankings, rankingScoreMap, playerNameKey, players, league, withPicks, pickLabel, pickScore, originName, escapeHTML, playerInfo, rosterPlayerIds, isDynastyPosition, leagueRankBands };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.DynastySleeper = api;
 })(globalThis);
