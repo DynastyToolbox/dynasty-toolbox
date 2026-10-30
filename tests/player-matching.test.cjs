@@ -9,7 +9,7 @@ test('KC suffix change retains all three published scores by Sleeper ID',()=>{
  const registry={kc:player('KC Concepcion Jr.')};
  const rankings=require('../data/nfl_rankings.json').rankings;
  for(const rows of Object.values(rankings)){
-  const expected=rows.find(r=>r.Player==='KC CONCEPCION');
+  const expected=rows.find(r=>/^KC CONCEPCION(?: JR\.?)?$/i.test(r.Player));
   const result=S.matchRankings(rows,registry);
   assert.equal(result.byId.get('kc'),expected);
   assert.equal(S.rankingScoreMap(rows,registry)['player:kc'],Number(expected.Score));
@@ -18,7 +18,7 @@ test('KC suffix change retains all three published scores by Sleeper ID',()=>{
  const league=buildLeague({meta:{season:'2026',settings:{type:2,draft_rounds:0}},rosters:[{roster_id:1,players:['kc']}],users:[],drafts:[],traded:[]},registry,book);
  assert.equal(league.teams[0].assets[0].id,'player:kc');
  assert.deepEqual(Object.values(league.teams[0].assets[0].scores).map(s=>s.ranked),[true,true,true]);
- assert.equal(league.teams[0].assets[0].scores.overall.value,5115);
+ assert.equal(league.teams[0].assets[0].scores.overall.value,Number(rankings.overall.find(r=>/^KC CONCEPCION(?: JR\.?)?$/i.test(r.Player)).Score));
 });
 test('punctuation, accents, spacing and terminal suffix variants match in either direction',()=>{
  for(const [a,b] of [['K.C. Concepcion','KC Concepcion Jr.'],['Jose Smith','José Smith'],["D’Andre Swift","D'Andre Swift"],['John Doe II','John Doe'],['John Doe','John Doe III'],['John Doe','John Doe, Sr.']]){
