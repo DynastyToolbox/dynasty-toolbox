@@ -112,6 +112,13 @@
   $('leagueId').addEventListener('keydown', e => {if (e.key==='Enter' && !$('loadLeagueBtn').disabled) $('loadLeagueBtn').click();});
   $('medianTeamSelect').addEventListener('change',render);
   window.addEventListener('dynasty-median-change',render);
+  window.addEventListener('dynasty-premium-clear',() => {
+    request++; loaded=null; players={};
+    $('loadLeagueBtn').disabled=false;
+    $('medianTeamSelect').replaceChildren();
+    $('median-roster').replaceChildren(); $('median-lineup').replaceChildren();
+    $('median-team-choice').hidden=$('median-roster-content').hidden=true; message('');
+  });
   window.addEventListener('dynasty-account-change',() => {
     const next = window.DynastyAccount?.user?.email;
     if (next===owner) return;

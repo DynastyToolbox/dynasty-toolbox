@@ -100,5 +100,12 @@
         }
       ]
     }
-  ]
+  ],
+  "buildCommand": "node scripts/build-public-site.cjs",
+  "outputDirectory": "public-build",
+  "functions": {
+    "api/account.js": {
+      "includeFiles": "data/weekly_points_current.json"
+    }
+  }
 }

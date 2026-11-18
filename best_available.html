@@ -143,9 +143,10 @@ header h1 {
 
 
 </style>
-  <script src="/nfl_rankings_data.js"></script>
   <script src="/sleeper_data.js"></script>
   <script src="/account-session.js" defer></script>
+  <script src="/premium-page.js" defer></script>
+  <script src="/membership-navigation.js" defer></script>
   <script src="/my-leagues.js" defer></script>
 </head>
 
@@ -170,15 +171,13 @@ header h1 {
 
 
 <div id="nav-placeholder"></div>
-
- <!-- Password Gate -->
-  <div id="gate" class="gate">
-    <h2>In Development</h2>
-    <p>This tool is in progress. Enter the access password to preview it.</p>
-    <input type="password" id="adminPassword" placeholder="Password" aria-label="Access password" />
-    <button id="unlockBtn">Unlock</button>
+  <section id="gate" class="gate" aria-label="Membership access">
+    <h2>Included with membership</h2>
+    <p id="gateMessage" role="status">Checking your membership…</p>
+    <p><a href="account.html">Sign in</a> · <a href="membership.html" data-upgrade-link>View membership</a></p>
+    <button id="premiumRetry" type="button">Check access again</button>
     <p id="gateError" class="gate-error" role="alert"></p>
-  </div>
+  </section>
 <div id="protected" style="display:none;">
 <div class="container">
 
@@ -260,43 +259,7 @@ header h1 {
       .catch(e => console.error('Nav load failed:', e));
   });
 </script>
-<script src="best_available.js"></script>
- <script>
-    // Simple shared password (soft lock, not true security)
-    const ADMIN_PASSWORD = "admin-beau";  // <-- change this to whatever you want
-    const STORAGE_KEY = "dt_admin_unlocked";
-
-    function showProtected() {
-      document.getElementById("gate").style.display = "none";
-      document.getElementById("protected").style.display = "block";
-    }
-
-    // On load, see if we've already unlocked
-    if (localStorage.getItem(STORAGE_KEY) === "true") {
-      showProtected();
-    } else {
-      document.getElementById("gate").style.display = "block";
-    }
-
-    document.getElementById("unlockBtn").addEventListener("click", () => {
-      const input = document.getElementById("adminPassword").value.trim();
-      const err = document.getElementById("gateError");
-      if (input === ADMIN_PASSWORD) {
-        localStorage.setItem(STORAGE_KEY, "true");
-        showProtected();
-      } else {
-        err.textContent = "Incorrect password.";
-      }
-    });
-
-    document
-      .getElementById("adminPassword")
-      .addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          document.getElementById("unlockBtn").click();
-        }
-      });
-  </script>
+<script src="best_available.js" defer></script>
   <p data-rankings-status role="alert" hidden style="text-align:center; font-size:0.85em;"></p>
 </body>
 </html>

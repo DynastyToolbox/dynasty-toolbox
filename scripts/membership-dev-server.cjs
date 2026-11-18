@@ -17,7 +17,7 @@ const files=new Set(['account.html','members.html','privacy.html','account.js','
   'outlook-bracket.js','outlook-draft.js','league_outlook.html','league-outlook.js','league-outlook.css','membership.html','membership.js','membership.css','membership-navigation.js','trade-roster-picker.js','devy-simulator.css',
   'index.html','home.css','home.js','trade_finder.html','trade-finder.js','pick_preferences.js','trade-finder.css','devy_mock_simulator.html','site_sheets.js','data/site_sheets.json',
   'nfl_rankings.html','college_rankings.html','team_analyzer.html','team_analyzer.js','league_rankings.html','sos.html','best_available.html','best_available.js',
-  'median_rankings.html','median_data.js','median_team.js','median_team.css','sleeper_data.js','data/weekly_points_current.json','nfl_mock_drafts.html','dynasty_mock_drafts.html',
+  'premium-page.js','median-page.js','median_rankings.html','median_data.js','median_team.js','median_team.css','sleeper_data.js','nfl_mock_drafts.html','dynasty_mock_drafts.html',
   'trade_calculator.html','trade-calculator.js','trade-calculator.css','trade-balance.js','nfl_rankings_data.js','scoring_formats.js','data/nfl_rankings.json','nav.html','nav.js',
   'assets/icons/instagram.svg','assets/icons/x.png','assets/icons/tiktok.svg','assets/Logos/favicon-96x96.png','assets/Logos/favicon.ico','assets/Logos/apple-touch-icon.png','assets/Logos/site.webmanifest']);
 const headers=JSON.parse(fs.readFileSync(path.join(root,'vercel.json'),'utf8')).headers;

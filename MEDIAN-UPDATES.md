@@ -1,5 +1,15 @@
 # Weekly median updates
 
+## Membership delivery (development)
+
+Median Rankings now requests its data through the authenticated `median-data` account action. The server verifies current membership before reading the dataset. Best Available similarly uses `available-players` to calculate unowned ranked players after membership verification. Both pages replace the legacy shared preview password with account/membership controls.
+
+Vercel runs `node scripts/build-public-site.cjs` and serves only `public-build/`. That directory includes browser assets and the three deliberately public ranking/sheet files; weekly datasets and server source are excluded. The account function includes `data/weekly_points_current.json` privately. Keep weekly updates at their existing source paths; never copy them into `public-build/`. The local membership preview also refuses direct weekly JSON requests. Existing copies in public repository history or earlier deployments are not retroactively removed by this change.
+
+The deployment still needs a hosted check of member access and direct-data rejection before paid launch.
+
+## Weekly refresh
+
 The `Update weekly medians` GitHub Actions workflow runs on Wednesdays at 13:23 UTC (7:23am Mountain daylight time, 6:23am Mountain standard time). It can also be started with **Actions → Update weekly medians → Run workflow**. GitHub scheduling may be delayed and can be disabled after extended repository inactivity.
 
 The workflow rebuilds Sleeper regular-season data, validates it, commits only the weekly JSON files, and calls a Vercel deploy hook for `main`. No local computer or Codex session needs to stay open. Data-fetch or validation failures leave the published data in place; failed runs appear in GitHub Actions.

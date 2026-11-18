@@ -3,54 +3,32 @@ let waiverPlayers = [];
 let sortField = "score";
 let sortAsc = false;
 
-function normalizeId(v){
-    return String(v).trim();
-}
-
-let availableLeague = null;
-let availableLoading = false;
-async function loadLeague(refresh = true) {
-  const leagueId = document.getElementById("leagueInput").value.trim();
-  if (!leagueId || availableLoading) return;
-  availableLoading = true;
-  const button = document.getElementById("loadAvailableBtn");
-  const select = document.getElementById("rankingType");
-  button.disabled = select.disabled = true;
-  waiverPlayers = [];
-  document.getElementById("waiverTable").innerHTML = "<tr><td colspan='5'>Loading...</td></tr>";
+let availableLoading = false, availableRequest = 0;
+const availableAccess = DynastyPremiumPage.start({feature:'bestAvailable', clear() {
+  availableRequest++; availableLoading=false; waiverPlayers=[];
+  document.getElementById('waiverTable').replaceChildren();
+  document.getElementById('loadAvailableBtn').disabled=false;
+  document.getElementById('rankingType').disabled=false;
+}});
+async function loadLeague() {
+  const leagueId = document.getElementById('leagueInput').value.trim();
+  if (!leagueId || availableLoading || !availableAccess.allowed) return;
+  const version=++availableRequest, accessVersion=availableAccess.revision;
+  const current=()=>version===availableRequest && accessVersion===availableAccess.revision;
+  availableLoading=true;
+  const button=document.getElementById('loadAvailableBtn'), select=document.getElementById('rankingType');
+  button.disabled=select.disabled=true;
+  waiverPlayers=[];
+  document.getElementById('waiverTable').innerHTML='<tr><td colspan="5">Loading…</td></tr>';
   try {
-    const [rankingMap, sleeperPlayers, bundle] = await Promise.all([
-      fetchRankingMap(select.value),
-      DynastySleeper.players(),
-      refresh || availableLeague?.id !== leagueId ? DynastySleeper.league(leagueId, { picks: false }) : availableLeague
-    ]);
-    const owned = new Set();
-    bundle.rosters.forEach(r => {
-      ["players", "reserve", "taxi", "starters"].forEach(key => {
-        if (Array.isArray(r[key])) r[key].forEach(id => owned.add(normalizeId(id)));
-      });
-    });
-    const rows = Object.values(rankingMap).map(r=>({Player:r.name,Position:r.pos,ranked:r}));
-    const freeAgents = [];
-    for (const [id,row] of DynastySleeper.matchRankings(rows,sleeperPlayers).byId) {
-      const ranked = row.ranked;
-      const sleeper = DynastySleeper.playerInfo(id,sleeperPlayers);
-      if (owned.has(normalizeId(sleeper.player_id))) continue;
-      freeAgents.push({ id: sleeper.player_id, name: ranked.name, pos: sleeper.position,
-        team: sleeper.team || ranked.team || "-", age: sleeper.age || ranked.age || "?", score: Number(ranked.score) });
-    }
-    availableLeague = bundle;
-    waiverPlayers = freeAgents.sort((a,b) => b.score - a.score);
-    renderTable();
-    try { if (window.DynastyAccount?.allowsHistory()) localStorage.setItem("best_available_league", leagueId); } catch (_) {}
-    storeLeague(leagueId, bundle.meta.name);
-  } catch (error) {
-    availableLeague = null;
-    document.getElementById("waiverTable").innerHTML = `<tr><td colspan="5">${DynastySleeper.escapeHTML(error.message || "Unable to load league. Please try again.")}</td></tr>`;
-  } finally {
-    availableLoading = false;
-    button.disabled = select.disabled = false;
-  }
+    const result=await DynastyAccount.request('available-players',{league_id:leagueId,ranking_type:select.value});
+    if(!current())return;
+    waiverPlayers=result.players; renderTable();
+    storeLeague(leagueId,result.league.name);
+  } catch(error) {
+    if(!current())return;
+    document.getElementById('waiverTable').innerHTML=`<tr><td colspan="5">${DynastySleeper.escapeHTML(error.message || 'Unable to load league.')}</td></tr>`;
+  } finally {if(current()){availableLoading=false;button.disabled=select.disabled=false;}}
 }
 
 function handleRankingChange() {
@@ -70,7 +48,7 @@ function handleRankingChange() {
   }
 
   // Re-run full load using the new rankingType
-  loadLeague(false);
+  loadLeague();
 }
 
 
@@ -107,30 +85,7 @@ function renderRecent() {
 }
 renderRecent();
 window.addEventListener("dynasty-account-change", renderRecent);
-
-function normalizeName(name) {
-  if (!name) return "";
-  return name.toLowerCase()
-    .replace(/[.\']/g, "") // remove periods and apostrophes: C.J. -> cj, D'Andre -> dandre
-    .trim();
-}
-
-
-async function fetchRankingMap(type){
-  const rows = await DynastyRankings.getRows(type);
-  const map = {};
-  rows.forEach(row => {
-    if (!row.Player || !row.Score) return;
-    const score = Number(row.Score);
-    if (Number.isNaN(score)) return;
-    map[normalizeName(row.Player)] = {
-      name: row.Player, team: row.Team || "", age: row.Age,
-      pos: row.Position.toUpperCase(), score
-    };
-  });
-  return map;
-}
-
+document.querySelectorAll('.pos-box').forEach(box => box.addEventListener('change', renderTable));
 
 /* ---------- Render Table ---------- */
 function renderTable(){
@@ -146,10 +101,10 @@ function renderTable(){
     document.getElementById("waiverTable").innerHTML =
         data.map(p=>`
         <tr>
-            <td>${p.name}</td>
-            <td>${p.pos}</td>
-            <td>${p.team}</td>
-            <td>${p.age}</td>
+            <td>${DynastySleeper.escapeHTML(p.name)}</td>
+            <td>${DynastySleeper.escapeHTML(p.pos)}</td>
+            <td>${DynastySleeper.escapeHTML(p.team)}</td>
+            <td>${DynastySleeper.escapeHTML(p.age)}</td>
             <td class="right">${p.score.toFixed(2)}</td>
         </tr>
         `).join("") || "<tr><td colspan=5>No players match filters.</td></tr>";
